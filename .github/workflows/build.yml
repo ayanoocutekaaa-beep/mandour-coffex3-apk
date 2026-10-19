@@ -20,6 +20,8 @@ jobs:
       - name: Build Android project from index.html
         run: |
           mkdir www && cp index.html www/
+          mkdir -p www/assets/beans
+          cp assets/beans/*-card.jpg www/assets/beans/
           npm init -y
           npm i @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
           npx cap init "Mandour Coffee" com.mandour.coffee --web-dir www

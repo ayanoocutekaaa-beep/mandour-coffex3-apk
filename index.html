@@ -1,107 +1,125 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#6f4e37">
-<title>مندور كوفي | طلب البن</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#faf3e8">
+<title>مندور كوفي</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#faf3e8;--card:#fff;--ink:#3b2417;--mut:#8a6f5d;--acc:#6f4e37;--acc2:#c8913f;--ok:#2e7d4f;--line:#e8d9c4;color-scheme:light}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1410;--card:#2a1f18;--ink:#f3e6d6;--mut:#b49a84;--acc:#c8913f;--acc2:#e0b066;--ok:#5fc08a;--line:#43322a;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#1c1410;--card:#2a1f18;--ink:#f3e6d6;--mut:#b49a84;--acc:#c8913f;--acc2:#e0b066;--ok:#5fc08a;--line:#43322a;color-scheme:dark}
+:root{color-scheme:light;--bg:#faf3e8;--card:#fff;--ink:#3b2417;--mut:#8a6f5d;--acc:#6f4e37;--acc2:#c8913f;--ok:#2e7d4f;--line:#e8d9c4;--shadow:0 8px 24px #3b24170d}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;margin:0}
-:root{padding-top:env(safe-area-inset-top,0px)}
-body{background:var(--bg);color:var(--ink);font-family:'Cairo',Tahoma,Arial,sans-serif;display:flex;flex-direction:column;transition:background .2s,color .2s}
-#splash{position:fixed;inset:0;z-index:50;background:linear-gradient(160deg,#2b1810,#6f4e37 60%,#c8913f);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;transition:opacity .45s,visibility .45s}
-#splash.hide{opacity:0;visibility:hidden;pointer-events:none}
-.cup{font-size:78px;animation:fl 2.4s ease-in-out infinite;filter:drop-shadow(0 10px 18px #1c141066)}
-@keyframes fl{50%{transform:translateY(-10px)}}
-#splash h1{font-size:30px;margin:8px 0 0;letter-spacing:.5px;direction:ltr;animation:up .7s both}
-#splash p{opacity:.88;margin:6px 0 28px;animation:up .9s both}
-@keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-#splash button{background:#fff;color:#4a2f1e;border:0;border-radius:30px;padding:12px 42px;font:800 17px Cairo,Tahoma;box-shadow:0 8px 25px #1c141044}
-header{background:var(--acc);color:#fff;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;font-weight:800;font-size:18px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 3px 14px #2b181022;z-index:2}
-.brand{display:flex;align-items:center;gap:9px}.brand-mark{width:36px;height:36px;border-radius:13px;background:#ffffff22;display:grid;place-items:center;font-size:21px}
-header button{background:transparent;border:1px solid #ffffff55;color:#fff;font-size:19px;width:42px;height:42px;border-radius:14px}
-main{flex:1;overflow-y:auto;padding:18px 15px calc(160px + env(safe-area-inset-bottom,0px));scrollbar-width:thin}
-.hero{padding:10px 2px 20px}.eyebrow{color:var(--acc2);font-size:12px;font-weight:800;margin:0 0 5px}.hero h2{font-size:25px;line-height:1.4;margin:0 0 7px}.hero p{font-size:14px;color:var(--mut);margin:0;line-height:1.8}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 5px 18px #3b24170a}
-.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.nm{font-weight:800}.mut{color:var(--mut);font-size:13px;line-height:1.7}
-input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 10px;width:100%}
-.g{width:110px;text-align:center;font-weight:800;font-size:18px;direction:ltr}
-.chips{display:flex;gap:7px;margin-top:10px}
-.chips button{flex:1;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:20px;padding:7px 3px;font:700 12px Cairo,Tahoma;transition:transform .15s,border-color .15s,background .15s}
-.chips button:active{transform:scale(.96)}.chips button.selected{border-color:var(--acc2);background:color-mix(in srgb,var(--acc2) 18%,var(--bg));color:var(--acc)}
-.pr{font-weight:800;color:var(--acc2);min-width:70px;text-align:left;font-size:17px}
-.price-caption{color:var(--mut);font-size:11px;display:block;font-weight:600}
-.product-icon{width:46px;height:46px;display:grid;place-items:center;border-radius:15px;background:linear-gradient(145deg,#f0dfc8,#fff8ed);font-size:24px;flex-shrink:0}
-:root[data-theme="dark"] .product-icon{background:linear-gradient(145deg,#463328,#33251d)}
-.product-head{display:flex;align-items:center;gap:11px}.product-meta{flex:1;min-width:0}.product-meta .nm{font-size:16px}.product-meta .mut{margin:2px 0 0}
-.measure-row{margin-top:13px}.measure-label{font-size:12px;color:var(--mut);font-weight:700}
-.qty-stepper{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);padding:4px;border-radius:13px}
-.qty-stepper button{border:0;background:var(--card);color:var(--acc);width:34px;height:34px;border-radius:10px;font-size:20px;font-weight:800}
-.qty-value{min-width:24px;text-align:center;font-weight:800}
-.add-button{width:100%;margin-top:14px;border:0;border-radius:13px;background:var(--acc);color:white;padding:12px 14px;font:800 14px Cairo,Tahoma;display:flex;justify-content:center;align-items:center;gap:8px;box-shadow:0 5px 12px #6f4e3725}
-.add-button:active{transform:scale(.985)}.section-title{display:flex;justify-content:space-between;align-items:center;margin:8px 2px 12px}.section-title h3{font-size:17px;margin:0}.section-title span{font-size:12px;color:var(--mut)}
-.note{border:1px dashed var(--line);border-radius:14px;padding:12px 14px;color:var(--mut);font-size:12px;line-height:1.8;margin-top:15px}
-.cart-bar{position:fixed;z-index:5;bottom:0;left:0;right:0;padding:12px 15px calc(12px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--line)}
-.cart-inner{max-width:640px;margin:auto;background:var(--ink);color:var(--bg);border-radius:17px;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 9px 28px #0002}
-.cart-info small{display:block;color:var(--mut);font-size:11px}.cart-info strong{font-size:19px}.cart-action{border:0;background:var(--acc2);color:#24170f;border-radius:12px;padding:10px 15px;font:800 13px Cairo,Tahoma;white-space:nowrap}
-.toast{position:fixed;z-index:70;top:calc(72px + env(safe-area-inset-top,0px));left:50%;transform:translate(-50%,-12px);opacity:0;pointer-events:none;background:var(--ok);color:white;padding:10px 16px;border-radius:999px;font-size:13px;font-weight:800;transition:opacity .2s,transform .2s;white-space:nowrap}.toast.show{opacity:1;transform:translate(-50%,0)}
-button{cursor:pointer}button:focus-visible,input:focus-visible{outline:3px solid #c8913f88;outline-offset:2px}
-@media(min-width:600px){main{max-width:640px;width:100%;margin:0 auto}.cart-bar{padding-left:calc((100% - 640px)/2 + 15px);padding-right:calc((100% - 640px)/2 + 15px)}}
+html,body{min-height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:'Cairo',Tahoma,Arial,sans-serif}
+body{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #c8913f66;outline-offset:2px}
+#splash{position:fixed;inset:0;z-index:100;background:linear-gradient(150deg,#3b2417 0%,#6f4e37 63%,#c8913f 120%);color:#fff;display:grid;place-content:center;text-align:center;padding:24px;transition:opacity .85s ease,visibility .85s ease}
+#splash::before,#splash::after{content:"";position:absolute;border:1px solid #fff2;border-radius:50%;width:260px;height:260px;left:50%;top:50%;transform:translate(-50%,-50%);animation:ring 2.2s ease-out both;pointer-events:none}
+#splash::after{animation-delay:.22s;width:310px;height:310px}
+@keyframes ring{0%{opacity:0;scale:.78}35%{opacity:.45}100%{opacity:0;scale:1.2}}
+#welcome-mark{font-size:56px;filter:drop-shadow(0 12px 22px #1c141066);animation:cup-in .8s cubic-bezier(.2,.8,.2,1) both}
+@keyframes cup-in{from{opacity:0;transform:translateY(18px) scale(.82)}to{opacity:1;transform:translateY(0) scale(1)}}
+#welcome-title{margin:17px 0 0;direction:ltr;font-family:'Cairo',sans-serif;font-size:clamp(24px,6vw,34px);font-weight:800;letter-spacing:.08em;animation:title-in 1s .2s both}
+@keyframes title-in{from{opacity:0;transform:translateY(13px);letter-spacing:.25em}to{opacity:1;transform:translateY(0);letter-spacing:.08em}}
+#welcome-sub{margin:10px 0 0;color:#fffC;font-size:13px;animation:title-in .8s .6s both}
+#splash.leaving{opacity:0;visibility:hidden}
+.appbar{position:sticky;top:0;z-index:10;background:var(--acc);color:#fff;padding:10px 15px;box-shadow:0 3px 14px #2b181022;display:flex;align-items:center;gap:11px}
+.brand-symbol{width:39px;height:39px;border-radius:14px;background:#ffffff20;display:grid;place-items:center;font-size:22px;flex:none}
+.appbar-copy{min-width:0;flex:1}.appbar-title{font-size:16px;font-weight:800;line-height:1.35}.appbar-sub{font-size:10px;opacity:.78}
+#back-button{border:1px solid #ffffff55;color:#fff;background:transparent;border-radius:12px;padding:7px 12px;font-weight:700}#back-button[hidden]{display:none}
+main{max-width:720px;margin:0 auto;padding:17px 14px 35px}
+.view[hidden]{display:none}.view{animation:rise .28s ease both}@keyframes rise{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.welcome-copy{padding:7px 2px 15px}.eyebrow{margin:0 0 5px;color:var(--acc2);font-size:11px;font-weight:800}.welcome-copy h1,.view h2{margin:0;font-size:23px;line-height:1.45}.welcome-copy p,.view-intro{margin:6px 0 0;color:var(--mut);font-size:13px;line-height:1.8}
+.action-grid{display:grid;gap:11px;margin-top:10px}.action-button{width:100%;display:flex;align-items:center;gap:13px;text-align:right;padding:15px;border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--ink);box-shadow:var(--shadow);transition:transform .15s,border-color .15s}.action-button:active{transform:scale(.99)}.action-button:hover{border-color:#c8913f88}
+.action-icon{width:48px;height:48px;flex:none;display:grid;place-items:center;border-radius:16px;background:#f5ead9;color:var(--acc);font-size:24px}.action-text{flex:1}.action-text strong{display:block;font-size:16px}.action-text small{display:block;margin-top:2px;color:var(--mut);font-size:11px}.arrow{font-size:22px;color:var(--acc2)}
+.summary-strip{display:flex;gap:10px;margin:17px 0 6px}.summary-chip{flex:1;border:1px solid var(--line);background:#fff8ee;border-radius:14px;padding:10px 12px}.summary-chip strong{display:block;font-size:18px}.summary-chip span{font-size:10px;color:var(--mut)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:14px;margin:12px 0;box-shadow:var(--shadow)}.panel-title{font-size:15px;font-weight:800;margin:0 0 10px}.field{display:grid;gap:5px;margin:10px 0}.field label{font-size:12px;font-weight:700;color:var(--mut)}.field input,.field select,.g,.grams-input{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:11px;background:var(--bg);color:var(--ink);min-height:43px}.field input[type=file]{padding:8px}.muted{font-size:11px;color:var(--mut);line-height:1.7}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.bean-card{display:grid;grid-template-columns:78px 1fr;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px;margin:10px 0;box-shadow:var(--shadow)}.bean-photo{width:78px;height:78px;object-fit:cover;border-radius:13px;background:#f0e3d2}.bean-meta{min-width:0}.bean-name{font-weight:800;font-size:14px}.bean-rate{font-size:11px;color:var(--mut);margin-top:2px}.invoice-entry{display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:8px;align-items:end;margin-top:8px}.gram-field{min-width:0}.gram-field label{display:block;color:var(--mut);font-size:10px;margin-bottom:4px}.g{height:40px;min-height:40px;text-align:center;font-weight:800;direction:ltr;padding:6px}.pr{font-size:14px;text-align:left;color:var(--acc);font-weight:800;white-space:nowrap;padding-bottom:8px}.pr small{display:block;color:var(--mut);font-size:9px;font-weight:600}
+.primary,.secondary,.danger{border:0;border-radius:12px;padding:11px 14px;font-weight:800}.primary{background:var(--acc);color:#fff;width:100%;box-shadow:0 5px 12px #6f4e3722}.secondary{background:#f4eadb;color:var(--acc);border:1px solid var(--line)}.danger{background:#fff0eb;color:#a33b22;border:1px solid #f1c8b8;padding:6px 9px;font-size:11px}.button-row{display:flex;gap:9px;margin-top:12px}.button-row>*{flex:1}
+.invoice-total{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;background:#f7eddf;border-radius:13px;margin:13px 0}.invoice-total span{font-size:12px;color:var(--mut)}.invoice-total strong{font-size:20px;color:var(--acc)}
+.empty{padding:15px;text-align:center;color:var(--mut);font-size:12px;background:#fff9f0;border-radius:13px;border:1px dashed var(--line)}
+.history-item,.customer-card,.custom-bean-row{border:1px solid var(--line);background:var(--card);border-radius:14px;padding:12px;margin:9px 0}.history-top,.customer-top,.custom-bean-row{display:flex;align-items:center;justify-content:space-between;gap:10px}.history-top strong,.customer-top strong{font-size:13px}.history-top span,.customer-top span{font-size:10px;color:var(--mut)}.history-detail{border-top:1px solid var(--line);margin-top:9px;padding-top:9px;color:var(--mut);font-size:11px;line-height:1.9}.customer-card .detail-toggle{margin-top:9px;width:100%;text-align:right;border:0;background:#fff8ee;color:var(--acc);padding:8px 10px;border-radius:10px;font-size:11px;font-weight:700}.recipe{padding:9px 0;border-bottom:1px solid #eee3d5}.recipe:last-child{border-bottom:0}.recipe-title{font-weight:800;color:var(--ink);font-size:12px}.ingredient-list{color:var(--mut);font-size:10px;line-height:1.8}
+.recipe-line{display:grid;grid-template-columns:minmax(0,1fr) 92px 35px;gap:6px;align-items:center;margin:8px 0}.recipe-line select,.recipe-line input{width:100%;min-width:0;padding:8px 7px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:11px;min-height:40px}.remove-line{width:34px;height:34px;border:0;border-radius:10px;background:#fff0eb;color:#a33b22;font-size:18px}.photo-preview{width:100%;max-height:190px;object-fit:cover;border-radius:13px;margin-top:8px}.custom-bean-row{justify-content:flex-start}.custom-bean-row img{width:48px;height:48px;border-radius:10px;object-fit:cover}.custom-bean-row .info{flex:1}.custom-bean-row strong{display:block;font-size:12px}.custom-bean-row small{color:var(--mut);font-size:10px}
+.toast{position:fixed;z-index:200;bottom:calc(22px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,12px);opacity:0;transition:.2s;pointer-events:none;background:#2e7d4f;color:#fff;border-radius:30px;padding:10px 16px;font-size:12px;font-weight:800;white-space:nowrap;box-shadow:0 6px 20px #0002}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(min-width:560px){.action-grid{grid-template-columns:1fr 1fr}.action-button:first-child{grid-column:span 2}.action-button{min-height:94px}.bean-card{grid-template-columns:92px 1fr}.bean-photo{width:92px;height:92px}}
+@media(max-width:370px){main{padding-right:10px;padding-left:10px}.bean-card{grid-template-columns:66px 1fr;gap:9px;padding:9px}.bean-photo{width:66px;height:66px}.invoice-entry{grid-template-columns:minmax(0,1fr) 85px}.recipe-line{grid-template-columns:minmax(0,1fr) 78px 32px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
-<div id="splash" role="dialog" aria-label="الترحيب بمندور كوفي"><div class="cup" aria-hidden="true">☕</div><h1>MANDOUR COFFEE</h1><p>بن على مزاجك… وفنجان يروق بالك</p><button id="start-button" type="button">ابدأ طلبك</button></div>
-<header><div class="brand"><span class="brand-mark" aria-hidden="true">☕</span><span>مندور كوفي</span></div><button id="theme-toggle" type="button" aria-label="تغيير المظهر" title="تغيير المظهر">☾</button></header>
+<div id="splash" aria-label="Welcome TO MANDOUR COFFEE"><div id="welcome-mark" aria-hidden="true">☕</div><h1 id="welcome-title">Welcome TO MANDOUR COFFEE</h1><p id="welcome-sub">قهوة على مزاجك · مندور كوفي</p></div>
+<header class="appbar"><span class="brand-symbol" aria-hidden="true">☕</span><div class="appbar-copy"><div class="appbar-title" id="bar-title">مندور كوفي</div><div class="appbar-sub">إدارة البن والفواتير</div></div><button id="back-button" type="button" hidden>رجوع</button></header>
 <main>
-  <section class="hero"><p class="eyebrow">تحميص بطعم يليق بيك</p><h2>اختار بنّك ووزنك</h2><p>حدد النوع والكمية اللي تناسبك، وشوف السعر التقديري قبل ما تضيفه لطلبك.</p></section>
-  <div class="section-title"><h3>منيو البن</h3><span>السعر بالجنيه المصري</span></div>
-  <section id="products" aria-label="أنواع البن"></section>
-  <p class="note">الأسعار المعروضة تقديرية وقابلة للتأكيد عند الطلب. اختَر الوزن من الأزرار أو اكتبه بالجرام، ثم أضف الصنف إلى السلة.</p>
+<section class="view" id="home-view">
+ <div class="welcome-copy"><p class="eyebrow">أهلًا بيك في مندور</p><h1>إدارة شغلك… ببساطة</h1><p class="view-intro">اختار الخدمة اللي محتاجها، وكل بياناتك محفوظة على الجهاز.</p></div>
+ <div class="action-grid">
+  <button class="action-button" data-view="invoice" type="button"><span class="action-icon">🧾</span><span class="action-text"><strong>إنشاء فاتورة</strong><small>أدخل الجرامات والسعر يتحسب تلقائيًا</small></span><span class="arrow">‹</span></button>
+  <button class="action-button" data-view="blends" type="button"><span class="action-icon">👤</span><span class="action-text"><strong>إضافة توليفة لمستخدم</strong><small>احفظ خلطة العميل واعرف آخر فاتورة</small></span><span class="arrow">‹</span></button>
+  <button class="action-button" data-view="add-bean" type="button"><span class="action-icon">🫘</span><span class="action-text"><strong>إضافة نوع بن</strong><small>أضف الاسم وسعر الكيلو وصورة الصنف</small></span><span class="arrow">‹</span></button>
+ </div>
+ <div class="summary-strip"><div class="summary-chip"><strong id="invoice-count">٠</strong><span>فاتورة محفوظة</span></div><div class="summary-chip"><strong id="bean-count">٤</strong><span>نوع بن متاح</span></div><div class="summary-chip"><strong id="customer-count">٠</strong><span>عميل وتوليفة</span></div></div>
+</section>
+<section class="view" id="invoice-view" hidden>
+ <p class="eyebrow">مندور كوفي · فاتورة</p><h2>إنشاء فاتورة</h2><p class="view-intro">اكتب الوزن بالجرام بجوار كل نوع، والسعر هيتحسب على سعر الكيلو.</p>
+ <div class="panel"><div class="field"><label for="invoice-customer">اسم العميل (اختياري)</label><input id="invoice-customer" type="text" maxlength="60" placeholder="مثال: أحمد"></div><div id="invoice-beans"></div><div class="invoice-total"><span>إجمالي الفاتورة</span><strong id="invoice-total">٠ جنيه</strong></div><button class="primary" id="save-invoice" type="button">حفظ الفاتورة</button></div>
+ <h3 class="panel-title">آخر الفواتير</h3><div id="invoice-history"></div>
+</section>
+<section class="view" id="blends-view" hidden>
+ <p class="eyebrow">ملف العميل</p><h2>إضافة توليفة لمستخدم</h2><p class="view-intro">سجّل خلطة العميل، وارجع لها وقت ما تحتاج. هنظهر لك تاريخ آخر فاتورة محفوظة باسمه.</p>
+ <form id="blend-form" class="panel"><div class="field"><label for="blend-customer">اسم المستخدم / العميل</label><input id="blend-customer" required maxlength="60" placeholder="اكتب اسم العميل"></div><div class="field"><label for="blend-name">اسم التوليفة</label><input id="blend-name" required maxlength="50" placeholder="مثال: خلطة البيت"></div><p class="panel-title">مكونات التوليفة بالجرام</p><div id="recipe-lines"></div><button class="secondary" id="add-recipe-line" type="button">＋ إضافة نوع بن للتوليفة</button><div class="button-row"><button class="primary" type="submit">حفظ التوليفة</button></div></form>
+ <h3 class="panel-title">العملاء والتوليفات المحفوظة</h3><div id="customer-list"></div>
+</section>
+<section class="view" id="add-bean-view" hidden>
+ <p class="eyebrow">منيو مندور · أنواع البن</p><h2>إضافة نوع بن</h2><p class="view-intro">أضف نوع جديد بسعر الكيلو وصورة من جهازك؛ هيظهر بعد كده تلقائيًا في الفواتير والتوليفات.</p>
+ <form id="bean-form" class="panel"><div class="field"><label for="bean-name">اسم نوع البن</label><input id="bean-name" required maxlength="50" placeholder="مثال: يمني مطري"></div><div class="field"><label for="bean-price">سعر الكيلو بالجنيه</label><input id="bean-price" required type="number" min="1" max="100000" step="1" inputmode="decimal" placeholder="مثال: 950"></div><div class="field"><label for="bean-photo">صورة البن</label><input id="bean-photo" required type="file" accept="image/*"><span class="muted">اختار صورة من المعرض؛ التطبيق هيقلّل حجمها ويحفظها على الجهاز.</span><img id="photo-preview" class="photo-preview" alt="معاينة صورة البن" hidden></div><button class="primary" type="submit">حفظ نوع البن</button></form>
+ <h3 class="panel-title">الأنواع المضافة</h3><div id="custom-bean-list"></div>
+</section>
 </main>
-<section class="cart-bar" aria-label="إجمالي الطلب"><div class="cart-inner"><div class="cart-info"><small id="cart-count">السلة فارغة</small><strong id="cart-total">٠ جنيه</strong></div><button class="cart-action" id="cart-action" type="button">عرض الطلب</button></div></section>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script>
-const products=[
- {id:'plain',name:'بن تركي سادة',description:'تحميص متوازن وطعم غني من غير إضافات.',icon:'🫘',kiloPrice:640,weights:[125,250,500,1000]},
- {id:'spiced',name:'بن تركي محوج',description:'خلطة عطرية بالحبهان ونكهة دافية.',icon:'🌰',kiloPrice:760,weights:[125,250,500,1000]}
+const BASE_BEANS=[
+ {id:'brazil-santos',name:'برازيلي سانتوس',pricePerKg:800,image:'assets/beans/brazil-santos-card.jpg',builtIn:true},
+ {id:'colombian',name:'كولومبي',pricePerKg:1000,image:'assets/beans/colombian-card.jpg',builtIn:true},
+ {id:'ethiopian',name:'حبشي',pricePerKg:700,image:'assets/beans/ethiopian-card.jpg',builtIn:true},
+ {id:'indonesian',name:'إندونيسي',pricePerKg:700,image:'assets/beans/indonesian-card.jpg',builtIn:true}
 ];
-const fmt=new Intl.NumberFormat('ar-EG',{maximumFractionDigits:0});
-const state=Object.fromEntries(products.map(p=>[p.id,{grams:125,quantity:1}]));
-let cart=[];let toastTimer;
-const productsRoot=document.getElementById('products');
-function estimate(product,grams){return Math.round(product.kiloPrice*grams/1000)}
-function renderProducts(){
- productsRoot.innerHTML=products.map(product=>{
-  const selected=state[product.id].grams;const price=estimate(product,selected);
-  return `<article class="card" data-product="${product.id}">
-   <div class="product-head"><span class="product-icon" aria-hidden="true">${product.icon}</span><div class="product-meta"><div class="nm">${product.name}</div><p class="mut">${product.description}</p></div><div class="pr"><span class="price-number">${fmt.format(price)}</span><span class="price-caption">جنيه · للكمية</span></div></div>
-   <div class="row measure-row"><span class="measure-label">الوزن بالجرام</span><div class="qty-stepper" aria-label="عدد الأكياس"><button type="button" data-qty="-1" aria-label="قلل العدد">−</button><span class="qty-value">${fmt.format(state[product.id].quantity)}</span><button type="button" data-qty="1" aria-label="زد العدد">+</button></div></div>
-   <input class="g" type="number" min="25" max="5000" step="25" inputmode="numeric" value="${selected}" aria-label="وزن ${product.name} بالجرام">
-   <div class="chips" role="group" aria-label="اختيار وزن سريع">${product.weights.map(weight=>`<button type="button" data-weight="${weight}" class="${selected===weight?'selected':''}" aria-pressed="${selected===weight}">${weight===1000?'١ كيلو':fmt.format(weight)+' جم'}</button>`).join('')}</div>
-   <button class="add-button" type="button"><span aria-hidden="true">＋</span> أضف للسلة · <span class="line-total">${fmt.format(price*state[product.id].quantity)}</span> جنيه</button>
-  </article>`;
- }).join('');
-}
-function renderCart(){const count=cart.reduce((s,i)=>s+i.quantity,0);const total=cart.reduce((s,i)=>s+i.total,0);document.getElementById('cart-count').textContent=count?`${fmt.format(count)} كيس في السلة`:'السلة فارغة';document.getElementById('cart-total').textContent=`${fmt.format(total)} جنيه`;document.getElementById('cart-action').textContent=count?'إنهاء الطلب':'عرض الطلب'}
-function notify(message){const toast=document.getElementById('toast');toast.textContent=message;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),1800)}
-function refreshCard(card,product){const s=state[product.id];const price=estimate(product,s.grams);card.querySelector('.price-number').textContent=fmt.format(price);card.querySelector('.line-total').textContent=fmt.format(price*s.quantity);card.querySelector('.qty-value').textContent=fmt.format(s.quantity);card.querySelectorAll('[data-weight]').forEach(button=>{const active=Number(button.dataset.weight)===s.grams;button.classList.toggle('selected',active);button.setAttribute('aria-pressed',String(active))})}
-productsRoot.addEventListener('click',event=>{const card=event.target.closest('[data-product]');if(!card)return;const product=products.find(item=>item.id===card.dataset.product);const s=state[product.id];const weightButton=event.target.closest('[data-weight]');if(weightButton){s.grams=Number(weightButton.dataset.weight);card.querySelector('.g').value=s.grams;refreshCard(card,product);return}const qtyButton=event.target.closest('[data-qty]');if(qtyButton){s.quantity=Math.max(1,Math.min(20,s.quantity+Number(qtyButton.dataset.qty)));refreshCard(card,product);return}if(event.target.closest('.add-button')){cart.push({name:product.name,grams:s.grams,quantity:s.quantity,total:estimate(product,s.grams)*s.quantity});renderCart();notify(`اتضاف ${product.name} للسلة`)}});
-productsRoot.addEventListener('input',event=>{if(!event.target.matches('.g'))return;const card=event.target.closest('[data-product]');const product=products.find(item=>item.id===card.dataset.product);const parsed=Number(event.target.value);if(!parsed)return;state[product.id].grams=Math.max(25,Math.min(5000,parsed));refreshCard(card,product)});
-productsRoot.addEventListener('change',event=>{if(!event.target.matches('.g'))return;const card=event.target.closest('[data-product]');const product=products.find(item=>item.id===card.dataset.product);const grams=state[product.id].grams;event.target.value=grams;refreshCard(card,product)});
-document.getElementById('cart-action').addEventListener('click',()=>{if(!cart.length){notify('اختار نوع البن وأضفه للسلة الأول');return}const summary=cart.map(item=>`${item.name} — ${fmt.format(item.grams)} جم × ${fmt.format(item.quantity)} = ${fmt.format(item.total)} جنيه`).join('\n');const total=cart.reduce((s,i)=>s+i.total,0);const message=`طلبك:\n${summary}\n\nالإجمالي التقديري: ${fmt.format(total)} جنيه`;if(navigator.share)navigator.share({title:'طلب مندور كوفي',text:message}).catch(()=>notify('تم تجهيز ملخص الطلب'));else window.alert(message)});
-document.getElementById('theme-toggle').addEventListener('click',()=>{const next=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=next;localStorage.setItem('mandour-theme',next);document.getElementById('theme-toggle').textContent=next==='dark'?'☀':'☾'});
-const savedTheme=localStorage.getItem('mandour-theme');if(savedTheme)document.documentElement.dataset.theme=savedTheme;document.getElementById('theme-toggle').textContent=savedTheme==='dark'?'☀':'☾';
-document.getElementById('start-button').addEventListener('click',()=>{document.getElementById('splash').classList.add('hide');localStorage.setItem('mandour-started','yes')});if(localStorage.getItem('mandour-started')==='yes')document.getElementById('splash').classList.add('hide');
-renderProducts();renderCart();
+const STORE_KEY='mandour-coffee-manager-v3';
+const fmt=new Intl.NumberFormat('ar-EG',{maximumFractionDigits:2});
+const dateFmt=new Intl.DateTimeFormat('ar-EG',{dateStyle:'medium',timeStyle:'short'});
+let data=loadData();let invoiceGrams={};let recipeLines=[{beanId:BASE_BEANS[0].id,grams:''}];let pendingPhoto='';let toastTimer;
+function loadData(){try{const saved=JSON.parse(localStorage.getItem(STORE_KEY)||'{}');return{customBeans:Array.isArray(saved.customBeans)?saved.customBeans:[],customers:Array.isArray(saved.customers)?saved.customers:[],invoices:Array.isArray(saved.invoices)?saved.invoices:[]}}catch{return{customBeans:[],customers:[],invoices:[]}}}
+function persist(){localStorage.setItem(STORE_KEY,JSON.stringify(data))}
+function allBeans(){return [...BASE_BEANS,...data.customBeans]}
+function money(value){return `${fmt.format(value)} جنيه`}
+function dateText(value){try{return dateFmt.format(new Date(value))}catch{return '—'}}
+function escapeHTML(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function priceFor(bean,grams){return bean.pricePerKg*Number(grams||0)/1000}
+function notify(message){const el=document.getElementById('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2200)}
+function refreshHome(){document.getElementById('invoice-count').textContent=fmt.format(data.invoices.length);document.getElementById('bean-count').textContent=fmt.format(allBeans().length);document.getElementById('customer-count').textContent=fmt.format(data.customers.length)}
+const views=['home','invoice','blends','add-bean'];
+const titles={home:'مندور كوفي',invoice:'إنشاء فاتورة',blends:'توليفات المستخدمين','add-bean':'إضافة نوع بن'};
+function openView(name){if(!views.includes(name))name='home';views.forEach(id=>{document.getElementById(`${id}-view`).hidden=id!==name});document.getElementById('back-button').hidden=name==='home';document.getElementById('bar-title').textContent=titles[name];if(name==='invoice')renderInvoice();if(name==='blends'){renderRecipeLines();renderCustomers()}if(name==='add-bean')renderCustomBeans();refreshHome();window.scrollTo({top:0,behavior:'smooth'})}
+document.getElementById('back-button').addEventListener('click',()=>openView('home'));
+document.addEventListener('click',event=>{const button=event.target.closest('[data-view]');if(button)openView(button.dataset.view)});
+function renderInvoice(){const root=document.getElementById('invoice-beans');root.innerHTML=allBeans().map(bean=>{const grams=invoiceGrams[bean.id]||'';const amount=priceFor(bean,grams);return `<article class="bean-card" data-invoice-bean="${escapeHTML(bean.id)}"><img class="bean-photo" src="${escapeHTML(bean.image)}" alt="حبوب ${escapeHTML(bean.name)}"><div class="bean-meta"><div class="bean-name">${escapeHTML(bean.name)}</div><div class="bean-rate">الكيلو ${money(bean.pricePerKg)}</div><div class="invoice-entry"><div class="gram-field"><label>الوزن بالجرام</label><input class="g" data-grams type="number" min="0" max="100000" step="1" inputmode="decimal" placeholder="٠" value="${escapeHTML(grams)}" aria-label="جرامات ${escapeHTML(bean.name)}"></div><div class="pr"><span data-line-price>${money(amount)}</span><small>سعر الوزن</small></div></div></div></article>`}).join('');root.oninput=event=>{if(!event.target.matches('[data-grams]'))return;const card=event.target.closest('[data-invoice-bean]');const bean=allBeans().find(item=>item.id===card.dataset.invoiceBean);invoiceGrams[bean.id]=event.target.value;card.querySelector('[data-line-price]').textContent=money(priceFor(bean,event.target.value));refreshInvoiceTotal()};refreshInvoiceTotal();renderInvoiceHistory()}
+function selectedInvoiceItems(){return allBeans().filter(bean=>Number(invoiceGrams[bean.id])>0).map(bean=>({beanId:bean.id,name:bean.name,grams:Number(invoiceGrams[bean.id]),pricePerKg:bean.pricePerKg,total:priceFor(bean,invoiceGrams[bean.id])}))}
+function refreshInvoiceTotal(){const total=selectedInvoiceItems().reduce((sum,item)=>sum+item.total,0);document.getElementById('invoice-total').textContent=money(total)}
+document.getElementById('save-invoice').addEventListener('click',()=>{const items=selectedInvoiceItems();if(!items.length){notify('أدخل وزن نوع بن واحد على الأقل');return}const invoice={id:`inv-${Date.now()}`,number:`M-${String(data.invoices.length+1).padStart(4,'0')}`,customer:document.getElementById('invoice-customer').value.trim(),items,total:items.reduce((sum,item)=>sum+item.total,0),createdAt:new Date().toISOString()};data.invoices.unshift(invoice);try{persist()}catch{data.invoices.shift();notify('مساحة التخزين ممتلئة؛ احذف صورًا كبيرة أو فواتير قديمة');return}invoiceGrams={};document.getElementById('invoice-customer').value='';renderInvoice();refreshHome();notify(`اتحفظت الفاتورة ${invoice.number}`)});
+function renderInvoiceHistory(){const root=document.getElementById('invoice-history');if(!data.invoices.length){root.innerHTML='<div class="empty">لسه مفيش فواتير محفوظة.</div>';return}root.innerHTML=data.invoices.slice(0,20).map(invoice=>`<article class="history-item"><div class="history-top"><strong>${escapeHTML(invoice.number)}${invoice.customer?` · ${escapeHTML(invoice.customer)}`:''}</strong><span>${dateText(invoice.createdAt)}</span></div><div class="history-detail">${(invoice.items||[]).map(item=>`${escapeHTML(item.name)}: ${fmt.format(item.grams)} جم — ${money(item.total)}`).join('<br>')}<br><strong>الإجمالي: ${money(invoice.total)}</strong></div></article>`).join('')}
+function renderRecipeLines(){const root=document.getElementById('recipe-lines');const options=allBeans().map(bean=>`<option value="${escapeHTML(bean.id)}">${escapeHTML(bean.name)}</option>`).join('');root.innerHTML=recipeLines.map((line,index)=>`<div class="recipe-line" data-recipe-line="${index}"><select aria-label="نوع البن">${options}</select><input type="number" min="1" max="100000" step="1" inputmode="decimal" placeholder="جرام" value="${escapeHTML(line.grams)}" aria-label="الوزن بالجرام"><button type="button" class="remove-line" data-remove-line="${index}" aria-label="حذف المكون">×</button></div>`).join('');root.querySelectorAll('.recipe-line').forEach((el,index)=>{el.querySelector('select').value=recipeLines[index].beanId;el.querySelector('select').addEventListener('change',event=>recipeLines[index].beanId=event.target.value);el.querySelector('input').addEventListener('input',event=>recipeLines[index].grams=event.target.value)})}
+document.getElementById('add-recipe-line').addEventListener('click',()=>{recipeLines.push({beanId:allBeans()[0]?.id||'',grams:''});renderRecipeLines()});
+document.getElementById('recipe-lines').addEventListener('click',event=>{const button=event.target.closest('[data-remove-line]');if(!button)return;if(recipeLines.length===1){notify('التوليفة لازم تحتوي على نوع بن واحد على الأقل');return}recipeLines.splice(Number(button.dataset.removeLine),1);renderRecipeLines()});
+function customerKey(value){return String(value||'').trim().toLocaleLowerCase('ar')}
+function lastInvoiceFor(name){const key=customerKey(name);return data.invoices.find(invoice=>customerKey(invoice.customer)===key)}
+document.getElementById('blend-form').addEventListener('submit',event=>{event.preventDefault();const name=document.getElementById('blend-customer').value.trim();const blendName=document.getElementById('blend-name').value.trim();const ingredients=recipeLines.filter(line=>Number(line.grams)>0).map(line=>{const bean=allBeans().find(item=>item.id===line.beanId);return bean?{beanId:bean.id,name:bean.name,grams:Number(line.grams),pricePerKg:bean.pricePerKg}:null}).filter(Boolean);if(!ingredients.length){notify('أضف وزنًا لمكون واحد على الأقل');return}let customer=data.customers.find(item=>customerKey(item.name)===customerKey(name));if(!customer){customer={id:`customer-${Date.now()}`,name,recipes:[]};data.customers.unshift(customer)}customer.recipes.unshift({id:`blend-${Date.now()}`,name:blendName,ingredients,createdAt:new Date().toISOString()});try{persist()}catch{notify('تعذر الحفظ؛ مساحة الجهاز قد تكون ممتلئة');return}event.target.reset();recipeLines=[{beanId:allBeans()[0]?.id||'',grams:''}];renderRecipeLines();renderCustomers();refreshHome();notify('اتحفظت التوليفة للعميل')});
+function renderCustomers(){const root=document.getElementById('customer-list');if(!data.customers.length){root.innerHTML='<div class="empty">مفيش توليفات محفوظة لسه. أضف أول توليفة من النموذج بالأعلى.</div>';return}root.innerHTML=data.customers.map(customer=>{const last=lastInvoiceFor(customer.name);const recipes=(customer.recipes||[]).map(recipe=>`<div class="recipe"><div class="recipe-title">${escapeHTML(recipe.name)} · ${dateText(recipe.createdAt)}</div><div class="ingredient-list">${(recipe.ingredients||[]).map(item=>`${escapeHTML(item.name)} — ${fmt.format(item.grams)} جم`).join(' · ')}</div></div>`).join('')||'<span class="muted">لا توجد توليفات بعد</span>';const lastDetails=last?`${escapeHTML(last.number)} — ${dateText(last.createdAt)} — ${money(last.total)}`:'لا توجد فاتورة محفوظة بهذا الاسم بعد';return `<article class="customer-card"><div class="customer-top"><strong>👤 ${escapeHTML(customer.name)}</strong><span>${fmt.format((customer.recipes||[]).length)} توليفة</span></div><button class="detail-toggle" type="button" aria-expanded="false">آخر فاتورة: ${last?dateText(last.createdAt):'لا توجد بعد'} · عرض التفاصيل</button><div class="history-detail" hidden><strong>آخر فاتورة:</strong> ${lastDetails}<br><strong>التوليفات:</strong>${recipes}</div></article>`}).join('')}
+document.getElementById('customer-list').addEventListener('click',event=>{const button=event.target.closest('.detail-toggle');if(!button)return;const details=button.nextElementSibling;details.hidden=!details.hidden;button.setAttribute('aria-expanded',String(!details.hidden))});
+function renderCustomBeans(){const root=document.getElementById('custom-bean-list');if(!data.customBeans.length){root.innerHTML='<div class="empty">الأنواع الأربعة الأساسية جاهزة. أي نوع تضيفه هيظهر هنا وفي شاشة الفواتير.</div>';return}root.innerHTML=data.customBeans.map(bean=>`<article class="custom-bean-row"><img src="${escapeHTML(bean.image)}" alt="${escapeHTML(bean.name)}"><div class="info"><strong>${escapeHTML(bean.name)}</strong><small>الكيلو ${money(bean.pricePerKg)}</small></div></article>`).join('')}
+function compressImage(file){return new Promise((resolve,reject)=>{if(!file||!file.type.startsWith('image/')){reject(new Error('اختار ملف صورة صالح'));return}const reader=new FileReader();reader.onerror=()=>reject(new Error('تعذرت قراءة الصورة'));reader.onload=()=>{const image=new Image();image.onerror=()=>reject(new Error('الصورة غير مدعومة'));image.onload=()=>{const scale=Math.min(1,900/Math.max(image.width,image.height));const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);resolve(canvas.toDataURL('image/jpeg',.76))};image.src=reader.result};reader.readAsDataURL(file)})}
+document.getElementById('bean-photo').addEventListener('change',async event=>{const file=event.target.files?.[0];if(!file){pendingPhoto='';return}try{pendingPhoto=await compressImage(file);const preview=document.getElementById('photo-preview');preview.src=pendingPhoto;preview.hidden=false}catch(error){pendingPhoto='';notify(error.message)}});
+document.getElementById('bean-form').addEventListener('submit',event=>{event.preventDefault();const name=document.getElementById('bean-name').value.trim();const price=Number(document.getElementById('bean-price').value);if(!name||!Number.isFinite(price)||price<=0){notify('راجع الاسم وسعر الكيلو');return}if(!pendingPhoto){notify('اختار صورة لنوع البن');return}const bean={id:`custom-${Date.now()}`,name,pricePerKg:price,image:pendingPhoto,builtIn:false};data.customBeans.push(bean);try{persist()}catch{data.customBeans.pop();notify('الصورة كبيرة على مساحة التخزين؛ اختار صورة أصغر');return}event.target.reset();pendingPhoto='';document.getElementById('photo-preview').hidden=true;renderCustomBeans();refreshHome();notify('اتضاف نوع البن بنجاح')});
+const splash=document.getElementById('splash');setTimeout(()=>splash.classList.add('leaving'),2600);setTimeout(()=>splash.remove(),3550);
+refreshHome();openView('home');
 </script>
 </body>
 </html>
