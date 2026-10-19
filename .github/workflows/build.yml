@@ -31,8 +31,7 @@ jobs:
           mkdir -p android/app/src/main/java/com/mandour/coffee/v5
           cp android-src/MainActivity.java android/app/src/main/java/com/mandour/coffee/v5/MainActivity.java
           mkdir -p android/app/src/main/res/xml
-          cp android-res/xml/share_paths.xml android/app/src/main/res/xml/
-          python3 android-src/patch_manifest.py
+          cp android-res/xml/file_paths.xml android/app/src/main/res/xml/file_paths.xml
           cp -R android-res/mipmap-* android/app/src/main/res/
           cp android-res/values/ic_launcher_background.xml android/app/src/main/res/values/
           chmod +x android/gradlew
