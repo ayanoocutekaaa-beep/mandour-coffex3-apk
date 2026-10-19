@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#171411">
+  <meta name="description" content="منيو مندور كوفي في بسيون: اختار بن سادة أو محوج، أو اكتشف مشروبات القهوة واطلب للاستلام من المقهى.">
+  <meta property="og:title" content="Mandour Coffee | منيو مندور">
+  <meta property="og:description" content="قهوتك على مزاجك — اختار بن للبيت أو مشروبك المفضل من منيو مندور في بسيون.">
+  <meta property="og:type" content="website">
+  <title>Mandour Coffee | منيو مندور</title>
+  <link rel="icon" type="image/svg+xml" href="assets/mandour-mark.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #171411;
+      --panel: #211a15;
+      --panel-soft: #282018;
+      --gold: #d5a06b;
+      --gold-bright: #efc492;
+      --white: #f7f3ed;
+      --muted: #b5a697;
+      --line: rgba(213, 160, 107, .18);
+      --shadow: 0 22px 60px rgba(0, 0, 0, .28);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { min-height: 100%; scroll-behavior: smooth; }
+    body { min-height: 100vh; overflow-x: hidden; background: radial-gradient(ellipse at 50% 18%, rgba(165, 107, 66, .16), transparent 42%), var(--bg); color: var(--white); font-family: "Cairo", sans-serif; }
+    button, a { font: inherit; -webkit-tap-highlight-color: transparent; }
+    button { color: inherit; }
+    .page { min-height: 100vh; display: flex; flex-direction: column; position: relative; isolation: isolate; overflow: hidden; }
+    .glow { position: absolute; z-index: -1; width: 340px; height: 340px; border-radius: 50%; background: #a95322; filter: blur(145px); opacity: .13; pointer-events: none; }
+    .glow-one { top: 10%; right: -190px; } .glow-two { bottom: 0; left: -190px; }
+    .site-header { width: min(100%, 1200px); margin: 0 auto; padding: 17px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); }
+    .brand { display: inline-flex; align-items: center; gap: 11px; color: var(--gold); text-decoration: none; }
+    .brand-mark { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: var(--gold); color: var(--bg); }
+    .brand-mark svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .brand-name { font-family: "Playfair Display", serif; font-size: 19px; font-weight: 800; letter-spacing: 1px; direction: ltr; text-align: left; line-height: 1.1; }
+    .brand-name span { display: block; margin-top: 4px; color: var(--muted); font-family: "Cairo", sans-serif; font-size: 9px; letter-spacing: 5px; text-align: center; }
+    .header-note { display: flex; align-items: center; gap: 9px; color: #d0c0b1; font-size: 12px; }
+    .status-dot { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 12px rgba(213, 160, 107, .8); }
+    main { flex: 1; width: 100%; padding: 34px 22px 50px; }
+    .home-view, .menu-view { width: min(100%, 1100px); margin: 0 auto; animation: rise-in .5s ease both; }
+    .home-hero { display: grid; grid-template-columns: 1.05fr .95fr; align-items: center; gap: clamp(28px, 6vw, 70px); margin: 14px auto 42px; }
+    .hero-copy { padding: 8px 0; }
+    .eyebrow { margin-bottom: 12px; color: var(--gold); font-size: 11px; font-weight: 800; letter-spacing: 4px; direction: ltr; }
+    h1, h2, h3, p { overflow-wrap: anywhere; }
+    h1 { margin-bottom: 8px; font-size: clamp(40px, 6vw, 68px); font-weight: 900; line-height: 1.22; letter-spacing: -1.4px; }
+    h1 span { color: var(--gold); text-shadow: 0 0 30px rgba(213, 160, 107, .2); }
+    .subtitle { color: #e6d8cb; font-size: clamp(17px, 2.2vw, 22px); font-weight: 700; }
+    .description { max-width: 470px; margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 2; }
+    .hero-photo { position: relative; min-height: 310px; overflow: hidden; border: 1px solid rgba(213, 160, 107, .32); border-radius: 30px; box-shadow: var(--shadow); }
+    .hero-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 54%; }
+    .hero-photo::after { position: absolute; inset: 0; content: ""; background: linear-gradient(0deg, rgba(23, 20, 17, .76), transparent 64%), linear-gradient(90deg, rgba(23, 20, 17, .2), transparent); }
+    .hero-photo figcaption { position: absolute; z-index: 1; right: 22px; bottom: 19px; color: var(--white); font-size: 13px; font-weight: 800; text-shadow: 0 2px 10px rgba(0, 0, 0, .8); }
+    .choice-heading { margin-bottom: 16px; text-align: center; }
+    .choice-heading h2 { font-size: clamp(21px, 3vw, 29px); font-weight: 900; }
+    .choice-heading p { margin-top: 4px; color: var(--muted); font-size: 13px; }
+    .choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .choice-card { min-height: 220px; position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: 58px 1fr 25px; align-items: center; gap: 15px; padding: 25px; border: 1px solid rgba(213, 160, 107, .28); border-radius: 25px; background: var(--panel); color: var(--white); text-align: right; cursor: pointer; box-shadow: 0 18px 50px rgba(0, 0, 0, .2); transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease; }
+    .choice-card::after { content: ""; position: absolute; z-index: 1; inset: 0; background: linear-gradient(0deg, rgba(23, 20, 17, .92), rgba(23, 20, 17, .72) 62%, rgba(23, 20, 17, .46)); pointer-events: none; }
+    .choice-photo { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 48%; opacity: .62; transition: opacity .35s ease, transform .7s ease; }
+    .choice-card > span { position: relative; z-index: 2; }
+    .choice-card:hover { transform: translateY(-4px); border-color: rgba(213, 160, 107, .82); box-shadow: 0 24px 65px rgba(0, 0, 0, .4), 0 0 28px rgba(213, 160, 107, .13); }
+    .choice-card:hover .choice-photo { opacity: .8; transform: scale(1.045); }
+    .choice-card:focus-visible, .back-button:focus-visible, .order-button:focus-visible, .map-link:focus-visible, .phone-link:focus-visible { outline: 3px solid var(--gold-bright); outline-offset: 4px; }
+    .choice-icon { width: 58px; height: 58px; display: grid; place-items: center; border: 1px solid rgba(213, 160, 107, .55); border-radius: 18px; background: rgba(23, 20, 17, .72); color: var(--gold); }
+    .choice-icon svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .choice-kicker { display: block; margin-bottom: 3px; color: var(--gold-bright); font-size: 11px; font-weight: 800; }
+    .choice-title { font-size: clamp(21px, 3vw, 28px); font-weight: 900; line-height: 1.35; }
+    .choice-copy { margin-top: 6px; color: #e3d6ca; font-size: 12px; line-height: 1.85; }
+    .choice-arrow { align-self: start; margin-top: 4px; color: var(--gold); transition: transform .25s ease; }
+    .choice-arrow svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .choice-card:hover .choice-arrow { transform: translateX(-5px); }
+    .choice-cta { grid-column: 2 / 4; justify-self: start; margin-top: 4px; color: var(--gold-bright); font-size: 12px; font-weight: 800; }
+    .pickup-note { width: min(100%, 740px); margin: 17px auto 0; color: var(--muted); font-size: 12px; line-height: 1.9; text-align: center; }
+    .pickup-note strong { color: #e0b584; }
+    .menu-view[hidden], .home-view[hidden] { display: none; }
+    .menu-topline { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+    .back-button { display: inline-flex; align-items: center; gap: 9px; padding: 10px 15px; border: 1px solid var(--line); border-radius: 999px; background: rgba(247, 243, 237, .035); color: var(--white); cursor: pointer; transition: background .2s ease, border-color .2s ease; }
+    .back-button:hover { border-color: rgba(213, 160, 107, .62); background: rgba(213, 160, 107, .1); }
+    .back-button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .menu-eyebrow { color: var(--gold); font-size: 11px; font-weight: 800; letter-spacing: 3px; direction: ltr; }
+    .menu-intro { max-width: 680px; margin: 0 auto 30px; text-align: center; }
+    .menu-intro h1 { font-size: clamp(34px, 5vw, 52px); }
+    .menu-intro p { margin-top: 7px; color: var(--muted); font-size: 14px; line-height: 1.9; }
+    .price-note { display: inline-flex; align-items: center; gap: 8px; margin-top: 13px; padding: 8px 13px; border: 1px solid rgba(213, 160, 107, .2); border-radius: 999px; background: rgba(213, 160, 107, .06); color: #d8c3ad; font-size: 11px; }
+    .price-note svg { width: 15px; height: 15px; flex: 0 0 15px; fill: none; stroke: var(--gold); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .beans-layout { display: grid; grid-template-columns: .85fr 1.15fr; gap: 28px; align-items: stretch; }
+    .beans-photo { min-height: 360px; position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 26px; box-shadow: var(--shadow); }
+    .beans-photo img { width: 100%; height: 100%; position: absolute; inset: 0; object-fit: cover; }
+    .beans-photo::after { position: absolute; inset: 0; content: ""; background: linear-gradient(0deg, rgba(23, 20, 17, .74), transparent 68%); }
+    .beans-photo figcaption { position: absolute; z-index: 1; right: 19px; bottom: 17px; color: var(--white); font-size: 13px; font-weight: 800; }
+    .bean-list { display: grid; gap: 14px; }
+    .bean-card { padding: 21px; border: 1px solid var(--line); border-radius: 22px; background: linear-gradient(145deg, rgba(40, 32, 24, .96), rgba(31, 25, 20, .94)); box-shadow: 0 12px 30px rgba(0, 0, 0, .14); }
+    .bean-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+    .bean-title { font-size: 21px; font-weight: 900; }
+    .bean-description { margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.8; }
+    .bean-badge { flex: 0 0 auto; padding: 5px 10px; border: 1px solid rgba(213, 160, 107, .25); border-radius: 999px; background: rgba(213, 160, 107, .08); color: var(--gold-bright); font-size: 10px; font-weight: 800; }
+    .bean-prices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+    .price-box { padding: 12px 14px; border: 1px solid rgba(213, 160, 107, .14); border-radius: 15px; background: rgba(0, 0, 0, .16); }
+    .price-label { display: block; color: var(--muted); font-size: 11px; }
+    .price-value { display: block; margin-top: 2px; color: var(--gold-bright); font-size: 22px; font-weight: 900; }
+    .price-value small { margin-right: 4px; color: #d7c5b3; font-size: 11px; font-weight: 700; }
+    .order-button { width: 100%; display: inline-flex; justify-content: center; align-items: center; gap: 8px; margin-top: 15px; padding: 11px 16px; border: 1px solid rgba(213, 160, 107, .36); border-radius: 14px; background: linear-gradient(135deg, #d5a06b, #b47849); color: #211811; font-size: 13px; font-weight: 900; text-decoration: none; cursor: pointer; transition: transform .2s ease, filter .2s ease; }
+    .order-button:hover { transform: translateY(-2px); filter: brightness(1.08); }
+    .order-button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .drinks-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px; }
+    .drink-card { overflow: hidden; border: 1px solid var(--line); border-radius: 21px; background: var(--panel); box-shadow: 0 12px 30px rgba(0, 0, 0, .15); transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease; }
+    .drink-card:hover { transform: translateY(-4px); border-color: rgba(213, 160, 107, .58); box-shadow: 0 18px 38px rgba(0, 0, 0, .24); }
+    .drink-image { width: 100%; aspect-ratio: 4 / 3; display: block; object-fit: cover; background: #30241a; }
+    .drink-body { padding: 14px; }
+    .drink-name { font-size: 16px; font-weight: 900; }
+    .drink-copy { min-height: 40px; margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.7; }
+    .drink-price-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-top: 12px; padding-top: 11px; border-top: 1px solid rgba(213, 160, 107, .12); }
+    .drink-price { color: var(--gold-bright); font-size: 21px; font-weight: 900; white-space: nowrap; }
+    .drink-price small { margin-right: 3px; color: #d7c5b3; font-size: 11px; }
+    .drink-size { color: var(--muted); font-size: 10px; }
+    .drink-card .order-button { min-height: 40px; padding: 9px 10px; font-size: 11px; }
+    .cafe-details { width: min(100%, 1100px); margin: 4px auto 0; padding: 22px 22px 18px; border-top: 1px solid var(--line); text-align: center; }
+    .details-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .info-card { min-height: 67px; padding: 11px 14px; display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid rgba(213, 160, 107, .16); border-radius: 16px; background: rgba(247, 243, 237, .035); text-align: right; }
+    .info-icon { width: 36px; height: 36px; flex: 0 0 36px; display: grid; place-items: center; border-radius: 12px; background: rgba(213, 160, 107, .12); color: var(--gold); }
+    .info-icon svg, .map-link svg, .phone-link svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .info-label { color: var(--muted); font-size: 10px; }
+    .info-value { color: var(--white); font-size: 12px; font-weight: 700; line-height: 1.7; }
+    .info-value a { color: inherit; text-decoration: none; }
+    .footer-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .map-link, .phone-link { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 9px 17px; border: 1px solid rgba(213, 160, 107, .33); border-radius: 30px; color: var(--gold-bright); font-size: 12px; font-weight: 800; text-decoration: none; transition: background .2s ease, transform .2s ease; }
+    .map-link:hover, .phone-link:hover { background: rgba(213, 160, 107, .1); transform: translateY(-2px); }
+    .site-footer { padding: 15px; border-top: 1px solid rgba(213, 160, 107, .12); color: #8b7c6d; font-size: 10px; text-align: center; }
+    .site-footer strong { color: var(--gold); font-weight: 700; }
+    .site-footer a { color: inherit; text-decoration: none; }
+    @keyframes rise-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 900px) { .home-hero { gap: 30px; } .hero-photo { min-height: 270px; } .drinks-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .beans-layout { gap: 19px; } }
+    @media (max-width: 640px) {
+      .site-header { padding: 13px 17px; } .brand-name { font-size: 16px; } .brand-mark { width: 36px; height: 36px; } .header-note { gap: 7px; font-size: 10px; }
+      main { padding: 23px 16px 34px; } .home-hero { grid-template-columns: 1fr; gap: 19px; margin: 3px auto 30px; } .hero-copy { text-align: center; }
+      .eyebrow { margin-bottom: 8px; font-size: 9px; letter-spacing: 3px; } h1 { font-size: clamp(39px, 12vw, 54px); } .description { margin: 8px auto 0; font-size: 12px; }
+      .hero-photo { min-height: 190px; border-radius: 22px; } .hero-photo figcaption { right: 15px; bottom: 13px; font-size: 11px; }
+      .choice-heading { margin-bottom: 12px; } .choice-heading h2 { font-size: 22px; } .choice-heading p { font-size: 11px; } .choice-grid { gap: 9px; }
+      .choice-card { min-height: 178px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 7px; padding: 13px 9px; border-radius: 18px; text-align: center; }
+      .choice-icon { width: 45px; height: 45px; flex: 0 0 45px; border-radius: 14px; } .choice-icon svg { width: 24px; height: 24px; } .choice-kicker { margin-bottom: 0; font-size: 9px; }
+      .choice-title { font-size: clamp(14px, 4vw, 18px); } .choice-copy { margin-top: 2px; font-size: 9px; line-height: 1.55; } .choice-arrow { display: none; } .choice-cta { margin-top: 2px; font-size: 9px; text-align: center; }
+      .pickup-note { margin-top: 13px; font-size: 10px; } .menu-topline { margin-bottom: 15px; } .back-button { padding: 8px 12px; font-size: 11px; } .menu-eyebrow { font-size: 9px; letter-spacing: 2px; }
+      .menu-intro { margin-bottom: 22px; } .menu-intro h1 { font-size: 35px; } .menu-intro p { font-size: 12px; } .price-note { align-items: flex-start; max-width: 100%; border-radius: 14px; text-align: right; line-height: 1.7; }
+      .beans-layout { grid-template-columns: 1fr; gap: 15px; } .beans-photo { min-height: 175px; border-radius: 20px; } .bean-card { padding: 16px; border-radius: 19px; }
+      .bean-title { font-size: 18px; } .bean-description { font-size: 11px; } .price-box { padding: 10px; } .price-value { font-size: 20px; }
+      .drinks-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .drink-card { border-radius: 17px; } .drink-body { padding: 11px; } .drink-name { font-size: 14px; } .drink-copy { min-height: 38px; font-size: 10px; } .drink-price { font-size: 19px; } .drink-card .order-button { min-height: 38px; margin-top: 11px; font-size: 10px; }
+      .cafe-details { padding: 17px 16px 15px; } .details-grid { grid-template-columns: 1fr; gap: 8px; } .info-card { justify-content: flex-start; min-height: 58px; padding: 8px 11px; } .footer-actions { margin-top: 11px; } .map-link, .phone-link { min-height: 39px; font-size: 11px; }
+    }
+    @media (max-width: 360px) { .choice-grid { grid-template-columns: 1fr; } .choice-card { min-height: 145px; } .drinks-grid { grid-template-columns: 1fr; } .drink-image { aspect-ratio: 16 / 9; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="glow glow-one" aria-hidden="true"></div><div class="glow glow-two" aria-hidden="true"></div>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="Mandour Coffee - بداية الصفحة" data-go-home>
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M6 13h17v7a6 6 0 0 1-6 6h-5a6 6 0 0 1-6-6v-7Z"/><path d="M23 15h2a4 4 0 0 1 0 8h-3"/><path d="M11 9c0-2 2-2 2-5M17 9c0-2 2-2 2-5"/></svg></span>
+        <span class="brand-name">MANDOUR<span>COFFEE</span></span>
+      </a>
+      <div class="header-note"><span class="status-dot" aria-hidden="true"></span><span>مكانك عندنا · بسيون</span></div>
+    </header>
+
+    <main id="top">
+      <section class="home-view" id="home-view" aria-labelledby="welcome-title">
+        <div class="home-hero">
+          <div class="hero-copy">
+            <p class="eyebrow">MANDOUR COFFEE · BASYOUN</p>
+            <h1 id="welcome-title" tabindex="-1">اختار <span>مزاجك</span></h1>
+            <p class="subtitle">قهوتك عندنا، أو بن مندور في بيتك</p>
+            <p class="description">قول لنا جاي تشرب فنجان، ولا عايز بن طازة يتطحن على مزاجك. اختار منيوك وشوف الأسعار قبل ما تطلب.</p>
+          </div>
+          <figure class="hero-photo"><img src="assets/mandour-hero.webp" alt="قهوة مندور مقدمة في أجواء دافئة" fetchpriority="high"><figcaption>قهوة مظبوطة من قلب بسيون</figcaption></figure>
+        </div>
+        <div class="choice-heading"><h2>هتختار إيه النهارده؟</h2><p>اضغط على اختيارك علشان تشوف المنيو والأسعار</p></div>
+        <div class="choice-grid" aria-label="اختار نوع المنيو">
+          <button class="choice-card" type="button" data-open-menu="drinks" aria-label="افتح قائمة المشروبات">
+            <img class="choice-photo" src="assets/mandour-drink.webp" alt="" aria-hidden="true" loading="lazy">
+            <span class="choice-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M6 13h17v7a6 6 0 0 1-6 6h-5a6 6 0 0 1-6-6v-7Z"/><path d="M23 15h2a4 4 0 0 1 0 8h-3"/><path d="M11 9c0-2 2-2 2-5M17 9c0-2 2-2 2-5"/></svg></span>
+            <span class="choice-text"><span class="choice-kicker">فنجان على مزاجك</span><span class="choice-title">المشروبات</span><span class="choice-copy">قهوة سخنة، لاتيه، ومشروبات تحلي يومك</span></span>
+            <span class="choice-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19 12H5m0 0 7 7m-7-7 7-7"/></svg></span><span class="choice-cta">شوف منيو المشروبات</span>
+          </button>
+          <button class="choice-card" type="button" data-open-menu="beans" aria-label="افتح قائمة البن السادة والمحوج">
+            <img class="choice-photo" src="assets/mandour-ground.webp" alt="" aria-hidden="true" loading="lazy">
+            <span class="choice-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M20.7 4.8C14.2 3.1 6.1 9.3 4.8 16.5c-1.1 6 2.3 10.3 7.4 10.3 6.5 0 14.3-6.5 15-13.2.5-4.7-1.8-7.7-6.5-8.8Z"/><path d="M8 24c2.1-6 8.1-12.4 16-16"/></svg></span>
+            <span class="choice-text"><span class="choice-kicker">ريحة البن في بيتك</span><span class="choice-title">حبوب القهوة</span><span class="choice-copy">اختار سادة أو محوج وشوف سعر الـ١/٨ والكيلو</span></span>
+            <span class="choice-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19 12H5m0 0 7 7m-7-7 7-7"/></svg></span><span class="choice-cta">شوف منيو البن</span>
+          </button>
+        </div>
+        <p class="pickup-note"><strong>استلام من المقهى فقط — مفيش توصيل.</strong> ابعت طلبك مسبقًا على واتساب، ونجهزهولك علشان تستلمه أول ما توصل.</p>
+      </section>
+
+      <section class="menu-view" id="beans-view" aria-labelledby="beans-title" aria-live="polite" hidden>
+        <div class="menu-topline"><button class="back-button" type="button" data-go-home><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m0 0 7 7m-7-7 7-7"/></svg>رجوع للاختيارات</button><span class="menu-eyebrow">MANDOUR COFFEE · BEANS</span></div>
+        <div class="menu-intro"><p class="eyebrow">من المحمصة لبيتك</p><h1 id="beans-title" tabindex="-1">اختار <span>بنك</span></h1><p>بن بطحنة مظبوطة وقهوة على كيفك. اختار السادة أو المحوج، واطلب الوزن المناسب ليك.</p><span class="price-note"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg>الأسعار المقترحة بالجنيه المصري؛ بتتأكد عند الطلب.</span></div>
+        <div class="beans-layout">
+          <figure class="beans-photo"><img src="assets/mandour-ground.webp" alt="حبوب قهوة محمصة وطازجة" loading="lazy"><figcaption>بن مندور · يتحضر على مزاجك</figcaption></figure>
+          <div class="bean-list" id="beans-grid" aria-label="أنواع البن وأسعار الأوزان"></div>
+        </div>
+      </section>
+
+      <section class="menu-view" id="drinks-view" aria-labelledby="drinks-title" aria-live="polite" hidden>
+        <div class="menu-topline"><button class="back-button" type="button" data-go-home><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m0 0 7 7m-7-7 7-7"/></svg>رجوع للاختيارات</button><span class="menu-eyebrow">MANDOUR COFFEE · DRINKS</span></div>
+        <div class="menu-intro"><p class="eyebrow">فنجانك مستنيك</p><h1 id="drinks-title" tabindex="-1">منيو <span>المشروبات</span></h1><p>من التركي المظبوط لحد اللاتيه البارد — اختار مشروبك واطلبه للاستلام من المقهى.</p><span class="price-note"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg>الأسعار المقترحة بالجنيه المصري؛ بتتأكد عند الطلب.</span></div>
+        <div class="drinks-grid" id="drinks-grid" aria-label="قائمة المشروبات"></div>
+        <p class="pickup-note"><strong>كل الطلبات للاستلام من المقهى في بسيون.</strong> مفيش توصيل حاليًا.</p>
+      </section>
+    </main>
+
+    <section class="cafe-details" aria-label="معلومات مقهى مندور">
+      <div class="details-grid">
+        <div class="info-card"><span class="info-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><div><p class="info-label">مواعيد العمل</p><p class="info-value">من ٩ صباحًا لحد ١ بعد منتصف الليل</p></div></div>
+        <div class="info-card"><span class="info-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-3 2a13 13 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2Z"/></svg></span><div><p class="info-label">اتصل بينا</p><p class="info-value"><a href="tel:+201096872170"><bdi dir="ltr">010 9687 2170</bdi></a></p></div></div>
+        <div class="info-card"><span class="info-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><div><p class="info-label">مكاننا</p><p class="info-value">مندور كوفي · بسيون</p></div></div>
+      </div>
+      <div class="footer-actions">
+        <a class="map-link" href="https://maps.app.goo.gl/G8RxG5DCDNRFWExK7" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>افتح موقعنا على الخريطة</a>
+        <a class="phone-link" href="tel:+201096872170"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-3 2a13 13 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2Z"/></svg>كلمنا</a>
+      </div>
+    </section>
+    <footer class="site-footer">معمولة بمزاج <strong>Mandour Coffee</strong> · <a href="https://wa.me/201096872170?text=%D8%A3%D9%87%D9%84%D8%A7%D9%8B%D8%8C%20%D8%B9%D8%A7%D9%8A%D8%B2%20%D8%A3%D8%B3%D8%A3%D9%84%20%D8%B9%D9%86%20%D8%A7%D9%84%D9%85%D9%86%D9%8A%D9%88" target="_blank" rel="noopener noreferrer">اسألنا على واتساب</a></footer>
+  </div>
+
+  <script>
+    const whatsappNumber = "201096872170";
+    const beanMenu = [
+      { name: "بن تركي سادة", description: "تحميص متوازن وطعم غني من غير إضافات — مناسب لكل يوم.", label: "سادة", eighth: 80, kilo: 640 },
+      { name: "بن تركي محوج", description: "خلطة عطرية بالحبهان — نكهة دافية ورائحة تسبق الفنجان.", label: "محوج", eighth: 95, kilo: 760 }
+    ];
+    const drinkMenu = [
+      { name: "قهوة تركي", description: "تركي مظبوطة بوش غني", price: 25, image: "assets/menu-turkish.webp", alt: "فنجان قهوة تركي بوش غني" },
+      { name: "إسبريسو", description: "جرعة مركزة بطعم غني", price: 35, image: "assets/menu-espresso.webp", alt: "فنجان إسبريسو طازج" },
+      { name: "كابتشينو", description: "قهوة وحليب برغوة ناعمة", price: 50, image: "assets/menu-cappuccino.webp", alt: "كابتشينو برغوة ناعمة" },
+      { name: "لاتيه", description: "إسبريسو وحليب كريمي", price: 50, image: "assets/menu-latte.webp", alt: "كوب لاتيه بطبقات الحليب والقهوة" },
+      { name: "آيس لاتيه", description: "لاتيه بارد مع مكعبات تلج", price: 55, image: "assets/menu-iced.webp", alt: "كوب آيس لاتيه بارد" },
+      { name: "هوت شوكليت", description: "شوكولاتة ساخنة وغنية", price: 45, image: "assets/menu-chocolate.webp", alt: "كوب شوكولاتة ساخنة" },
+      { name: "شاي", description: "كوباية شاي مظبوطة", price: 15, image: "assets/menu-tea.webp", alt: "كوب شاي مصري بلون كهرماني" }
+    ];
+    const homeView = document.getElementById("home-view");
+    const beansView = document.getElementById("beans-view");
+    const drinksView = document.getElementById("drinks-view");
+    const arabicPrice = new Intl.NumberFormat("ar-EG", { maximumFractionDigits: 0 });
+    const whatsappIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5A11.8 11.8 0 0 0 3.4 19.7L2 22l2.5-.7A11.9 11.9 0 0 0 22 11.8c0-3.1-1.2-6-3.5-8.3Z"/><path d="M8.2 7.3c-.3 0-.6.1-.8.4-.3.3-1 1-1 2.3s1.1 2.8 1.3 3c.2.3 2.1 3.4 5.2 4.6 2.5 1 3 .8 3.6.8.5-.1 1.7-.7 1.9-1.3.2-.6.2-1.2.2-1.3s-.2-.3-.5-.5l-1.9-.9c-.3-.1-.5-.2-.7.2s-.8.9-.9 1.1-.3.2-.6.1a7.8 7.8 0 0 1-2.3-1.4 8.6 8.6 0 0 1-1.6-2c-.2-.3 0-.5.1-.6l.5-.6.2-.5c.1-.2 0-.4 0-.5l-.9-2.1c-.2-.5-.5-.4-.7-.4Z"/></svg>';
+    function wa(message) { return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`; }
+    function renderBeans() {
+      document.getElementById("beans-grid").innerHTML = beanMenu.map((bean) => `
+        <article class="bean-card">
+          <div class="bean-card-top"><div><h2 class="bean-title">${bean.name}</h2><p class="bean-description">${bean.description}</p></div><span class="bean-badge">${bean.label}</span></div>
+          <div class="bean-prices" aria-label="أسعار ${bean.name}">
+            <div class="price-box"><span class="price-label">١/٨ كيلو · ١٢٥ جم</span><span class="price-value">${arabicPrice.format(bean.eighth)} <small>جنيه</small></span></div>
+            <div class="price-box"><span class="price-label">الكيلو</span><span class="price-value">${arabicPrice.format(bean.kilo)} <small>جنيه</small></span></div>
+          </div>
+          <a class="order-button" href="${wa(`أهلاً مندور، عايز أطلب ${bean.name} (${arabicPrice.format(bean.eighth)} جنيه للـ١/٨ أو ${arabicPrice.format(bean.kilo)} جنيه للكيلو) للاستلام من المقهى. ممكن تأكدولي المتاح؟`)}" target="_blank" rel="noopener noreferrer">${whatsappIcon}اطلب ${bean.label} على واتساب</a>
+        </article>
+      `).join("");
+    }
+    function renderDrinks() {
+      document.getElementById("drinks-grid").innerHTML = drinkMenu.map((drink) => `
+        <article class="drink-card">
+          <img class="drink-image" src="${drink.image}" alt="${drink.alt}" loading="lazy" width="800" height="600">
+          <div class="drink-body"><h2 class="drink-name">${drink.name}</h2><p class="drink-copy">${drink.description}</p>
+            <div class="drink-price-row"><span class="drink-price">${arabicPrice.format(drink.price)} <small>جنيه</small></span><span class="drink-size">للكوب</span></div>
+            <a class="order-button" href="${wa(`أهلاً مندور، عايز أطلب ${drink.name} بسعر ${arabicPrice.format(drink.price)} جنيه للاستلام من المقهى.`)}" target="_blank" rel="noopener noreferrer" aria-label="اطلب ${drink.name} بسعر ${arabicPrice.format(drink.price)} جنيه عبر واتساب">${whatsappIcon}اطلب على واتساب</a>
+          </div>
+        </article>
+      `).join("");
+    }
+    function setView(view, updateHistory = true, moveFocus = true) {
+      const isHome = view === "home";
+      homeView.hidden = !isHome;
+      beansView.hidden = isHome || view !== "beans";
+      drinksView.hidden = isHome || view !== "drinks";
+      if (updateHistory) {
+        const hash = isHome ? "#top" : `#${view}`;
+        if (window.location.hash !== hash) window.history.pushState({ view }, "", hash);
+      }
+      document.title = isHome ? "Mandour Coffee | منيو مندور" : view === "beans" ? "بن مندور السادة والمحوج | Mandour Coffee" : "مشروبات مندور كوفي | Mandour Coffee";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      const heading = isHome ? document.getElementById("welcome-title") : document.getElementById(`${view}-title`);
+      if (moveFocus && heading) heading.focus({ preventScroll: true });
+    }
+    function syncFromHash() {
+      const view = window.location.hash.slice(1);
+      setView(view === "beans" || view === "drinks" ? view : "home", false, false);
+    }
+    document.addEventListener("click", (event) => {
+      const opener = event.target.closest("[data-open-menu]");
+      if (opener) { setView(opener.dataset.openMenu); return; }
+      if (event.target.closest("[data-go-home]")) { setView("home"); return; }
+    });
+    window.addEventListener("popstate", syncFromHash);
+    window.addEventListener("hashchange", syncFromHash);
+    renderBeans();
+    renderDrinks();
+    syncFromHash();
+  </script>
+</body>
+</html>

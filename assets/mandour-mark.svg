@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Mandour Coffee</title>
+  <rect width="64" height="64" rx="20" fill="#d5a06b"/>
+  <g fill="none" stroke="#171411" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5">
+    <path d="M15 29h27v11a9 9 0 0 1-9 9h-9a9 9 0 0 1-9-9V29Z"/>
+    <path d="M42 33h3a6 6 0 0 1 0 12h-6"/>
+    <path d="M24 23c0-3 3-3 3-7M33 23c0-3 3-3 3-7"/>
+    <path d="M21 55h22"/>
+  </g>
+</svg>
