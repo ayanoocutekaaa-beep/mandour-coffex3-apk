@@ -17,24 +17,28 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - name: Build Android project from index.html
+      - name: Build Android app from the Arabic web interface
         run: |
-          mkdir www && cp index.html www/
           mkdir -p www/assets/beans
+          cp index.html www/index.html
           cp assets/beans/*-card.jpg www/assets/beans/
-          cp assets/coffee-hero.png www/assets/coffee-hero.png
+          cp assets/coffee-hero.png assets/mandour-app-icon.png www/assets/
           npm init -y
-          npm i @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
-          npx cap init "Mandour Coffee" com.mandour.coffee --web-dir www
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
+          npx cap init "Mandour Coffee" com.mandour.coffee.v5 --web-dir www
           npx cap add android
           npx cap sync android
+          mkdir -p android/app/src/main/java/com/mandour/coffee/v5
+          cp android-src/MainActivity.java android/app/src/main/java/com/mandour/coffee/v5/MainActivity.java
+          cp -R android-res/mipmap-* android/app/src/main/res/
+          cp android-res/values/ic_launcher_background.xml android/app/src/main/res/values/
+          chmod +x android/gradlew
           cd android
-          chmod +x gradlew
           ./gradlew assembleDebug
-          cp app/build/outputs/apk/debug/app-debug.apk ../mandour-coffee.apk
-      - name: Publish release
+          cp app/build/outputs/apk/debug/app-debug.apk ../mandour-coffee-v5.apk
+      - name: Publish APK release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
           name: Mandour Coffee v${{ github.run_number }}
-          files: mandour-coffee.apk
+          files: mandour-coffee-v5.apk
