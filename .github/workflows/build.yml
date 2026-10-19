@@ -20,9 +20,11 @@ jobs:
       - name: Build Android app from the Arabic web interface
         run: |
           mkdir -p www/assets/beans
+          mkdir -p www/assets/payments
           cp index.html www/index.html
           cp assets/beans/*-card.jpg www/assets/beans/
           cp assets/coffee-hero.png assets/mandour-app-icon.png assets/receipt-stamp.png www/assets/
+          cp assets/payments/* www/assets/payments/
           npm init -y
           npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
           npx cap init "Mandour Coffee" com.mandour.coffee.v5 --web-dir www
