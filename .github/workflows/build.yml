@@ -23,7 +23,7 @@ jobs:
           mkdir -p www/assets/payments
           cp index.html www/index.html
           cp assets/beans/*-card.jpg www/assets/beans/
-          cp assets/mandour-home-banner.jpg assets/mandour-app-icon.png assets/receipt-stamp.png www/assets/
+          cp assets/mandour-home-banner.jpg assets/mandour-app-icon.png assets/mandour-welcome-poster.png assets/receipt-stamp.png www/assets/
           cp assets/payments/* www/assets/payments/
           npm init -y
           npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6

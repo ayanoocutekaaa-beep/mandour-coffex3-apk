@@ -19,10 +19,11 @@ button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,inpu
 #splash::before,#splash::after{content:"";position:absolute;border:1px solid #fff2;border-radius:50%;width:260px;height:260px;left:50%;top:50%;transform:translate(-50%,-50%);animation:ring 2.2s ease-out both;pointer-events:none}
 #splash::after{animation-delay:.22s;width:310px;height:310px}
 @keyframes ring{0%{opacity:0;scale:.78}35%{opacity:.45}100%{opacity:0;scale:1.2}}
-#welcome-mark{font-size:56px;filter:drop-shadow(0 12px 22px #1c141066);animation:cup-in .8s cubic-bezier(.2,.8,.2,1) both}
+#welcome-mark{width:min(50vw,210px);height:min(46vh,390px);margin:0 auto;display:grid;place-items:center;overflow:hidden;border:1px solid #ffffff55;border-radius:20px;background:linear-gradient(145deg,#563a2a,#9b7144);box-shadow:0 12px 26px #1c141066;animation:cup-in .8s cubic-bezier(.2,.8,.2,1) both}
+#welcome-mark img{display:block;width:100%;height:100%;object-fit:contain;border-radius:19px}
 @keyframes cup-in{from{opacity:0;transform:translateY(18px) scale(.82)}to{opacity:1;transform:translateY(0) scale(1)}}
-#welcome-title{margin:17px 0 0;direction:ltr;font-family:'Cairo',sans-serif;font-size:clamp(24px,6vw,34px);font-weight:800;letter-spacing:.08em;animation:title-in 1s .2s both}
-@keyframes title-in{from{opacity:0;transform:translateY(13px);letter-spacing:.25em}to{opacity:1;transform:translateY(0);letter-spacing:.08em}}
+#welcome-title{margin:15px 0 0;direction:ltr;font-family:'Cairo',sans-serif;font-size:clamp(22px,5.7vw,30px);font-weight:800;line-height:1.25;letter-spacing:.02em;animation:title-in 1s .2s both}
+@keyframes title-in{from{opacity:0;transform:translateY(13px);letter-spacing:.12em}to{opacity:1;transform:translateY(0);letter-spacing:.02em}}
 #welcome-sub{margin:10px 0 0;color:#fffC;font-size:13px;animation:title-in .8s .6s both}
 #splash.leaving{opacity:0;visibility:hidden}
 .appbar{position:sticky;top:0;z-index:10;background:var(--acc);color:#fff;padding:10px 15px;box-shadow:0 3px 14px #2b181022;display:flex;align-items:center;gap:11px}
@@ -132,10 +133,11 @@ body{background:radial-gradient(ellipse at 8% 12%,#e4d1b833,transparent 31%),rad
 @media(max-width:380px){.customer-template-row{grid-template-columns:1fr}.customer-template-row .secondary{width:100%}}
 
 .customer-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 4px}.customer-stats>div{display:grid;gap:4px;padding:10px;border:1px solid var(--line);border-radius:13px;background:#fffaf2}.customer-stats small,.customer-purchase-row small{color:var(--mut);font-size:10px}.customer-stats strong{color:var(--acc);font-size:15px}.customer-stats-note{display:block;color:var(--mut);font-size:9px;margin:0 1px 9px}.customer-section{margin-top:12px}.customer-section>strong{font-size:12px}.customer-purchase-list{display:grid;gap:6px;margin-top:7px}.customer-purchase-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:11px;background:#fffefa}.customer-purchase-row>span{display:grid;gap:3px;min-width:0}.customer-purchase-row>span>strong{font-size:11px}.customer-purchase-row>strong{white-space:nowrap;color:var(--acc);font-size:12px}
+#welcome-mark img{display:block;width:100%;height:100%;object-fit:contain;border:0;border-radius:19px;box-shadow:none}
 </style>
 </head>
 <body>
-<div id="splash" aria-label="مندور كوفي"><div id="welcome-mark"><img src="assets/mandour-app-icon.png" alt=""></div><h1 id="welcome-title">مندور كوفي</h1><p id="welcome-sub">إدارة العملاء والطلبات والفواتير</p></div>
+<div id="splash" aria-label="Welcome to Mandour Coffee"><div id="welcome-mark"><img src="assets/mandour-welcome-poster.png" alt="شعار مندور كوفي"></div><h1 id="welcome-title">Welcome to<br>Mandour Coffee</h1><p id="welcome-sub">إدارة العملاء والطلبات والفواتير</p></div>
 <header class="appbar"><span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M7 12h15v7a7.5 7.5 0 0 1-15 0v-7Z"/><path d="M22 14h2.2a3.8 3.8 0 0 1 0 7.6H22M11 7c0-1.2 1.8-1.7 1.8-3M17 7c0-1.2 1.8-1.7 1.8-3"/></svg></span><div class="appbar-copy"><div class="appbar-title" id="bar-title">مندور كوفي</div><div class="appbar-sub">إدارة البن والفواتير</div></div><button id="back-button" type="button" hidden>رجوع</button></header>
 <main>
 <section class="view" id="home-view">
