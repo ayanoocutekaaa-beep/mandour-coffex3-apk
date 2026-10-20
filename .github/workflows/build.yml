@@ -21,10 +21,13 @@ jobs:
         run: |
           mkdir -p www/assets/beans
           mkdir -p www/assets/payments
+          mkdir -p www/assets/menu
           cp index.html www/index.html
           cp assets/beans/*-card.jpg www/assets/beans/
           cp assets/mandour-home-banner.jpg assets/mandour-app-icon.png assets/mandour-welcome-poster.png assets/receipt-stamp.png www/assets/
           cp assets/payments/* www/assets/payments/
+          cp assets/menu/*.jpg www/assets/menu/
+          cp assets/map-location-qr.png www/assets/
           npm init -y
           npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
           npx cap init "Mandour Coffee" com.mandour.coffee.v5 --web-dir www
