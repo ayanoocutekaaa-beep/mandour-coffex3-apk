@@ -7,6 +7,8 @@ import android.net.Uri;
 import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.DocumentsContract;
 import android.util.Base64;
 import android.webkit.JavascriptInterface;
@@ -28,6 +30,8 @@ public class MainActivity extends BridgeActivity {
     private String pendingSaveName;
     private String pendingFolderKind;
     private MediaPlayer paidSoundPlayer;
+    private final Handler paidSoundHandler = new Handler(Looper.getMainLooper());
+    private Runnable pendingSecondPaidSound;
     private final String PREFS = "mandour_save_folders";
 
     @Override
@@ -96,8 +100,16 @@ public class MainActivity extends BridgeActivity {
 
     private void playPaidSoundOnUiThread() {
         stopPaidSoundOnUiThread();
-        File audioFile = new File(getCacheDir(), "mandour-paid-checks.m4a");
-        try (InputStream input = getAssets().open("public/assets/audio/paid-checks.m4a");
+        startPaidAudioOnUiThread("public/assets/audio/paid-checks.m4a", "mandour-paid-checks.m4a", true);
+    }
+
+    private void playSecondPaidSoundOnUiThread() {
+        startPaidAudioOnUiThread("public/assets/audio/paid-checks-second.m4a", "mandour-paid-checks-second.m4a", false);
+    }
+
+    private void startPaidAudioOnUiThread(String assetPath, String cacheName, boolean playSecondAfter) {
+        File audioFile = new File(getCacheDir(), cacheName);
+        try (InputStream input = getAssets().open(assetPath);
              FileOutputStream output = new FileOutputStream(audioFile)) {
             byte[] buffer = new byte[8192];
             int count;
@@ -112,7 +124,16 @@ public class MainActivity extends BridgeActivity {
             player.setDataSource(audioFile.getAbsolutePath());
             player.setOnCompletionListener(completed -> {
                 completed.release();
-                if (paidSoundPlayer == completed) paidSoundPlayer = null;
+                if (paidSoundPlayer == completed) {
+                    paidSoundPlayer = null;
+                    if (playSecondAfter) {
+                        pendingSecondPaidSound = () -> {
+                            pendingSecondPaidSound = null;
+                            playSecondPaidSoundOnUiThread();
+                        };
+                        paidSoundHandler.postDelayed(pendingSecondPaidSound, 2000);
+                    }
+                }
             });
             player.setOnErrorListener((failed, what, extra) -> {
                 failed.release();
@@ -131,6 +152,10 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void stopPaidSoundOnUiThread() {
+        if (pendingSecondPaidSound != null) {
+            paidSoundHandler.removeCallbacks(pendingSecondPaidSound);
+            pendingSecondPaidSound = null;
+        }
         MediaPlayer player = paidSoundPlayer;
         paidSoundPlayer = null;
         if (player == null) return;
