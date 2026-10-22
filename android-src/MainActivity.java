@@ -4,6 +4,8 @@ import android.content.ClipData;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.media.AudioAttributes;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
 import android.util.Base64;
@@ -13,6 +15,7 @@ import androidx.core.content.FileProvider;
 import com.getcapacitor.BridgeActivity;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
@@ -24,6 +27,7 @@ public class MainActivity extends BridgeActivity {
     private String pendingSaveMime;
     private String pendingSaveName;
     private String pendingFolderKind;
+    private MediaPlayer paidSoundPlayer;
     private final String PREFS = "mandour_save_folders";
 
     @Override
@@ -82,6 +86,62 @@ public class MainActivity extends BridgeActivity {
         @JavascriptInterface public String getFolderName(String kind) {
             return getSharedPreferences(PREFS, MODE_PRIVATE).getString("name_" + kind, "");
         }
+        @JavascriptInterface public void playPaidSound() {
+            runOnUiThread(() -> playPaidSoundOnUiThread());
+        }
+        @JavascriptInterface public void stopPaidSound() {
+            runOnUiThread(() -> stopPaidSoundOnUiThread());
+        }
+    }
+
+    private void playPaidSoundOnUiThread() {
+        stopPaidSoundOnUiThread();
+        File audioFile = new File(getCacheDir(), "mandour-paid-checks.m4a");
+        try (InputStream input = getAssets().open("public/assets/audio/paid-checks.m4a");
+             FileOutputStream output = new FileOutputStream(audioFile)) {
+            byte[] buffer = new byte[8192];
+            int count;
+            while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+            output.flush();
+
+            MediaPlayer player = new MediaPlayer();
+            player.setAudioAttributes(new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build());
+            player.setDataSource(audioFile.getAbsolutePath());
+            player.setOnCompletionListener(completed -> {
+                completed.release();
+                if (paidSoundPlayer == completed) paidSoundPlayer = null;
+            });
+            player.setOnErrorListener((failed, what, extra) -> {
+                failed.release();
+                if (paidSoundPlayer == failed) paidSoundPlayer = null;
+                return true;
+            });
+            player.setOnPreparedListener(ready -> {
+                if (paidSoundPlayer == ready) ready.start();
+                else ready.release();
+            });
+            paidSoundPlayer = player;
+            player.prepareAsync();
+        } catch (Exception error) {
+            stopPaidSoundOnUiThread();
+        }
+    }
+
+    private void stopPaidSoundOnUiThread() {
+        MediaPlayer player = paidSoundPlayer;
+        paidSoundPlayer = null;
+        if (player == null) return;
+        try { if (player.isPlaying()) player.stop(); } catch (Exception ignored) {}
+        try { player.release(); } catch (Exception ignored) {}
+    }
+
+    @Override
+    public void onDestroy() {
+        stopPaidSoundOnUiThread();
+        super.onDestroy();
     }
 
     private void saveOrChooseFolder(String data, String mime, String name, String kind) {
