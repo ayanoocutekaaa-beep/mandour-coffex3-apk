@@ -3,7 +3,11 @@ package com.mandour.coffee.v5;
 import android.content.ClipData;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.AudioAttributes;
+import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
 import android.util.Base64;
@@ -13,6 +17,7 @@ import androidx.core.content.FileProvider;
 import com.getcapacitor.BridgeActivity;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
@@ -24,6 +29,10 @@ public class MainActivity extends BridgeActivity {
     private String pendingSaveMime;
     private String pendingSaveName;
     private String pendingFolderKind;
+    private final Handler paidAudioHandler = new Handler(Looper.getMainLooper());
+    private MediaPlayer paidAudioPlayer;
+    private Runnable pendingSecondAudio;
+    private String activePaidAudioKey = "";
     private final String PREFS = "mandour_save_folders";
 
     @Override
@@ -82,6 +91,92 @@ public class MainActivity extends BridgeActivity {
         @JavascriptInterface public String getFolderName(String kind) {
             return getSharedPreferences(PREFS, MODE_PRIVATE).getString("name_" + kind, "");
         }
+        @JavascriptInterface public void playPaidSound(String key) {
+            String requestKey = key == null ? "paid" : key;
+            runOnUiThread(() -> startPaidSoundSequence(requestKey));
+        }
+        @JavascriptInterface public void stopPaidSound() {
+            runOnUiThread(() -> stopPaidSoundSequence());
+        }
+    }
+
+    private void startPaidSoundSequence(String key) {
+        if (key.equals(activePaidAudioKey) && (paidAudioPlayer != null || pendingSecondAudio != null)) return;
+        stopPaidSoundSequence();
+        activePaidAudioKey = key;
+        playPaidAudioAsset("public/assets/audio/paid-checks.m4a", true);
+    }
+
+    private void playPaidAudioAsset(String assetPath, boolean scheduleSecond) {
+        MediaPlayer player = null;
+        try (InputStream input = getAssets().open(assetPath)) {
+            File audioFile = new File(getCacheDir(), scheduleSecond ? "mandour-paid-checks.m4a" : "mandour-paid-checks-second.m4a");
+            try (FileOutputStream output = new FileOutputStream(audioFile)) {
+                byte[] buffer = new byte[8192];
+                int count;
+                while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+                output.flush();
+            }
+            player = new MediaPlayer();
+            player.setAudioAttributes(new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build());
+            player.setDataSource(audioFile.getAbsolutePath());
+            MediaPlayer preparedPlayer = player;
+            preparedPlayer.setOnCompletionListener(completed -> {
+                completed.release();
+                if (paidAudioPlayer != completed) return;
+                paidAudioPlayer = null;
+                if (scheduleSecond) {
+                    pendingSecondAudio = () -> {
+                        pendingSecondAudio = null;
+                        if (!activePaidAudioKey.isEmpty()) playPaidAudioAsset("public/assets/audio/paid-checks-second.m4a", false);
+                    };
+                    paidAudioHandler.postDelayed(pendingSecondAudio, 2000);
+                } else {
+                    activePaidAudioKey = "";
+                }
+            });
+            preparedPlayer.setOnErrorListener((failed, what, extra) -> {
+                if (paidAudioPlayer == failed) paidAudioPlayer = null;
+                failed.release();
+                activePaidAudioKey = "";
+                return true;
+            });
+            preparedPlayer.setOnPreparedListener(ready -> {
+                if (paidAudioPlayer == ready && !activePaidAudioKey.isEmpty()) ready.start();
+                else ready.release();
+            });
+            paidAudioPlayer = preparedPlayer;
+            preparedPlayer.prepareAsync();
+        } catch (Exception error) {
+            if (player != null) {
+                try { player.release(); } catch (Exception ignored) {}
+            }
+            paidAudioPlayer = null;
+            activePaidAudioKey = "";
+        }
+    }
+
+    private void stopPaidSoundSequence() {
+        if (pendingSecondAudio != null) {
+            paidAudioHandler.removeCallbacks(pendingSecondAudio);
+            pendingSecondAudio = null;
+        }
+        activePaidAudioKey = "";
+        MediaPlayer player = paidAudioPlayer;
+        paidAudioPlayer = null;
+        if (player != null) {
+            try { if (player.isPlaying()) player.stop(); } catch (Exception ignored) {}
+            try { player.release(); } catch (Exception ignored) {}
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        stopPaidSoundSequence();
+        super.onDestroy();
     }
 
     private void saveOrChooseFolder(String data, String mime, String name, String kind) {
