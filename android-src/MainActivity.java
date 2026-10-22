@@ -42,7 +42,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         WebView webView = getBridge() == null ? null : getBridge().getWebView();
         if (webView == null) return;
