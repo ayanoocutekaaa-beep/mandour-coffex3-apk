@@ -386,7 +386,7 @@ const BASE_BEANS=[
  {id:'vietnamese',name:'فيتنامي',pricePerKg:600,image:'assets/beans/real2/vietnamese.jpg',builtIn:true}
 ];
 const STORE_KEY='mandour-coffee-manager-v3';
-const LocalNotifications = window.Capacitor?.registerPlugin?.('LocalNotifications') || null;
+const LocalNotifications = window.Capacitor?.Plugins?.LocalNotifications || window.Capacitor?.registerPlugin?.('LocalNotifications') || null;
 let notifSyncTimer = null;
 
 function queueLocalCheckNotificationSync() {
