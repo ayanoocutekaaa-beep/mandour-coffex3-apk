@@ -4028,11 +4028,21 @@ document.addEventListener("visibilitychange", () => {
 syncLocalCheckNotifications().catch(console.error);
 
 const splash = document.getElementById("splash");
-setTimeout(() => splash.classList.add("leaving"), 2600);
-setTimeout(() => {
-  splash.remove();
-  document.body.classList.add("app-ready");
-}, 3550);
+let splashReady = false;
+function finishSplash() {
+  if (splashReady || !splash) return;
+  splashReady = true;
+  splash.classList.add("leaving");
+  window.setTimeout(() => {
+    splash.remove();
+    document.body.classList.add("app-ready");
+  }, 700);
+}
+window.setTimeout(finishSplash, 2600);
+window.setTimeout(finishSplash, 5000);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) window.setTimeout(finishSplash, 120);
+});
 history.replaceState(
   { mandourView: "home" },
   "",

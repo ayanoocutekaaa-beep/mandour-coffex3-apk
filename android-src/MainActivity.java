@@ -6,8 +6,6 @@ import android.content.SharedPreferences;
 import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
 import android.util.Base64;
@@ -29,9 +27,7 @@ public class MainActivity extends BridgeActivity {
     private String pendingSaveMime;
     private String pendingSaveName;
     private String pendingFolderKind;
-    private final Handler paidAudioHandler = new Handler(Looper.getMainLooper());
     private MediaPlayer paidAudioPlayer;
-    private Runnable pendingSecondAudio;
     private String activePaidAudioKey = "";
     private final String PREFS = "mandour_save_folders";
 
@@ -39,8 +35,24 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getBridge() != null && getBridge().getWebView() != null) {
-            getBridge().getWebView().addJavascriptInterface(new ReceiptShareBridge(), "MandourNative");
+            WebView webView = getBridge().getWebView();
+            webView.setBackgroundColor(android.graphics.Color.WHITE);
+            webView.addJavascriptInterface(new ReceiptShareBridge(), "MandourNative");
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        WebView webView = getBridge() == null ? null : getBridge().getWebView();
+        if (webView == null) return;
+        webView.onResume();
+        webView.postDelayed(() -> webView.evaluateJavascript(
+            "(document.body && document.body.children.length > 0) ? 'ready' : 'empty'",
+            result -> {
+                if ("\"empty\"".equals(result)) webView.reload();
+            }
+        ), 250);
     }
 
     @Override
@@ -101,16 +113,16 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void startPaidSoundSequence(String key) {
-        if (key.equals(activePaidAudioKey) && (paidAudioPlayer != null || pendingSecondAudio != null)) return;
+        if (key.equals(activePaidAudioKey) && paidAudioPlayer != null) return;
         stopPaidSoundSequence();
         activePaidAudioKey = key;
-        playPaidAudioAsset("public/assets/audio/paid-checks.m4a", true);
+        playPaidAudioAsset("public/assets/audio/paid-checks.m4a");
     }
 
-    private void playPaidAudioAsset(String assetPath, boolean scheduleSecond) {
+    private void playPaidAudioAsset(String assetPath) {
         MediaPlayer player = null;
         try (InputStream input = getAssets().open(assetPath)) {
-            File audioFile = new File(getCacheDir(), scheduleSecond ? "mandour-paid-checks.m4a" : "mandour-paid-checks-second.m4a");
+            File audioFile = new File(getCacheDir(), "mandour-paid-checks.m4a");
             try (FileOutputStream output = new FileOutputStream(audioFile)) {
                 byte[] buffer = new byte[8192];
                 int count;
@@ -128,15 +140,7 @@ public class MainActivity extends BridgeActivity {
                 completed.release();
                 if (paidAudioPlayer != completed) return;
                 paidAudioPlayer = null;
-                if (scheduleSecond) {
-                    pendingSecondAudio = () -> {
-                        pendingSecondAudio = null;
-                        if (!activePaidAudioKey.isEmpty()) playPaidAudioAsset("public/assets/audio/paid-checks-second.m4a", false);
-                    };
-                    paidAudioHandler.postDelayed(pendingSecondAudio, 2000);
-                } else {
-                    activePaidAudioKey = "";
-                }
+                activePaidAudioKey = "";
             });
             preparedPlayer.setOnErrorListener((failed, what, extra) -> {
                 if (paidAudioPlayer == failed) paidAudioPlayer = null;
@@ -160,10 +164,6 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void stopPaidSoundSequence() {
-        if (pendingSecondAudio != null) {
-            paidAudioHandler.removeCallbacks(pendingSecondAudio);
-            pendingSecondAudio = null;
-        }
         activePaidAudioKey = "";
         MediaPlayer player = paidAudioPlayer;
         paidAudioPlayer = null;
