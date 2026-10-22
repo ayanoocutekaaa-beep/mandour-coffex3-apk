@@ -1,0 +1,1202 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f3ed">
+<link rel="icon" type="image/png" href="assets/mandour-app-icon.png">
+<title>مندور كوفي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;--bg:#faf3e8;--card:#fff;--ink:#3b2417;--mut:#8a6f5d;--acc:#6f4e37;--acc2:#c8913f;--ok:#2e7d4f;--line:#e8d9c4;--shadow:0 8px 24px #3b24170d}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:'Tajawal',Tahoma,Arial,sans-serif}
+body{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #c8913f66;outline-offset:2px}
+#splash{position:fixed;inset:0;z-index:100;background:linear-gradient(150deg,#3b2417 0%,#6f4e37 63%,#c8913f 120%);color:#fff;display:grid;place-content:center;text-align:center;padding:24px;transition:opacity .85s ease,visibility .85s ease}
+#splash::before,#splash::after{content:"";position:absolute;border:1px solid #fff2;border-radius:50%;width:260px;height:260px;left:50%;top:50%;transform:translate(-50%,-50%);animation:ring 2.2s ease-out both;pointer-events:none}
+#splash::after{animation-delay:.22s;width:310px;height:310px}
+@keyframes ring{0%{opacity:0;scale:.78}35%{opacity:.45}100%{opacity:0;scale:1.2}}
+#welcome-mark{width:min(50vw,210px);height:min(46vh,390px);margin:0 auto;display:grid;place-items:center;overflow:hidden;border:1px solid #ffffff55;border-radius:20px;background:linear-gradient(145deg,#563a2a,#9b7144);box-shadow:0 12px 26px #1c141066;animation:cup-in .8s cubic-bezier(.2,.8,.2,1) both}
+#welcome-mark img{display:block;width:100%;height:100%;object-fit:contain;border-radius:19px}
+@keyframes cup-in{from{opacity:0;transform:translateY(18px) scale(.82)}to{opacity:1;transform:translateY(0) scale(1)}}
+#welcome-title{margin:15px 0 0;direction:ltr;font-family:'Tajawal',sans-serif;font-size:clamp(22px,5.7vw,30px);font-weight:800;line-height:1.25;letter-spacing:.02em;animation:title-in 1s .2s both}
+@keyframes title-in{from{opacity:0;transform:translateY(13px);letter-spacing:.12em}to{opacity:1;transform:translateY(0);letter-spacing:.02em}}
+#welcome-sub{margin:10px 0 0;color:#fffC;font-size:13px;animation:title-in .8s .6s both}
+#splash.leaving{opacity:0;visibility:hidden}
+.appbar{position:sticky;top:0;z-index:10;background:var(--acc);color:#fff;padding:10px 15px;box-shadow:0 3px 14px #2b181022;display:flex;align-items:center;gap:11px}
+.brand-symbol{width:39px;height:39px;border-radius:14px;background:#ffffff20;display:grid;place-items:center;font-size:22px;flex:none}
+.appbar-copy{min-width:0;flex:1}.appbar-title{font-size:16px;font-weight:800;line-height:1.35}.appbar-sub{font-size:10px;opacity:.78}
+#back-button{border:1px solid #ffffff55;color:#fff;background:transparent;border-radius:12px;padding:7px 12px;font-weight:700}#back-button[hidden]{display:none}
+main{max-width:720px;margin:0 auto;padding:17px 14px 35px}
+.view[hidden]{display:none}.view{animation:rise .28s ease both}@keyframes rise{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.welcome-copy{padding:7px 2px 15px}.eyebrow{margin:0 0 5px;color:var(--acc2);font-size:11px;font-weight:800}.welcome-copy h1,.view h2{margin:0;font-size:23px;line-height:1.45}.welcome-copy p,.view-intro{margin:6px 0 0;color:var(--mut);font-size:13px;line-height:1.8}
+.action-grid{display:grid;gap:11px;margin-top:10px}.action-button{width:100%;display:flex;align-items:center;gap:13px;text-align:right;padding:15px;border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--ink);box-shadow:var(--shadow);transition:transform .15s,border-color .15s}.action-button:active{transform:scale(.99)}.action-button:hover{border-color:#c8913f88}
+.action-icon{width:48px;height:48px;flex:none;display:grid;place-items:center;border-radius:16px;background:#f5ead9;color:var(--acc);font-size:24px}.action-text{flex:1}.action-text strong{display:block;font-size:16px}.action-text small{display:block;margin-top:2px;color:var(--mut);font-size:11px}.arrow{font-size:22px;color:var(--acc2)}
+.summary-strip{display:flex;gap:10px;margin:17px 0 6px}.summary-chip{flex:1;border:1px solid var(--line);background:#fff8ee;border-radius:14px;padding:10px 12px}.summary-chip strong{display:block;font-size:18px}.summary-chip span{font-size:10px;color:var(--mut)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:14px;margin:12px 0;box-shadow:var(--shadow)}.panel-title{font-size:15px;font-weight:800;margin:0 0 10px}.field{display:grid;gap:5px;margin:10px 0}.field label{font-size:12px;font-weight:700;color:var(--mut)}.field input,.field select,.g,.grams-input{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:11px;background:var(--bg);color:var(--ink);min-height:43px}.field input[type=file]{padding:8px}.muted{font-size:11px;color:var(--mut);line-height:1.7}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.bean-card{display:grid;grid-template-columns:78px 1fr;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px;margin:10px 0;box-shadow:var(--shadow)}.bean-photo{width:78px;height:78px;object-fit:cover;border-radius:13px;background:#f0e3d2}.bean-meta{min-width:0}.bean-name{font-weight:800;font-size:14px}.bean-rate{font-size:11px;color:var(--mut);margin-top:2px}.invoice-entry{display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:8px;align-items:end;margin-top:8px}.gram-field{min-width:0}.gram-field label{display:block;color:var(--mut);font-size:10px;margin-bottom:4px}.g{height:40px;min-height:40px;text-align:center;font-weight:800;direction:ltr;padding:6px}.pr{font-size:14px;text-align:left;color:var(--acc);font-weight:800;white-space:nowrap;padding-bottom:8px}.pr small{display:block;color:var(--mut);font-size:9px;font-weight:600}
+.primary,.secondary,.danger{border:0;border-radius:12px;padding:11px 14px;font-weight:800}.primary{background:var(--acc);color:#fff;width:100%;box-shadow:0 5px 12px #6f4e3722}.secondary{background:#f4eadb;color:var(--acc);border:1px solid var(--line)}.danger{background:#fff0eb;color:#a33b22;border:1px solid #f1c8b8;padding:6px 9px;font-size:11px}.button-row{display:flex;gap:9px;margin-top:12px}.button-row>*{flex:1}
+.invoice-total{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;background:#f7eddf;border-radius:13px;margin:13px 0}.invoice-total span{font-size:12px;color:var(--mut)}.invoice-total strong{font-size:20px;color:var(--acc)}
+.empty{padding:15px;text-align:center;color:var(--mut);font-size:12px;background:#fff9f0;border-radius:13px;border:1px dashed var(--line)}
+.history-item,.customer-card,.custom-bean-row{border:1px solid var(--line);background:var(--card);border-radius:14px;padding:12px;margin:9px 0}.history-top,.customer-top,.custom-bean-row{display:flex;align-items:center;justify-content:space-between;gap:10px}.history-top strong,.customer-top strong{font-size:13px}.history-top span,.customer-top span{font-size:10px;color:var(--mut)}.history-detail{border-top:1px solid var(--line);margin-top:9px;padding-top:9px;color:var(--mut);font-size:11px;line-height:1.9}.customer-card .detail-toggle{margin-top:9px;width:100%;text-align:right;border:0;background:#fff8ee;color:var(--acc);padding:8px 10px;border-radius:10px;font-size:11px;font-weight:700}.recipe{padding:9px 0;border-bottom:1px solid #eee3d5}.recipe:last-child{border-bottom:0}.recipe-title{font-weight:800;color:var(--ink);font-size:12px}.ingredient-list{color:var(--mut);font-size:10px;line-height:1.8}
+.recipe-line{display:grid;grid-template-columns:minmax(0,1fr) 92px 35px;gap:6px;align-items:center;margin:8px 0}.recipe-line select,.recipe-line input{width:100%;min-width:0;padding:8px 7px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:11px;min-height:40px}.remove-line{width:34px;height:34px;border:0;border-radius:10px;background:#fff0eb;color:#a33b22;font-size:18px}.photo-preview{width:100%;max-height:190px;object-fit:cover;border-radius:13px;margin-top:8px}.custom-bean-row{justify-content:flex-start}.custom-bean-row img{width:48px;height:48px;border-radius:10px;object-fit:cover}.custom-bean-row .info{flex:1}.custom-bean-row strong{display:block;font-size:12px}.custom-bean-row small{color:var(--mut);font-size:10px}
+.toast{position:fixed;z-index:200;bottom:calc(22px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,12px);opacity:0;transition:.2s;pointer-events:none;background:#2e7d4f;color:#fff;border-radius:30px;padding:10px 16px;font-size:12px;font-weight:800;white-space:nowrap;box-shadow:0 6px 20px #0002}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(min-width:560px){.action-grid{grid-template-columns:1fr 1fr}.action-button:first-child{grid-column:span 2}.action-button{min-height:94px}.bean-card{grid-template-columns:92px 1fr}.bean-photo{width:92px;height:92px}}
+@media(max-width:370px){main{padding-right:10px;padding-left:10px}.bean-card{grid-template-columns:66px 1fr;gap:9px;padding:9px}.bean-photo{width:66px;height:66px}.invoice-entry{grid-template-columns:minmax(0,1fr) 85px}.recipe-line{grid-template-columns:minmax(0,1fr) 78px 32px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+:root{--bg:#f7f5f0;--card:#fff;--ink:#28231e;--mut:#777169;--acc:#4b392d;--acc2:#c58b3d;--ok:#28795c;--line:#e8e2d8;--shadow:0 10px 28px #33271b10}
+body{background:radial-gradient(ellipse at 12% 8%,#e9dccb55,transparent 34%),radial-gradient(ellipse at 92% 30%,#d9e3d133,transparent 32%),var(--bg)}
+.appbar{background:linear-gradient(110deg,#3d2d23,#604631);padding:11px 17px;box-shadow:0 7px 22px #38281b20}
+.brand-symbol{border:1px solid #ffffff2b;border-radius:15px;box-shadow:inset 0 1px #ffffff28}
+#back-button{min-height:40px;border-radius:14px;background:#ffffff12;transition:background .18s,transform .18s}
+#back-button:active{transform:scale(.96);background:#ffffff25}
+main{padding-top:18px;padding-bottom:40px}
+.welcome-copy{padding:5px 3px 13px}.welcome-copy h1{font-size:25px;letter-spacing:-.35px}
+.dashboard-hero{position:relative;isolation:isolate;overflow:hidden;min-height:154px;margin:4px 0 17px;padding:19px 18px;border-radius:23px;background:linear-gradient(115deg,#3e2e25 0%,#644b36 65%,#967044 130%);color:#fff;box-shadow:0 15px 30px #49352220}
+.dashboard-hero::after{content:"";position:absolute;z-index:-1;left:-34px;bottom:-67px;width:180px;height:180px;border:1px solid #ffffff18;border-radius:50%;box-shadow:0 0 0 17px #ffffff08,0 0 0 34px #ffffff06}
+.dashboard-copy{position:relative;z-index:2;max-width:68%}.dashboard-kicker{display:inline-flex;align-items:center;gap:6px;color:#f2d2a0;font-size:10px;font-weight:800}.dashboard-copy strong{display:block;margin-top:8px;font-size:19px;line-height:1.55}.dashboard-copy p{margin:4px 0 0;color:#ffffffc9;font-size:10px;line-height:1.8}
+.dashboard-art{position:absolute;z-index:1;left:3px;bottom:-10px;width:43%;height:170px;object-fit:contain;object-position:left bottom;filter:drop-shadow(0 8px 14px #15100d50);pointer-events:none}
+.action-grid{gap:12px;margin-top:10px}.action-button{position:relative;overflow:hidden;min-height:84px;padding:14px;border-radius:20px;box-shadow:0 7px 18px #3526190d;transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,border-color .2s}
+.action-button::after{content:"";position:absolute;inset:auto -18px -30px auto;width:82px;height:82px;border-radius:50%;background:#c58b3d0a;transition:transform .3s}.action-button:hover{transform:translateY(-2px);box-shadow:0 12px 24px #35261912}.action-button:hover::after{transform:scale(1.35)}.action-button:active{transform:scale(.985)}
+.action-icon{width:50px;height:50px;border:1px solid #e8dccb;border-radius:17px;background:linear-gradient(145deg,#fcf6ed,#efe3d1);box-shadow:inset 0 1px #fff}
+.action-button:first-child .action-icon{background:linear-gradient(145deg,#f7e7ca,#ecd3a8)}
+.action-text strong{font-size:15px}.action-text small{font-size:10px;line-height:1.7}
+.summary-strip{gap:8px;margin-top:17px}.summary-chip{border-radius:16px;background:#ffffffc7;box-shadow:0 4px 12px #35261908;text-align:center}.summary-chip strong{font-size:17px;color:var(--acc)}
+.view{will-change:transform,opacity}.view.leaving{opacity:0;transform:translateY(-8px) scale(.992);transition:opacity .17s ease,transform .17s ease;pointer-events:none}.view.entering{opacity:0;transform:translateY(9px) scale(.992)}
+.panel{border-radius:20px;padding:15px;box-shadow:0 9px 24px #3526190b}.bean-card{border-radius:18px;padding:11px;box-shadow:0 6px 18px #3526190b;transition:transform .18s,border-color .18s}.bean-card:focus-within{border-color:#c58b3d88;transform:translateY(-1px)}
+.bean-photo{border-radius:15px;box-shadow:0 4px 10px #31231617}.g{border-radius:12px;font-variant-numeric:tabular-nums}.invoice-total{border:1px solid #ebdfce;border-radius:16px;background:linear-gradient(110deg,#f8f0e4,#fffaf1)}
+.roast-panel{margin:13px 0 8px;padding:14px;border:1px solid var(--line);border-radius:17px;background:#fff;box-shadow:0 5px 15px #35261908}.roast-heading{display:flex;align-items:center;gap:9px;margin-bottom:10px}.roast-heading-icon{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:#f7eddf;font-size:18px}.roast-heading strong{font-size:13px}.roast-heading small{display:block;color:var(--mut);font-size:10px}.roast-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}.roast-option{min-height:48px;border:1px solid var(--line);border-radius:14px;background:#fbfaf7;color:var(--ink);font-size:12px;font-weight:800;transition:.18s}.roast-option[aria-pressed="true"]{border-color:#9d7242;background:#f7efe4;box-shadow:inset 0 0 0 1px #9d724233;color:#563d28}.roast-option span{display:block;margin-top:2px;color:var(--mut);font-size:9px;font-weight:600}.invoice-breakdown{display:grid;gap:6px;margin-top:11px;padding:10px 12px;border-radius:13px;background:#f9f7f2;color:var(--mut);font-size:11px}.invoice-breakdown div{display:flex;justify-content:space-between;gap:10px}.invoice-breakdown strong{color:var(--ink)}.invoice-breakdown .fee-row strong{color:#946529}.invoice-breakdown .final-row{border-top:1px solid var(--line);padding-top:7px;margin-top:2px;color:var(--ink);font-weight:800}
+.history-item,.customer-card,.custom-bean-row{border-radius:17px;box-shadow:0 5px 16px #35261908}.history-top strong,.customer-top strong{font-size:12px}.primary{min-height:48px;border-radius:14px;background:linear-gradient(110deg,#49372b,#705239);box-shadow:0 7px 16px #49352221;transition:transform .16s,filter .16s}.primary:active{transform:scale(.985);filter:brightness(1.08)}.secondary{min-height:44px;border-radius:13px}
+.toast{box-shadow:0 9px 24px #0002}
+@media(max-width:400px){.dashboard-copy{max-width:72%}.dashboard-art{width:39%;height:150px}.dashboard-copy strong{font-size:17px}.action-button{min-height:77px;padding:12px}.summary-chip{padding:9px 6px}}
+:root{--bg:#f6f3ed;--card:#fffefa;--ink:#29231d;--mut:#756c62;--acc:#503827;--acc2:#b87a32;--ok:#3c7a61;--line:#e7dfd4;--shadow:0 10px 30px #2b20140d;--accent-soft:#f2e8da}
+html,body{background:var(--bg);font-size:15px;scroll-behavior:smooth}
+body{background:radial-gradient(ellipse at 15% 5%,#eadbc755,transparent 34%),radial-gradient(ellipse at 96% 38%,#c7d7ca22,transparent 34%),var(--bg)}
+.appbar{min-height:66px;padding:10px max(16px,calc((100vw - 720px)/2));gap:12px;background:linear-gradient(112deg,#35261d,#674a32);box-shadow:0 6px 24px #2d20172b}
+.brand-symbol{width:42px;height:42px;border-radius:15px;background:linear-gradient(145deg,#ffffff26,#ffffff10);border:1px solid #ffffff3d;box-shadow:inset 0 1px #ffffff35}
+.brand-symbol svg{width:26px;height:26px;stroke:#fff5e8;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
+.appbar-title{font-size:17px;letter-spacing:.1px}.appbar-sub{font-size:11px}
+#back-button{min-width:66px;min-height:42px;border-radius:14px;background:#ffffff12}
+main{padding:18px 16px calc(142px + env(safe-area-inset-bottom))}
+.welcome-copy h1,.view h2{font-size:25px;line-height:1.5;letter-spacing:-.3px}.welcome-copy p,.view-intro{font-size:13px;line-height:1.9}
+.eyebrow{font-size:12px;letter-spacing:.2px}.dashboard-hero{min-height:162px;border-radius:24px;margin:8px 0 18px;box-shadow:0 16px 36px #49352226}.dashboard-copy strong{font-size:20px;line-height:1.6}.dashboard-copy p{font-size:11px}.dashboard-art{height:178px;width:43%}
+.action-grid{gap:12px}.action-button{min-height:82px;border-radius:19px;padding:14px 15px;background:#fffefa;border-color:#e9e1d7;box-shadow:0 6px 18px #38291c0c}.action-button:active{transform:scale(.985)}
+.action-icon{width:48px;height:48px;border-radius:16px;display:grid;place-items:center}.action-icon svg{width:25px;height:25px;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.action-text strong{font-size:15px}.action-text small{font-size:11px;line-height:1.7}
+.summary-strip{gap:9px;margin-top:17px}.summary-chip{border-radius:16px;padding:11px 7px;background:#fffdf8;border-color:#ece4da;box-shadow:0 5px 14px #38291c08}.summary-chip strong{font-size:19px}.summary-chip span{font-size:10px}
+.panel{padding:16px;border-radius:20px;background:#fffefa;box-shadow:0 9px 24px #36281c0b}.panel-title{font-size:15px}
+.field{gap:7px;margin:13px 0}.field label{font-size:13px;color:#61574d}.field input,.field select,.recipe-line select,.recipe-line input{min-height:48px;border-radius:14px;background:#fbfaf7;border-color:#e4ddd2;padding:11px 13px;font-size:14px}.field input[type=file]{padding:10px}.muted{font-size:12px;line-height:1.8}
+.bean-card{grid-template-columns:82px 1fr;gap:12px;padding:11px;border-radius:18px}.bean-photo{width:82px;height:82px;border-radius:15px}.bean-name{font-size:14px}.bean-rate{font-size:12px}.invoice-entry{grid-template-columns:minmax(0,1fr) 105px}.gram-field label{font-size:11px}.g{min-height:45px;height:45px;font-size:16px}.pr{font-size:15px}.pr small{font-size:10px}
+.roast-panel{padding:15px;border-radius:18px;background:#fffefa}.roast-option{min-height:52px;border-radius:15px;font-size:13px}.roast-option span{font-size:10px}.invoice-breakdown{padding:12px 13px;border-radius:15px;font-size:12px}.invoice-breakdown strong{font-size:12px}.invoice-total{padding:15px;border-radius:16px}
+.primary,.secondary{min-height:48px;border-radius:14px;font-size:14px}.secondary{background:#f6eee2}.recipe-line{grid-template-columns:minmax(0,1fr) 90px 42px;gap:8px}.remove-line{width:40px;height:40px;border-radius:12px}
+.history-disclosure{margin:18px 0 0;border:1px solid var(--line);border-radius:18px;background:#fffefa;overflow:hidden}.history-disclosure summary{min-height:52px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 15px;cursor:pointer;font-weight:800;font-size:14px;list-style:none}.history-disclosure summary::-webkit-details-marker{display:none}.history-disclosure summary::after{content:"＋";color:var(--acc2);font-size:18px}.history-disclosure[open] summary::after{content:"−"}.history-disclosure summary small{margin-inline-start:auto;color:var(--mut);font-size:10px;font-weight:600}.history-disclosure #invoice-history{padding:0 12px 12px}
+.customer-card,.history-item,.custom-bean-row{background:#fffefa;border-radius:17px;padding:13px}.customer-card .detail-toggle{padding:11px;border-radius:12px;font-size:12px;background:#f7f2e9}.history-detail{font-size:12px;line-height:2}
+.bottom-nav{position:fixed;z-index:20;inset-inline:0;bottom:0;display:flex;justify-content:center;gap:5px;padding:7px max(10px,calc((100vw - 720px)/2)) calc(8px + env(safe-area-inset-bottom));background:#fffefaed;border-top:1px solid #e9e2d9;box-shadow:0 -9px 24px #30231710;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.bottom-nav button{flex:1;min-width:0;min-height:53px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:0;border-radius:15px;background:transparent;color:#7b7268;font-size:10px;font-weight:700;transition:color .16s,background .16s,transform .16s}
+.bottom-nav button svg{width:22px;height:22px;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.bottom-nav button[aria-current="page"]{color:#573d29;background:#f3eadc}.bottom-nav button:active{transform:scale(.95)}
+.invoice-dock{position:fixed;z-index:19;inset-inline:0;bottom:calc(68px + env(safe-area-inset-bottom));max-width:720px;margin-inline:auto;display:flex;align-items:center;gap:12px;padding:11px 15px;background:#fffefaed;border:1px solid #e6ddd1;border-bottom:0;border-radius:19px 19px 0 0;box-shadow:0 -8px 25px #33251a12;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}.invoice-dock[hidden],.bottom-nav[hidden]{display:none!important}.invoice-dock-total{flex:1;min-width:0}.invoice-dock-total span{display:block;color:var(--mut);font-size:10px}.invoice-dock-total strong{display:block;color:var(--acc);font-size:18px;white-space:nowrap}.invoice-dock .primary{width:auto;min-width:145px;padding-inline:17px}
+.toast{bottom:calc(82px + env(safe-area-inset-bottom));font-size:13px;padding:11px 17px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #bd873d66;outline-offset:2px}
+@media(max-width:380px){.appbar{padding-inline:12px}.dashboard-copy{max-width:71%}.dashboard-copy strong{font-size:18px}.dashboard-art{width:40%;height:155px}.invoice-dock{gap:8px;padding-inline:10px}.invoice-dock .primary{min-width:130px;padding-inline:12px}.invoice-dock-total strong{font-size:16px}.bottom-nav button{font-size:9px}}
+@media(min-width:760px){main{padding-inline:22px}.bottom-nav{border-inline:1px solid #e9e2d9;border-radius:18px 18px 0 0}.invoice-dock{border-inline:1px solid #e6ddd1}}
+@media(prefers-reduced-motion:reduce){html,body{scroll-behavior:auto}}
+.invoice-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.invoice-meta-grid .field{margin:7px 0}.invoice-meta-grid input{direction:ltr;text-align:right}
+.doc-type-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}.doc-type-options button{min-height:44px;border:1px solid var(--line);border-radius:13px;background:#fbfaf7;color:var(--mut);font-size:12px;font-weight:800}.doc-type-options button[aria-pressed="true"]{border-color:#98704a;background:#f5ecdf;color:#503827;box-shadow:inset 0 0 0 1px #98704a22}
+.history-search{padding:10px 2px 4px}.history-search input{width:100%;min-height:44px;border:1px solid var(--line);border-radius:13px;padding:9px 12px;background:#fbfaf7;color:var(--ink);font-size:12px}.history-day,.history-month{margin:8px 0;border:1px solid var(--line);border-radius:15px;background:#fffefa;overflow:hidden}.history-day>summary,.history-month>summary{padding:12px 13px;list-style:none;cursor:pointer;font-size:12px;font-weight:800;display:flex;justify-content:space-between;gap:10px}.history-day>summary::-webkit-details-marker,.history-month>summary::-webkit-details-marker{display:none}.history-day>summary::after,.history-month>summary::after{content:"＋";color:var(--acc2);font-size:16px}.history-day[open]>summary::after,.history-month[open]>summary::after{content:"−"}.history-day-content,.history-month-content{padding:0 10px 10px}.history-day-total,.history-month-total{color:var(--mut);font-size:10px;font-weight:600}.saved-invoice{border:1px solid #eee4d8;border-radius:14px;background:#fff;margin:8px 0;overflow:hidden}.saved-invoice>summary{padding:11px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;list-style:none}.saved-invoice>summary::-webkit-details-marker{display:none}.saved-invoice>summary strong{font-size:12px}.saved-invoice>summary .record-total{white-space:nowrap;color:var(--acc);font-weight:900}.invoice-summary-meta{display:block;margin-top:3px;color:var(--mut);font-size:10px}.saved-invoice[open] .history-detail{margin:0 12px 10px}.record-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.record-actions button{min-height:38px;padding:7px 10px;border-radius:11px;font-size:11px}.record-actions .danger{margin-inline-start:auto}
+.modal-overlay{position:fixed;z-index:80;inset:0;display:grid;place-items:center;padding:14px;background:#20181088;backdrop-filter:blur(4px)}.modal-overlay[hidden]{display:none!important}.modal-scrim{position:absolute;inset:0}.modal-card{position:relative;z-index:1;width:min(100%,580px);max-height:calc(100dvh - 28px);overflow:auto;border:1px solid #f1e7da;border-radius:22px;background:#fbf8f2;box-shadow:0 24px 80px #17110c55;padding:15px}.modal-header{display:flex;align-items:center;justify-content:space-between;gap:10px}.modal-header h2{margin:0;color:var(--ink);font-size:17px}.modal-header p{margin:2px 0 0;color:var(--mut);font-size:11px}.modal-close{width:38px;height:38px;flex:none;border:0;border-radius:12px;background:#eee5d9;color:var(--acc);font-size:24px}.receipt-stage{max-height:55dvh;overflow:auto;margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:16px;background:#efe8dc}.receipt-stage canvas{display:block;width:100%;height:auto;max-width:430px;margin:0 auto;border-radius:8px;box-shadow:0 6px 18px #33271b22}.receipt-share-hint{margin:10px 3px;color:var(--mut);font-size:11px;line-height:1.7}.receipt-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.receipt-actions button{width:100%;min-height:44px;margin:0;font-size:12px}.receipt-actions #receipt-share{grid-column:span 2}.delete-step-label{display:block;margin-bottom:4px;color:#9c6332;font-size:10px;font-weight:800}.delete-copy{margin:13px 0;color:var(--mut);font-size:13px;line-height:1.8}.delete-modal-card .danger{min-height:45px;padding-inline:14px;font-size:12px}.delete-modal-card .button-row{margin-top:14px}.delete-modal-card .button-row button{flex:1}
+@media(max-width:380px){.invoice-meta-grid{gap:6px}.invoice-meta-grid label{font-size:11px}.record-actions{gap:5px}.record-actions button{padding-inline:8px}.receipt-actions{gap:6px}}
+@media print{html,body{min-height:0!important;background:#fff!important}.appbar,main,.invoice-dock,.bottom-nav,.toast,#splash,#delete-modal{display:none!important}#receipt-modal{display:block!important;position:static!important;inset:auto!important;padding:0!important;background:#fff!important;backdrop-filter:none!important}#receipt-modal .modal-scrim,#receipt-modal .modal-header,#receipt-modal .receipt-share-hint,#receipt-modal .receipt-actions{display:none!important}.receipt-modal-card{width:100%!important;max-height:none!important;overflow:visible!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important}.receipt-stage{max-height:none!important;overflow:visible!important;margin:0!important;padding:0!important;border:0!important;background:#fff!important}.receipt-stage canvas{width:100%!important;max-width:100%!important;max-height:none!important;box-shadow:none!important;border-radius:0!important}}
+.invoice-meta-grid .field small,.payment-note{display:block;color:var(--mut);font-size:10px;line-height:1.7;margin-top:5px}.business-contact{display:flex;align-items:center;gap:8px;margin:9px 0 15px;padding:10px 12px;border:1px solid var(--line);border-radius:13px;background:#fffefa;color:var(--mut);font-size:11px}.business-contact>span:first-child{font-size:18px;color:#2d8054}.business-contact strong{margin-inline-start:auto;color:var(--ink);letter-spacing:.3px;font-size:13px}.payment-method-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.payment-method{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:94px;padding:8px 5px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--ink);font-size:10px;font-weight:800}.payment-method[aria-pressed="true"]{border-color:#98704a;background:#f8f0e4;box-shadow:0 0 0 2px #98704a18}.payment-mark{width:76px;height:46px;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:8px;overflow:hidden}.payment-mark img{display:block;max-width:100%;max-height:100%;object-fit:contain}.cash-mark img{width:42px;height:42px}.instapay-mark img{width:73px;height:auto}.payment-method span:last-child{white-space:nowrap}.customer-invoice-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}.customer-invoice-actions button{font-size:11px;padding-inline:7px}.customer-branch-note{display:block;margin-top:6px;color:var(--mut);font-size:10px;line-height:1.6}.invoice-lineage{color:#765b3e;font-size:11px}.business-contact a{color:inherit}.receipt-whatsapp{text-decoration:none;display:flex;align-items:center;justify-content:center}
+#welcome-mark img{display:block;width:82px;height:82px;object-fit:cover;border:1px solid #f0d8aa;border-radius:24px;box-shadow:0 12px 26px #1c141066}
+body{background:radial-gradient(ellipse at 8% 12%,#e4d1b833,transparent 31%),radial-gradient(ellipse at 92% 55%,#9aab8a18,transparent 32%),linear-gradient(180deg,#fbf8f2 0%,#f2ece2 58%,#f8f5ef 100%)}
+.dashboard-hero{background-image:linear-gradient(90deg,#30211618 0%,#34251b55 38%,#37271de8 68%,#37271df5 100%),url('assets/mandour-home-banner.jpg');background-position:center;background-size:cover;background-repeat:no-repeat;min-height:174px;padding:20px 18px}
+.dashboard-copy{max-width:62%}.dashboard-copy strong{font-size:19px;line-height:1.55}.dashboard-copy p{font-size:11px}.dashboard-art{display:none}
+.customer-card{overflow:hidden;padding:0;border-radius:18px;background:#fffefa;box-shadow:0 7px 20px #3526190b}
+.customer-toggle{width:100%;display:flex;align-items:center;gap:10px;padding:14px;border:0;background:transparent;color:var(--ink);text-align:right}
+.customer-ident{flex:1;min-width:0}.customer-name-row{display:flex;align-items:center;flex-wrap:wrap;gap:7px}.customer-name-row strong{font-size:14px}.customer-country{display:inline-flex;align-items:center;border-radius:20px;padding:3px 9px;background:#f4ebdc;color:#765639;font-size:10px;font-weight:800}.customer-last-buy{display:block;margin-top:4px;color:var(--mut);font-size:11px}.customer-chevron{color:var(--acc2);font-size:21px;transition:transform .2s}.customer-toggle[aria-expanded="true"] .customer-chevron{transform:rotate(180deg)}
+.customer-expanded{padding:0 13px 13px}.customer-invoice-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.customer-invoice-actions button{font-size:12px;padding-inline:7px}.customer-branch-note{display:block;margin:7px 1px;color:var(--mut);font-size:10px;line-height:1.75}.customer-expanded .history-detail{margin-top:9px;padding-top:9px}
+@media(max-width:380px){.dashboard-copy{max-width:67%}.dashboard-hero{min-height:164px;padding:17px 14px}.dashboard-copy strong{font-size:17px}.customer-toggle{padding:12px 10px}.customer-name-row strong{font-size:13px}.customer-last-buy{font-size:10px}}
+.customer-template-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #eee3d5}.customer-template-row:last-child{border-bottom:0}.customer-template-row .recipe{padding:5px 0;border:0}.customer-template-row .secondary{min-height:38px;padding:7px 10px;font-size:10px;white-space:nowrap}.customer-template-row .ingredient-list strong{color:var(--acc);font-size:10px}
+@media(max-width:380px){.customer-template-row{grid-template-columns:1fr}.customer-template-row .secondary{width:100%}}
+.customer-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 4px}.customer-stats>div{display:grid;gap:4px;padding:10px;border:1px solid var(--line);border-radius:13px;background:#fffaf2}.customer-stats small,.customer-purchase-row small{color:var(--mut);font-size:10px}.customer-stats strong{color:var(--acc);font-size:15px}.customer-stats-note{display:block;color:var(--mut);font-size:9px;margin:0 1px 9px}.customer-section{margin-top:12px}.customer-section>strong{font-size:12px}.customer-purchase-list{display:grid;gap:6px;margin-top:7px}.customer-purchase-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:11px;background:#fffefa}.customer-purchase-row>span{display:grid;gap:3px;min-width:0}.customer-purchase-row>span>strong{font-size:11px}.customer-purchase-row>strong{white-space:nowrap;color:var(--acc);font-size:12px}
+#welcome-mark img{display:block;width:100%;height:100%;object-fit:contain;border:0;border-radius:19px;box-shadow:none}
+button{touch-action:manipulation}
+.primary,.secondary,.danger{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:10px 14px;text-align:center;line-height:1.3;transition:transform .16s ease,box-shadow .16s ease,filter .16s ease,border-color .16s ease,background .16s ease}
+.button-row>*{min-height:48px;display:flex;align-items:center;justify-content:center;text-align:center}
+.customer-invoice-actions button{min-height:46px}
+.record-actions button{min-height:42px}
+.receipt-actions button,.receipt-actions a{min-height:46px;display:flex;align-items:center;justify-content:center;text-align:center}
+.doc-type-options button,.payment-method,.roast-option{transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease}
+button:active{transform:scale(.98)}
+.action-button:active,.bottom-nav button:active{transform:scale(.985)}
+.view{animation:none;will-change:opacity,transform;transition:opacity .22s ease,transform .28s cubic-bezier(.2,.8,.2,1)}
+.view.entering{opacity:0;transform:translateX(15px) scale(.994);transition:none}
+.view.leaving{opacity:0;transform:translateX(-12px) scale(.994);transition:opacity .18s ease,transform .18s ease;pointer-events:none}
+@keyframes modal-backdrop-in{from{opacity:0}to{opacity:1}}
+@keyframes modal-card-in{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+.modal-overlay:not([hidden]){animation:modal-backdrop-in .2s ease both}
+.modal-card{animation:modal-card-in .28s cubic-bezier(.2,.8,.2,1) both}
+@keyframes app-content-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes app-nav-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+body.app-ready .appbar{animation:app-content-in .42s .04s cubic-bezier(.2,.8,.2,1) both}
+body.app-ready main{animation:app-content-in .48s .1s cubic-bezier(.2,.8,.2,1) both}
+body.app-ready .bottom-nav{animation:app-nav-in .4s .18s cubic-bezier(.2,.8,.2,1) both}
+.branch-payment-panel{display:grid;gap:12px;margin-top:14px;padding:13px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#fffaf1,#f7efe2)}
+.branch-location{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:9px;padding:10px;border-radius:14px;background:#fff}
+.branch-pin{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:#f4ead8;color:#8a5a25;font-size:23px}
+.branch-location>div{display:grid;gap:3px}.branch-location strong{font-size:12px}.branch-location small,.payment-destination small,.payment-qr-note{color:var(--mut);font-size:10px;line-height:1.55}
+.branch-location>a{padding:8px 10px;border-radius:10px;background:#684a31;color:white;font-size:10px;font-weight:800;text-decoration:none;white-space:nowrap}
+.map-qr{grid-column:2/4;width:78px;height:78px;object-fit:contain;border:1px solid var(--line);border-radius:10px;padding:3px;background:#fff}
+.payment-destination-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.payment-destination{display:grid;align-content:start;gap:7px;min-width:0;padding:11px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.payment-destination>strong{color:var(--acc);font-size:12px}.payment-destination>b{font-size:16px;letter-spacing:.5px}
+.payment-destination .secondary{min-height:38px;padding:7px;font-size:10px}.qr-upload-label{padding:8px;border:1px dashed #cdbb9f;border-radius:10px;color:#77583a;text-align:center;font-size:10px;font-weight:800;cursor:pointer}
+.qr-file-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.payment-qr-preview{width:100%;max-height:150px;object-fit:contain;border-radius:10px;background:#fff}.payment-qr-note{display:block}
+.check-order-panel{display:grid;gap:16px}.check-top-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.check-top-fields .field{margin:0}.check-top-fields .field:first-child{grid-column:1/-1}
+.check-top-fields select{width:100%;min-height:48px;padding:10px;border:1px solid var(--line);border-radius:13px;background:#fff;color:var(--ink);font:inherit}
+.check-menu-heading,.check-draft-heading,.checks-section-title{display:flex;align-items:center;justify-content:space-between;gap:8px}.check-menu-heading h3,.checks-section-title h3{margin:0;font-size:16px}.check-menu-heading small,.checks-section-title small{display:block;margin-top:4px;color:var(--mut);font-size:10px;line-height:1.5}.menu-count{padding:6px 9px;border-radius:20px;background:#f5eddf;color:#805a31;font-size:10px;font-weight:800;white-space:nowrap}
+.check-menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.check-menu-card{overflow:hidden;display:grid;grid-template-columns:62px 1fr;gap:9px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:15px;background:#fffefa;box-shadow:0 4px 14px #36231609}.check-menu-card>img{width:62px;height:68px;object-fit:cover;border-radius:11px;background:#f3ebdf}.check-menu-info{display:grid;gap:5px;min-width:0}.check-menu-info strong{font-size:11px;line-height:1.4}.check-menu-info small{color:var(--mut);font-size:10px}.check-menu-info select{max-width:100%;min-height:33px;padding:4px 5px;border:1px solid var(--line);border-radius:8px;background:white;color:var(--ink);font:inherit;font-size:10px}.check-menu-info button{grid-column:1/-1;min-height:35px;padding:6px;border-radius:9px;background:#684a31;color:#fff;font:inherit;font-size:11px;font-weight:800}
+.check-draft-box{display:grid;gap:9px;padding:12px;border-radius:16px;background:#f8f1e7;border:1px solid #eadcc9}.check-draft-heading{font-size:13px}.check-draft-heading span{color:var(--acc);font-weight:900}.check-draft-list,.check-guest-items{display:grid;gap:7px}.check-draft-line,.check-saved-item{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:6px;padding:8px;border-radius:11px;background:#fff}.check-line-name{min-width:0;font-size:11px;line-height:1.45}.check-line-price{white-space:nowrap;color:var(--acc);font-size:10px;font-weight:800}.qty-controls{display:flex;align-items:center;gap:5px}.qty-controls button{width:30px;height:30px;border:1px solid var(--line);border-radius:9px;background:#fbf5ea;color:var(--ink);font-size:17px;font-weight:800}.qty-controls strong{min-width:18px;text-align:center;font-size:12px}.check-commit{width:100%;min-height:48px}.open-checks-section{margin-top:20px}.checks-section-title{align-items:flex-start;margin-bottom:10px}.check-list{display:grid;gap:11px}.check-card{overflow:hidden;border:1px solid var(--line);border-radius:18px;background:#fffefa;box-shadow:0 6px 18px #3526190a}.check-card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:13px;background:linear-gradient(110deg,#fffaf2,#f5ecdf)}.check-card-header h4{margin:0;font-size:14px}.check-card-header small{display:block;margin-top:4px;color:var(--mut);font-size:10px}.check-total{color:var(--acc);font-size:16px;font-weight:900;white-space:nowrap}.check-guest{margin:10px;padding:10px;border:1px solid var(--line);border-radius:14px;background:#fff}.check-guest-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:7px}.check-guest-head strong{font-size:12px}.check-guest-head button,.check-danger{border:0;border-radius:9px;padding:7px 9px;background:#fff0ed;color:#9c493d;font:inherit;font-size:10px;font-weight:800}.check-saved-item{grid-template-columns:minmax(0,1fr) auto auto;margin-top:5px;padding:6px}.check-saved-item .qty-controls button{width:26px;height:26px}.check-card-actions{display:flex;flex-wrap:wrap;gap:7px;padding:0 10px 11px}.check-card-actions button{min-height:38px;padding:7px 10px;font-size:10px}.check-state{padding:5px 8px;border-radius:20px;background:#e8f4e9;color:#39744a;font-size:10px;font-weight:800}.check-state.closed{background:#eee9e2;color:#6c6257}.closed-checks{margin-top:14px}.closed-checks>summary{padding:12px;border-radius:12px;background:#f5efe6;color:var(--ink);font-size:12px;font-weight:800}
+@media(max-width:390px){.check-menu-grid{grid-template-columns:1fr}.check-menu-card{grid-template-columns:72px 1fr}.check-menu-card>img{width:72px;height:76px}.payment-destination-grid{grid-template-columns:1fr 1fr}.branch-location{grid-template-columns:auto 1fr}.branch-location>a{grid-column:2;justify-self:start}.map-qr{grid-column:1/3}}
+@media(prefers-reduced-motion:reduce){.check-menu-card,.check-card,button{transition:none!important}}
+.bottom-nav{grid-template-columns:repeat(5,minmax(0,1fr))}
+.bottom-nav button{min-width:0;padding-inline:2px}
+.bottom-nav button span{font-size:10px}
+html{scroll-behavior:auto}
+main{overflow:clip}
+.invoice-meta-grid{grid-template-columns:1fr}
+.payment-destination-grid{grid-template-columns:1fr}
+.check-menu-grid{grid-template-columns:1fr;gap:12px}
+.check-menu-card{grid-template-columns:86px minmax(0,1fr);gap:12px;align-items:center;padding:10px;min-height:108px}
+.check-menu-card>img{width:86px;height:86px;border-radius:14px}
+.check-menu-info{grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:7px 10px}
+.check-menu-info strong{grid-column:1/-1;font-size:13px;line-height:1.45}
+.check-menu-info small{font-size:11px}
+.check-menu-info select{width:100%;min-height:40px;font-size:11px}
+.check-menu-info button{grid-column:2;grid-row:2 / span 2;min-width:92px;min-height:44px;font-size:12px}
+.check-menu-info:not(:has(select)) button{grid-row:2}
+.check-menu-heading{align-items:flex-start}
+.check-menu-heading h3{font-size:17px}
+.check-menu-heading small{font-size:11px}
+.menu-count{flex:none}
+.invoice-dock{z-index:18}
+.bottom-nav{z-index:30}
+@media(max-width:390px){
+  main{padding-inline:12px;padding-bottom:calc(158px + env(safe-area-inset-bottom))}
+  .appbar{padding-inline:12px}
+  .check-menu-card{grid-template-columns:76px minmax(0,1fr);gap:10px;min-height:100px}
+  .check-menu-card>img{width:76px;height:76px}
+  .check-menu-info button{min-width:84px;padding-inline:8px}
+  .invoice-dock{bottom:calc(72px + env(safe-area-inset-bottom));padding:10px 12px}
+  .invoice-dock .primary{min-width:126px}
+}
+@media(min-width:560px){.check-menu-grid{grid-template-columns:1fr 1fr}.check-menu-card{grid-template-columns:72px minmax(0,1fr)}.check-menu-card>img{width:72px;height:72px}}
+main{overflow-x:hidden}
+.view[aria-hidden="true"]{display:none!important}
+.section-divider{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin:18px 2px 9px;padding-bottom:8px;border-bottom:2px solid #eadfce}
+.section-divider strong{font-size:14px;color:var(--acc)}
+.section-divider small{color:var(--mut);font-size:10px;text-align:left}
+.section-divider.compact{margin:0 0 8px;padding-bottom:7px;border-bottom-width:1px}
+.check-order-panel{gap:11px}
+.check-menu-heading{padding:8px 0 2px}
+.check-menu-card{grid-template-columns:76px minmax(0,1fr);min-height:102px}
+.check-menu-card>img{width:76px;height:76px}
+.check-menu-info{grid-template-columns:1fr;gap:6px}
+.check-menu-info strong,.check-menu-info small,.check-menu-info select,.check-menu-info button{grid-column:1;grid-row:auto;width:100%}
+.check-menu-info button{min-height:40px;min-width:0}
+.check-draft-box{margin-top:5px}
+.check-draft-box .section-divider{margin-top:0}
+.history-disclosure{margin-top:18px}
+@media(max-width:390px){.section-divider{margin-top:15px}.section-divider small{font-size:9px}.check-menu-card{grid-template-columns:68px minmax(0,1fr);gap:9px}.check-menu-card>img{width:68px;height:68px}}
+@media(min-width:560px){.check-menu-card{grid-template-columns:72px minmax(0,1fr)}.check-menu-card>img{width:72px;height:72px}}
+.check-total-wrap{display:grid;justify-items:end;gap:3px}.check-total-wrap small{color:var(--mut);font-size:9px}.pay-item{border:1px solid #d8c7ad!important;border-radius:7px;padding:3px 6px;background:#fff8eb;color:#855c2d;font-size:9px;font-weight:800}.pay-item.is-paid{background:#e7f3e7;color:#39734a;border-color:#b6d3b9!important}.paid-line{background:#f3f4ef!important}.line-qty-label{display:block;color:var(--mut);font-size:9px;margin-top:2px}.paid-line .check-line-name{text-decoration:line-through;text-decoration-color:#a8a89f;text-decoration-thickness:1px;opacity:.7}.checks-group{margin-top:15px}.checks-group h4{display:flex;justify-content:space-between;align-items:center;margin:0 2px 8px;color:var(--acc);font-size:13px}.checks-group h4 span{min-width:24px;padding:3px 7px;border-radius:15px;background:#f2e9db;text-align:center;font-size:10px}.check-state.deferred{background:#fff0d6;color:#8a5d20}.deferred-card{border-color:#e5c78f}
+.summary-strip{grid-template-columns:repeat(4,minmax(0,1fr))}.summary-chip strong{font-size:15px}.summary-chip span{font-size:9px}.section-divider.compact{justify-content:flex-start}.check-menu-heading{margin-top:2px}
+@media(max-width:390px){.summary-strip{grid-template-columns:1fr 1fr}.summary-chip{min-height:58px}}
+.bean-inventory-strip{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:10px 0 12px}.bean-inventory-strip>div{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 13px;border:1px solid var(--line);border-radius:14px;background:#fffaf2}.bean-inventory-strip strong{color:var(--acc);font-size:18px}.bean-inventory-strip span{color:var(--mut);font-size:10px}
+.bean-inventory-strip{position:sticky;top:8px;z-index:8;padding:8px;border:1px solid #d8c5a9;border-radius:16px;background:rgba(255,250,242,.96);box-shadow:0 6px 20px rgba(68,43,22,.12);backdrop-filter:blur(8px)}.bean-inventory-strip>div:last-child{background:#f4e6cd;border-color:#d9bd91}.bean-inventory-strip>div:last-child strong{font-size:22px}
+.compact-check-card{border-radius:14px;box-shadow:0 3px 12px #3526190c}.compact-check-header{display:flex;justify-content:space-between;gap:10px;padding:11px 12px;background:#fff8ed;border-bottom:1px solid #eee1cf}.compact-check-header h4{margin:0 0 2px;font-size:14px}.compact-customer{display:block;color:var(--acc);font-size:11px}.compact-check-header small{display:block;margin-top:4px;color:var(--mut);font-size:9px}.compact-total{display:grid;justify-items:end;gap:3px}.compact-total>strong{color:var(--acc);font-size:15px}.compact-total>small{color:var(--mut);font-size:9px}.compact-guest-list{padding:7px 10px}.compact-guest{padding:7px 0;border-bottom:1px solid #eee5d9}.compact-guest:last-child{border-bottom:0}.compact-guest-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}.compact-guest-head strong{font-size:11px}.remove-guest{border:0;background:transparent;color:#a15a4f;font:inherit;font-size:9px;padding:2px 4px}.compact-items{display:grid;gap:4px}.compact-item{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:5px;padding:5px 6px;border-radius:8px;background:#fff}.compact-item .check-line-name{font-size:10px}.compact-item .check-line-name small{display:block;color:var(--mut);font-size:8px}.compact-item .check-line-price{font-size:9px}.compact-qty{gap:3px}.compact-qty button{width:23px;height:23px;font-size:14px}.compact-qty strong{font-size:10px;min-width:14px}.compact-qty .pay-item{width:auto;min-width:30px;padding:2px 5px;border-radius:6px;background:#f5ead8;color:#78552f;font-size:9px}.compact-qty .pay-item.is-paid{background:#e5f2e6;color:#39734a}.compact-actions{display:flex;gap:6px;flex-wrap:wrap;padding:7px 10px 9px;border-top:1px solid #eee5d9}.compact-actions button{min-height:32px;padding:5px 10px;border-radius:8px;font-size:10px}.compact-actions .danger{margin-inline-start:auto}
+.account-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:3px 2px 0}.account-section-head strong{font-size:15px;color:var(--acc)}.account-section-head small{color:var(--mut);font-size:10px}.account-fields-grid{padding:12px;border:1px solid var(--line);border-radius:15px;background:#fffaf2}.account-fields-grid .field:first-child{grid-column:auto}.account-fields-grid .field label{font-size:10px}.account-fields-grid .field input,.account-fields-grid select{min-height:44px}
+.check-menu-card>img{object-fit:cover;image-rendering:auto}
+.check-user-preview{margin-top:9px;padding:10px 12px;border-radius:12px;background:#f5eadb;color:var(--acc);font-size:12px;font-weight:800}.check-filter-bar{display:flex;align-items:center;justify-content:space-between;gap:9px;margin:13px 0 8px;padding:9px 10px;border:1px solid var(--line);border-radius:14px;background:#fffaf2}.check-filter-bar strong{font-size:12px}.check-filter-bar div{display:flex;gap:5px}.check-filter-bar button{border:1px solid var(--line);border-radius:9px;padding:6px 8px;background:#fff;color:var(--mut);font-size:10px;font-weight:800}.check-filter-bar button[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:#fff}.extra-drinks-panel{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}.extra-drinks-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;border:1px solid #d9c3a6;border-radius:13px;padding:11px 12px;background:#fff5e6;color:var(--acc);font-weight:800}.extra-drinks-toggle small{color:var(--mut);font-size:10px}.extra-drinks-grid{margin-top:10px}.discount-field{display:grid;gap:2px;color:var(--mut);font-size:8px;font-weight:700}.discount-field input{width:48px;height:25px;padding:2px 3px;border:1px solid #decdb7;border-radius:6px;background:#fff9ef;text-align:center;font-size:10px;color:var(--ink)}.saved-discount input{width:42px}.check-line-name del{color:#a9937e;font-size:8px;margin-inline-end:3px}.check-line-name strong{color:var(--ok);font-size:9px}
+.check-panel-switch{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:12px 0}.check-panel-switch button{min-height:44px;border:1px solid var(--line);border-radius:13px;background:#fff;color:var(--acc);font-weight:800;font-size:11px}.check-panel-switch button[aria-pressed="true"]{background:var(--acc);color:#fff;border-color:#acc;box-shadow:0 5px 12px #50382722}.checks-section-title{display:flex;align-items:center;justify-content:space-between;gap:8px}.checks-section-title small{color:var(--mut);font-size:9px}.open-checks-section{margin-top:14px;padding-bottom:30px}.check-order-panel[hidden],#checks-only-panel[hidden],#extra-drinks-menu[hidden]{display:none!important}
+.backup-panel{margin-top:14px;padding:14px;border:1px solid #d9c3a6;border-radius:18px;background:linear-gradient(145deg,#fffaf2,#f6ead8);box-shadow:0 7px 20px #4a2b1710}.backup-panel-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.backup-kicker{color:var(--acc2);font-size:10px;font-weight:900}.backup-panel h3{margin:3px 0 4px;color:var(--acc);font-size:15px}.backup-panel p{margin:0;color:var(--mut);font-size:10px;line-height:1.8}.backup-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--acc);color:#fff;font-size:24px;font-weight:900}.backup-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}.backup-actions button,.backup-import-label{min-height:39px!important;padding:8px 7px!important;border-radius:10px!important;font-size:10px!important;text-align:center;display:grid;place-items:center}.backup-note{display:block;margin-top:9px;color:var(--mut);font-size:9px;line-height:1.7}.backup-import-label{cursor:pointer}
+.compact-customer{display:block;margin-top:7px;padding:7px 10px;border:1px solid #d7c09d;border-radius:10px;background:#fff;color:#3b2417;font-size:15px;font-weight:900;line-height:1.55;letter-spacing:.1px}
+.compact-guest-head strong{font-size:14px!important;font-weight:900!important;color:#3b2417!important}
+.check-user-preview{padding:12px 14px;border:1px solid #d7c09d;background:#fff8ec;color:#3b2417;font-size:15px;font-weight:900;line-height:1.6}
+.check-menu-info strong{font-size:15px;font-weight:900;line-height:1.45;color:#342116}
+.check-menu-info .check-menu-price{display:block;margin:0;padding:4px 8px;border-radius:8px;background:#fff3df;color:#573717;font-size:13px;font-weight:900;line-height:1.5}
+.check-line-name{font-size:13px;font-weight:800;line-height:1.55}
+.check-line-name small{font-size:11px!important;line-height:1.5}
+.discount-field{min-width:94px;gap:4px;font-size:10px;font-weight:900;color:#553b29;line-height:1.35}
+.discount-field input{width:76px;height:36px;padding:4px 8px;border:1px solid #b99b74;border-radius:9px;font-size:15px;font-weight:800;color:#2e2119;background:#fff}
+.saved-discount input{width:76px}
+.check-menu-card{border-color:#e0d0b9}
+.check-menu-card .check-menu-info button{font-weight:800}
+.appbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.appbar-net-weight {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 6px 10px;
+  border-radius: 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+.appbar-net-weight strong {
+  font-size: 13px;
+  color: #fff;
+  font-weight: 800;
+}
+.appbar-net-weight span {
+  font-size: 9px;
+  color: #fffaea;
+  opacity: 0.85;
+}
+.draft-customer-input{display:block;width:100%;margin-top:6px;min-height:32px;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:#fbfaf7;color:var(--ink);font:inherit;font-size:11px}
+.draft-customer-input::placeholder{color:#a6907a;font-size:10px}
+.edit-guest{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;margin-inline-start:6px;border:1px solid #d6c2a4;border-radius:7px;background:#fdf6e9;color:#7b4d1f;font:inherit;font-size:13px;line-height:1;vertical-align:middle;cursor:pointer}
+.edit-guest:active{transform:scale(.94)}
+.add-guest-btn{min-height:34px!important;padding:5px 10px!important;font-size:11px!important;border-radius:9px!important}
+.move-item{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;margin-inline-start:3px;border:1px solid #c3d4bc;border-radius:7px;background:#f1f7ec;color:#3d6b32;font:inherit;font-size:13px;line-height:1;vertical-align:middle;cursor:pointer}
+.move-item:active{transform:scale(.94)}
+.move-suggestions{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.move-suggestions:empty{display:none}
+.move-suggestions button{border:1px solid var(--line);border-radius:20px;padding:5px 10px;background:#fff;color:var(--acc);font:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.move-suggestions button:active{transform:scale(.96)}
+.option-buttons{display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px!important;margin-top:5px!important;grid-column:1/-1!important;grid-row:auto!important;width:100%!important}
+.check-menu-info .option-buttons .option-btn{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:1px!important;padding:6px!important;border:1px solid var(--line)!important;border-radius:11px!important;background:#fffaf2!important;color:var(--ink)!important;font:inherit!important;font-size:12px!important;font-weight:800!important;line-height:1.25!important;text-align:center!important;cursor:pointer!important;transition:.14s!important;grid-column:auto!important;grid-row:auto!important;width:100%!important;min-width:0!important;min-height:48px!important}
+.option-btn .opt-label{font-size:12px;font-weight:800;color:var(--ink)}
+.option-btn .opt-price{font-size:11px;font-weight:700;color:var(--acc)}
+.check-menu-info .option-buttons .option-btn.is-default{border-color:#b28a5c!important;background:#f6ecdc!important;box-shadow:inset 0 0 0 1px #b28a5c33!important}
+.option-btn:active{transform:scale(.97)}
+body:not(.invoice-active) .appbar-net-weight{display:none!important}
+.recipe-net-weight{margin:10px 0 4px;padding:11px 14px;border:1px solid #d8c5a9;border-radius:12px;background:linear-gradient(135deg,#fff8ec,#f5e6ce);display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12px;color:var(--mut);font-weight:700}
+.recipe-net-weight strong{color:var(--acc);font-size:16px;font-weight:900}
+.tip-field{display:grid;gap:2px;min-width:76px;font-size:9px;font-weight:800;color:#78552f}
+.tip-field input{width:66px;height:32px;padding:3px 6px;border:1px solid #d9c3a6;border-radius:8px;background:#fff8eb;text-align:center;font-size:13px;font-weight:800;color:var(--ink)}
+.quick-add-row{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.quick-add-row::-webkit-scrollbar{display:none}
+.quick-add-row[hidden]{display:none!important}
+.quick-add-btn{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:10px 14px;border:1px solid #d9c3a6;border-radius:12px;background:#fffaf2;color:var(--ink);font:inherit;cursor:pointer;white-space:nowrap;min-height:60px;min-width:120px;transition:.14s}
+.quick-add-btn:active{transform:scale(.97);background:#f6ecdc}
+.qa-name{font-size:12px;font-weight:800}
+.qa-price{font-size:11px;color:var(--acc);font-weight:700}
+.backup-reminder{display:flex;align-items:center;gap:10px;margin:10px 0;padding:12px 14px;border:1px solid #e8b678;border-radius:14px;background:linear-gradient(135deg,#fff6e3,#fdebc8);color:#68471e;font-size:12px;font-weight:700}
+.backup-reminder[hidden]{display:none!important}
+.backup-reminder>span:first-child{font-size:22px;line-height:1}
+.backup-reminder>div{flex:1;display:grid;gap:2px}
+.backup-reminder small{display:block;color:#8c6530;font-size:10px;font-weight:600}
+.backup-reminder button{border:0;border-radius:9px;padding:7px 10px;background:#68471e;color:#fff;font:inherit;font-size:11px;font-weight:800;cursor:pointer}
+.report-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.report-stat{padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:#fffaf2}
+.report-stat small{display:block;color:var(--mut);font-size:10px;font-weight:700}
+.report-stat strong{display:block;margin-top:4px;color:var(--acc);font-size:16px;font-weight:900}
+.report-section{margin-top:14px}
+.report-section>h4{margin:0 0 7px;font-size:13px;color:var(--acc)}
+.report-top-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fffefa;margin-bottom:5px;font-size:12px}
+.report-top-item strong{color:var(--acc);font-size:11px}
+</style>
+</head>
+<body>
+<div id="splash" aria-label="Welcome to Mandour Coffee"><div id="welcome-mark"><img src="assets/mandour-welcome-poster.png" alt="شعار مندور كوفي"></div><h1 id="welcome-title">WELCOME TO<br>MANDOUR coffee✨</h1><p id="welcome-sub">DV.𝓐𝔂𝓪𝓷𝓸𝓴𝓸𝓳𝓲</p></div>
+
+<header class="appbar">
+  <span class="brand-symbol" aria-hidden="true">
+    <svg viewBox="0 0 32 32" fill="none"><path d="M7 12h15v7a7.5 7.5 0 0 1-15 0v-7Z"/><path d="M22 14h2.2a3.8 3.8 0 0 1 0 7.6H22M11 7c0-1.2 1.8-1.7 1.8-3M17 7c0-1.2 1.8-1.7 1.8-3"/></svg>
+  </span>
+  <div class="appbar-copy">
+    <div class="appbar-title" id="bar-title">مندور كوفي</div>
+    <div class="appbar-sub">إدارة البن والفواتير</div>
+  </div>
+  <div class="appbar-net-weight">
+    <strong id="invoice-net-weight">٠ جم</strong>
+    <span>الوزن الصافي الحالي</span>
+  </div>
+  <button id="back-button" type="button" hidden>رجوع</button>
+</header>
+
+<main>
+<section class="view" id="home-view">
+ <section class="dashboard-hero">
+  <div class="dashboard-copy">
+    <span class="dashboard-kicker">☕MANDOUR COFFEE</span>
+  </div>
+  <img class="dashboard-art" src="assets/mandour-home-banner.jpg" alt="MANDOUR COFFEE✨">
+</section><div class="action-grid">
+  <button class="action-button" data-view="invoice" type="button"><span class="action-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M6 3.5h9l3 3V21l-2-1.2L14 21l-2-1.2L10 21l-2-1.2L6 21V3.5Z"/><path d="M9 10h6M9 13h6M9 16h4"/></svg></span><span class="action-text"><strong>إنشاء فاتورة</strong><small>أدخل الجرامات والسعر يتحسب تلقائيًا</small></span><span class="arrow">‹</span></button>
+  <button class="action-button" data-view="blends" type="button"><span class="action-icon" aria-hidden="true">👤</span><span class="action-text"><strong>العملاء والتوليفات</strong><small>بيانات العملاء وطلباتهم وآخر شراء</small></span><span class="arrow">‹</span></button><button class="action-button" data-view="checks" type="button"><span class="action-icon" aria-hidden="true">🧾</span><span class="action-text"><strong>الشيكات والحسابات</strong><small>افتح حسابًا وأضف الطلبات وتابع المدفوعات</small></span><span class="arrow">‹</span></button>
+
+ </div>
+ <div class="summary-strip"><div class="summary-chip"><strong id="invoice-count">٠</strong><span>فاتورة محفوظة</span></div><div class="summary-chip"><strong id="bean-count">٨</strong><span>نوع بن متاح</span></div><div class="summary-chip"><strong id="open-checks-count">٠</strong><span>شيك مفتوح</span></div><div class="summary-chip"><strong id="customer-count">٠</strong><span>عميل وتوليفة</span></div></div>
+ <div id="backup-reminder" class="backup-reminder" hidden><span aria-hidden="true">⚠</span><div><strong>وقت النسخة الاحتياطية</strong><small>لسه مفيش نسخة احتياطية</small></div><button type="button" id="backup-reminder-btn">احفظ الآن</button></div>
+<section class="backup-panel" aria-label="حفظ واستيراد بيانات التطبيق"><div class="backup-panel-head"><div><span class="backup-kicker">حماية بياناتك</span><h3>النسخ الاحتياطي ونقل البيانات</h3><p>احفظ أو شارك بيانات العملاء والتوليفات والفواتير والشيكات وتواريخها ومدفوعاتها في ملف واحد، واسترجعها عند تغيير الهاتف أو إعادة تثبيت التطبيق.</p></div><span class="backup-icon" aria-hidden="true">↥</span></div><div class="backup-actions"><button class="primary" id="export-data" type="button">حفظ نسخة احتياطية</button><button class="secondary" id="share-data" type="button">مشاركة النسخة</button><button class="secondary" id="backup-folder-settings" type="button">اختيار مجلد الحفظ</button><label class="secondary backup-import-label" for="import-data">إضافة / دمج بيانات</label><input id="import-data" type="file" accept=".json,application/json,.txt" hidden></div><small class="backup-note">اختر مجلدًا لحفظ النسخة خارجه. عند الاستيراد تُضاف السجلات الجديدة فقط، ولا تُحذف بيانات التطبيق الحالية.</small><div style="margin-top:10px"><button class="secondary" id="enable-notif-btn" type="button" style="width:100%">🔔 تفعيل إشعارات نهاية اليوم</button><small class="backup-note" id="notif-status">الإشعارات هتشتغل طول ما التطبيق مفتوح.</small></div></section>
+</section>
+<section class="view" id="invoice-view" hidden>
+ <p class="eyebrow">مندور كوفي · فاتورة</p><h2>إنشاء فاتورة</h2><p class="view-intro">اكتب الوزن بالجرام بجوار كل نوع، والسعر هيتحسب على سعر الكيلو.</p>
+ <div class="bean-inventory-strip"><div><strong id="invoice-bean-count">٠</strong><span>نوع بن</span></div><div><strong id="invoice-net-weight-strip">٠ جم</strong><span>الوزن الصافي الحالي</span></div></div>
+ <div class="panel"><div class="invoice-meta-grid"><div class="field"><label for="invoice-date">تاريخ الشراء / الفاتورة</label><input id="invoice-date" type="date" required></div><div class="field"><label for="invoice-expiry">الصلاحية والحذف التلقائي · بعد ٣ شهور</label><input id="invoice-expiry" type="date" readonly required><small>تُحسب من تاريخ الفاتورة. سيُحذف المستند تلقائيًا عند هذا التاريخ؛ نزّل صورته إذا أردت الاحتفاظ بها.</small></div></div><div class="field"><label>نوع المستند</label><div class="doc-type-options"><button type="button" data-document-type="receipt" aria-pressed="true">إيصال بيع</button><button type="button" data-document-type="quote" aria-pressed="false">عرض سعر</button></div></div><div class="field"><label for="invoice-customer">اسم العميل (اختياري)</label><input id="invoice-customer" type="text" maxlength="60" placeholder="مثال: أحمد"></div><div class="business-contact"><span aria-hidden="true">☎</span><span>رقم الهاتف والواتساب على الفاتورة</span><strong dir="ltr">01096872170</strong></div><div class="field"><label>طريقة الدفع</label><div class="payment-method-options" role="group" aria-label="طريقة الدفع"><button class="payment-method" type="button" data-payment-method="cash" aria-pressed="true"><span class="payment-mark cash-mark"><img src="assets/payments/cash.svg" alt="" aria-hidden="true"></span><span>نقدي</span></button><button class="payment-method" type="button" data-payment-method="vodafone" aria-pressed="false"><span class="payment-mark"><img src="assets/payments/vodafone-cash.png" alt="" aria-hidden="true"></span><span>Vodafone Cash</span></button><button class="payment-method" type="button" data-payment-method="instapay" aria-pressed="false"><span class="payment-mark instapay-mark"><img src="assets/payments/instapay.png" alt="" aria-hidden="true"></span><span>InstaPay</span></button></div><small class="payment-note">اختيار طريقة الدفع يدوّنها على الفاتورة فقط؛ لا ينفّذ تحويلًا ماليًا.</small><div class="branch-payment-panel"><div class="branch-location"><span class="branch-pin" aria-hidden="true">⌖</span><div><strong>موقع مندور كوفي</strong><small>امسح الرمز أو افتح الموقع على الخريطة</small></div><a href="https://maps.app.goo.gl/phv48EMLHnG28rVP9" target="_blank" rel="noopener">فتح الموقع</a><img class="map-qr" src="assets/map-location-qr.png" alt="رمز QR لموقع مندور كوفي"></div><div class="payment-destination-grid"><article class="payment-destination"><strong>Vodafone Cash</strong><b dir="ltr">01097110611</b><small>تحويل المحفظة: اطلب ‎*9*7#‎ ثم أدخل الرقم</small><button type="button" class="secondary" data-copy-wallet="vodafone">نسخ رقم المحفظة</button><label class="qr-upload-label" for="vodafone-qr-file">إضافة QR رسمي من Vodafone Cash</label><input id="vodafone-qr-file" class="qr-file-input" type="file" accept="image/*" data-payment-qr="vodafone"><img class="payment-qr-preview" id="vodafone-qr-preview" alt="رمز Vodafone Cash" hidden></article><article class="payment-destination"><strong>InstaPay</strong><b dir="ltr">01097110611</b><small>أضف رمز الاستقبال الذي تشاركه من تطبيق InstaPay</small><button type="button" class="secondary" data-copy-wallet="instapay">نسخ رقم الهاتف</button><label class="qr-upload-label" for="instapay-qr-file">إضافة QR من تطبيق InstaPay</label><input id="instapay-qr-file" class="qr-file-input" type="file" accept="image/*" data-payment-qr="instapay"><img class="payment-qr-preview" id="instapay-qr-preview" alt="رمز InstaPay" hidden></article></div><small class="payment-qr-note">تُحفظ صور QR على هذا الجهاز. استخدم فقط رمزًا صادرًا من تطبيق أو خدمة الدفع الرسمية؛ رقم الهاتف وحده لا ينشئ رمز دفع صالحًا.</small></div></div><div class="section-divider"><strong>١ · الأصناف والوزن</strong><small>اكتب الجرامات أمام كل نوع بن</small></div><div id="invoice-beans"></div>
+  <div class="section-divider"><strong>٢ · طريقة التحضير والإجمالي</strong><small>راجع المحوّج والإجمالي قبل الحفظ</small></div><section class="roast-panel" aria-label="اختيار البن السادة أو المحوج"><div class="roast-heading"><span class="roast-heading-icon" aria-hidden="true">♨</span><div><strong>تحبها سادة ولا محوّج؟</strong><small>اختار طريقة التحضير للفاتورة كلها</small></div></div><div class="roast-options"><button class="roast-option" type="button" data-roast="sada" aria-pressed="true">سادة<span>من غير إضافة</span></button><button class="roast-option" type="button" data-roast="m7awag" aria-pressed="false">محوّج<span>+١٠ جنيه لكل ١٢٥ جم</span></button></div><div class="invoice-breakdown"><div><span>سعر البن</span><strong id="base-total">٠ جنيه</strong></div><div class="fee-row"><span>إضافة المحوّج</span><strong id="seasoning-total">٠ جنيه</strong></div><div><span>إجمالي الوزن</span><strong id="weight-total">٠ جم</strong></div><div class="final-row"><span>الإجمالي النهائي</span><strong id="invoice-total">٠ جنيه</strong></div></div></section>
+  <p class="muted">حساب المحوّج تناسبي: ١٠ جنيه لكل ١٢٥ جم؛ مثلًا ٢٥٠ جم = ٢٠ جنيه زيادة.</p></div>
+ <details class="history-disclosure"><summary><span>الفواتير اليومية والأرشيف</span><small>آخر ٣٠ يومًا يومًا بيوم</small></summary><div class="history-search"><input id="invoice-search" type="search" placeholder="ابحث برقم الفاتورة أو اسم العميل"></div><div id="invoice-history"></div></details>
+</section>
+<section class="view" id="blends-view" hidden>
+ <p class="eyebrow">ملفات العملاء</p><h2>العملاء والتوليفات</h2><p class="view-intro">احفظ اسم العميل وبلده وتوليفته، ثم افتح اسمه لإضافة طلب أو طلب فرعي بتاريخ اليوم.</p>
+ <form id="blend-form" class="panel"><div class="field"><label for="blend-customer">اسم العميل</label><input id="blend-customer" required maxlength="60" placeholder="اكتب اسم العميل"></div><div class="field"><label for="blend-country">البلد</label><input id="blend-country" maxlength="60" placeholder="مثال: مصر"></div><div class="field"><label for="blend-name">اسم التوليفة</label><input id="blend-name" required maxlength="50" placeholder="مثال: خلطة البيت"></div><p class="panel-title">مكونات التوليفة بالجرام</p><div id="recipe-lines"></div><div class="recipe-net-weight"><span>إجمالي وزن التوليفة</span><strong id="recipe-total-weight">٠ جم</strong></div><button class="secondary" id="add-recipe-line" type="button">＋ إضافة نوع بن للتوليفة</button><div class="button-row"><button class="primary" type="submit">حفظ التوليفة</button></div></form>
+ <h3 class="panel-title">العملاء والتوليفات المحفوظة</h3><div id="customer-list"></div>
+</section>
+<section class="view" id="checks-view" hidden>
+ <p class="eyebrow">مندور كوفي · الكافيه</p><h2>الشيكات وحسابات الطاولات</h2><p class="view-intro">تابع الشيكات في شاشة مستقلة، أو افتح إدخال الطلب لإضافة أصناف جديدة.</p><div class="check-panel-switch"><button type="button" data-check-panel="list" aria-pressed="true">عرض الشيكات فقط</button><button type="button" data-check-panel="orders" aria-pressed="false">إضافة طلب جديد</button></div>
+ <form id="check-order-form" class="panel check-order-panel" onsubmit="return false"><div class="account-section-head"><strong>بيانات الحساب</strong><small>العميل والطاولة قبل اختيار المشروبات</small></div><div class="check-top-fields account-fields-grid"><div class="field"><label for="check-customer">اسم العميل (اختياري)</label><input id="check-customer" maxlength="60" placeholder="اتركه فاضي للطلبات بدون اسم"></div><div class="field"><label for="check-service-mode">الطلب</label><select id="check-service-mode"><option value="inside">داخل الكافيه</option><option value="takeaway">خارج الكافيه / تيك أواي</option></select></div><div class="field" id="check-table-field"><label for="check-table-name">رقم / اسم الطاولة</label><input id="check-table-name" maxlength="24" placeholder="مثال: ٣"></div><div class="field"><label for="check-existing">الحساب المفتوح</label><select id="check-existing"><option value="">إنشاء حساب جديد</option></select></div></div><div id="check-user-preview" class="check-user-preview">اسم العميل سيظهر هنا</div>
+  <div class="section-divider compact"><strong>الأكثر مبيعًا</strong><small>اضغط لإضافة سريعة</small></div><div id="quick-add" class="quick-add-row" hidden></div><div class="section-divider compact"><strong>قائمة مشروبات القهوة والشاي</strong></div><div class="check-menu-heading"><div><h3>المشروبات</h3></div><span class="menu-count" id="menu-count">١٧ صنف</span></div><div id="check-menu" class="check-menu-grid"></div><section class="extra-drinks-panel"><button type="button" class="extra-drinks-toggle" id="extra-drinks-toggle" aria-expanded="false"><span>＋ مشروبات باردة وإضافات</span><small>افتح القائمة</small></button><div id="extra-drinks-menu" class="check-menu-grid extra-drinks-grid" hidden></div></section>
+  <section class="check-draft-box"><div class="section-divider compact"><strong>الطلب الحالي</strong></div><div class="check-draft-heading"><strong>طلب العميل الحالي</strong><span id="check-draft-total">٠ جنيه</span></div><div id="check-draft-lines"><div class="empty">اختار صنفًا من القائمة.</div></div><button id="commit-check-order" class="primary check-commit" type="button">إضافة الطلب للحساب</button></section>
+ </form>
+ <section class="open-checks-section" id="checks-only-panel"><div class="checks-section-title"><h3>الشيكات فقط</h3><button type="button" class="secondary" id="open-report-btn" style="min-height:34px;padding:5px 10px;font-size:11px">📊 تقرير اليوم</button></div><div id="check-list"></div></section>
+</section>
+</main>
+<section class="invoice-dock" id="invoice-dock" hidden aria-label="حفظ الفاتورة"><div class="invoice-dock-total"><span>الإجمالي الحالي</span><strong id="dock-total">٠ جنيه</strong></div><button class="primary" id="save-invoice" type="button">حفظ الفاتورة</button></section>
+<nav class="bottom-nav" id="app-navigation" aria-label="التنقل الرئيسي">
+ <button type="button" data-view="home" aria-current="page"><svg viewBox="0 0 24 24" fill="none"><path d="m3.5 10.5 8.5-7 8.5 7M5.5 9.5v10h13v-10M9.5 19.5v-6h5v6"/></svg><span>الرئيسية</span></button>
+ <button type="button" data-view="invoice"><svg viewBox="0 0 24 24" fill="none"><path d="M6 3.5h9l3 3V21l-2-1.2L14 21l-2-1.2L10 21l-2-1.2L6 21V3.5Z"/><path d="M9 10h6M9 13h6M9 16h4"/></svg><span>فاتورة</span></button>
+ <button type="button" data-view="blends"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20c.3-3.5 2.9-5.5 6.5-5.5s6.2 2 6.5 5.5"/></svg><span>العملاء</span></button>
+ <button type="button" data-view="checks"><svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><path d="M7.5 9h5M7.5 13h3M15 10.5h2M14 15h3"/></svg><span>الشيكات</span></button>
+</nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="modal-overlay" id="receipt-modal" hidden role="dialog" aria-modal="true" aria-labelledby="receipt-modal-title"><div class="modal-scrim" data-close-receipt></div><section class="modal-card receipt-modal-card"><header class="modal-header"><div><h2 id="receipt-modal-title">إيصال مندور كوفي</h2><p>جاهز للمشاركة أو الطباعة</p></div><button class="modal-close" type="button" data-close-receipt aria-label="إغلاق">×</button></header><div class="receipt-stage"><canvas id="receipt-canvas" aria-label="صورة الإيصال"></canvas></div><p class="receipt-share-hint">اختار WhatsApp أو Instagram أو TikTok أو أي تطبيق متاح من قائمة المشاركة.</p><div class="receipt-actions"><button id="receipt-share" class="primary" type="button">مشاركة الإيصال</button><button id="receipt-download" class="secondary" type="button">تنزيل الصورة</button><a class="secondary receipt-whatsapp" href="https://wa.me/201096872170" target="_blank" rel="noopener">تواصل عبر واتساب</a><button id="receipt-print" class="secondary" type="button">طباعة</button><button id="receipt-repeat" class="secondary" type="button" data-repeat-invoice="">إعادة نفس الفاتورة</button></div></section></div>
+<div class="modal-overlay" id="delete-modal" hidden role="dialog" aria-modal="true" aria-labelledby="delete-title"><div class="modal-scrim" data-close-delete></div><section class="modal-card delete-modal-card"><div class="modal-header"><div><span class="delete-step-label" id="delete-step-label">التأكيد الأول · ١ من ٢</span><h2 id="delete-title">حذف الفاتورة؟</h2></div><button class="modal-close" type="button" data-close-delete aria-label="إغلاق">×</button></div><p class="delete-copy" id="delete-copy">ستبقى الفاتورة محفوظة ما لم تؤكد الحذف مرتين.</p><div class="button-row" id="delete-step-one"><button class="secondary" type="button" data-close-delete>إلغاء</button><button class="danger" id="delete-next" type="button">متابعة للحذف</button></div><div class="button-row" id="delete-step-two" hidden><button class="secondary" type="button" data-close-delete>إلغاء</button><button class="danger" id="delete-final" type="button">تأكيد الحذف نهائيًا</button></div></section></div>
+<div class="modal-overlay" id="report-modal" hidden role="dialog" aria-modal="true"><div class="modal-scrim" data-close-report></div><section class="modal-card"><header class="modal-header"><div><h2>تقرير اليوم</h2><p id="report-date"></p></div><button class="modal-close" type="button" data-close-report aria-label="إغلاق">×</button></header><div id="report-body"></div></section></div>
+<div class="modal-overlay" id="move-modal" hidden role="dialog" aria-modal="true" aria-labelledby="move-title"><div class="modal-scrim" data-close-move></div><section class="modal-card"><header class="modal-header"><div><h2 id="move-title">نقل صنف</h2><p id="move-sub">اختر العدد واسم العميل</p></div><button class="modal-close" type="button" data-close-move aria-label="إغلاق">×</button></header><div class="field"><label for="move-qty">العدد المراد نقله</label><input id="move-qty" type="number" min="1" step="1" inputmode="numeric" value="1"><small class="muted">الإجمالي المتاح: <span id="move-qty-total">0</span></small></div><div class="field"><label for="move-customer">اسم العميل</label><input id="move-customer" type="text" maxlength="60" placeholder="اكتب اسم العميل"><div id="move-suggestions" class="move-suggestions"></div></div><div class="button-row"><button class="secondary" type="button" data-close-move>إلغاء</button><button class="primary" type="button" id="move-confirm">نقل</button></div></section></div>
+<script>
+const BASE_BEANS=[
+ {id:'brazil-santos',name:'برازيلي سانتوس',pricePerKg:800,image:'assets/beans/real2/brazil-santos.jpg',builtIn:true},
+ {id:'colombian',name:'كولومبي',pricePerKg:1000,image:'assets/beans/real2/colombian.jpg',builtIn:true},
+ {id:'ethiopian',name:'حبشي',pricePerKg:700,image:'assets/beans/real2/ethiopian.jpg',builtIn:true},
+ {id:'indonesian',name:'إندونيسي',pricePerKg:600,image:'assets/beans/real2/indonesian.jpg',builtIn:true},
+ {id:'indian-arika',name:'هندي اريكا',pricePerKg:800,image:'assets/beans/real2/indian-arika.jpg',builtIn:true},
+ {id:'brazil-robusta',name:'برازيلي روبستا',pricePerKg:600,image:'assets/beans/real2/brazil-robusta.jpg',builtIn:true},
+ {id:'hindri-robusta',name:'هندري روبستا',pricePerKg:600,image:'assets/beans/real2/hindri-robusta.jpg',builtIn:true},
+ {id:'vietnamese',name:'فيتنامي',pricePerKg:600,image:'assets/beans/real2/vietnamese.jpg',builtIn:true}
+];
+const STORE_KEY='mandour-coffee-manager-v3';
+const LocalNotifications = window.Capacitor?.registerPlugin?.('LocalNotifications') || null;
+let notifSyncTimer = null;
+
+function queueLocalCheckNotificationSync() {
+  if (!LocalNotifications) return;
+  clearTimeout(notifSyncTimer);
+  notifSyncTimer = setTimeout(() => {
+    syncLocalCheckNotifications().catch(error => {
+      console.error('Local notification sync failed:', error);
+    });
+  }, 700);
+}
+
+const fmt=new Intl.NumberFormat('ar-EG',{maximumFractionDigits:2});
+const dateFmt=new Intl.DateTimeFormat('ar-EG',{dateStyle:'medium',timeStyle:'short'});const dateOnlyFmt=new Intl.DateTimeFormat('ar-EG',{dateStyle:'medium'});
+let data=loadData();
+(function migrateItemDiscounts(){
+  let changed = false;
+  (data.checks||[]).forEach(check=>{
+    (check.guests||[]).forEach(guest=>{
+      (guest.items||[]).forEach(item=>{
+        if(item.discount !== undefined && item.lineDiscount === undefined){
+          item.lineDiscount = (Number(item.discount)||0) * (Number(item.qty)||0);
+          delete item.discount;
+          changed = true;
+        }
+      });
+    });
+  });
+  if(changed){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(data)); }catch(e){} }
+})();let invoiceGrams={};let roastMode='sada';let documentType='receipt';let paymentMethod='cash';let invoiceLineage=null;let invoiceCustomerContext=null;let pendingDeleteInvoiceId=null;let activeReceipt=null;let currentView='home';let navigationToken=0;let recipeLines=[{beanId:BASE_BEANS[0].id,grams:''}];let pendingPhoto='';let toastTimer;
+function loadData(){try{const saved=JSON.parse(localStorage.getItem(STORE_KEY)||'{}');return{customBeans:Array.isArray(saved.customBeans)?saved.customBeans:[],customers:Array.isArray(saved.customers)?saved.customers:[],invoices:Array.isArray(saved.invoices)?saved.invoices:[],checks:Array.isArray(saved.checks)?saved.checks:[],paymentQrs:saved.paymentQrs&&typeof saved.paymentQrs==='object'?saved.paymentQrs:{}}}catch{return{customBeans:[],customers:[],invoices:[],checks:[],paymentQrs:{}}}}
+function persist() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(data));
+  queueLocalCheckNotificationSync();
+}
+
+function backupSnapshot(){return{format:'mandour-coffee-backup',version:1,exportedAt:new Date().toISOString(),app:'Mandour Coffee',data:JSON.parse(JSON.stringify(data))}}
+function backupFileName(){return `mandour-coffee-backup-${localDateValue()}.json`}
+function markBackupDone(){try{localStorage.setItem('mandour-last-backup',new Date().toISOString())}catch{}updateBackupBanner()}
+function updateBackupBanner(){const banner=document.getElementById('backup-reminder');if(!banner)return;let last=null;try{last=localStorage.getItem('mandour-last-backup')}catch{}if(!last){banner.hidden=false;banner.querySelector('small').textContent='لسه مفيش نسخة احتياطية';return}const days=Math.floor((Date.now()-new Date(last).getTime())/(24*60*60*1000));if(days>=7){banner.hidden=false;banner.querySelector('small').textContent=`آخر نسخة احتياطية كانت من ${fmt.format(days)} يوم`}else banner.hidden=true}
+function downloadBackup(){const json=JSON.stringify(backupSnapshot(),null,2);if(window.MandourNative?.saveBackup){window.MandourNative.saveBackup(json,backupFileName());markBackupDone();return}const blob=new Blob([json],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=backupFileName();document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);markBackupDone();notify('تم تجهيز نسخة البيانات للتنزيل')}
+async function shareBackup(){const blob=new Blob([JSON.stringify(backupSnapshot(),null,2)],{type:'application/json'});const file=new File([blob],backupFileName(),{type:'application/json'});if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){try{await navigator.share({title:'نسخة بيانات مندور كوفي',text:'نسخة احتياطية كاملة لبيانات التطبيق',files:[file]});markBackupDone();notify('تم فتح المشاركة')}catch(error){if(error?.name!=='AbortError')downloadBackup()}return}downloadBackup()}
+function normalizeImportedData(value){const candidate=value?.format==='mandour-coffee-backup'?value.data:value;if(!candidate||typeof candidate!=='object')throw new Error('الملف ليس نسخة بيانات صحيحة');const result={customBeans:Array.isArray(candidate.customBeans)?candidate.customBeans:[],customers:Array.isArray(candidate.customers)?candidate.customers:[],invoices:Array.isArray(candidate.invoices)?candidate.invoices:[],checks:Array.isArray(candidate.checks)?candidate.checks:[],paymentQrs:candidate.paymentQrs&&typeof candidate.paymentQrs==='object'?candidate.paymentQrs:{}};if(!result.customBeans.length&&!result.customers.length&&!result.invoices.length&&!result.checks.length&&!Object.keys(result.paymentQrs).length)throw new Error('النسخة لا تحتوي على بيانات محفوظة');return result}
+function stableBackupStringify(value){if(value===null||typeof value!=='object')return JSON.stringify(value);if(Array.isArray(value))return '['+value.map(stableBackupStringify).join(',')+']';return '{'+Object.keys(value).sort().map(key=>JSON.stringify(key)+':'+stableBackupStringify(value[key])).join(',')+'}'}
+function mergeBackupRecords(current,incoming){const merged=[...current];const seen=new Set(current.map(item=>item&&item.id!=null?'id:'+String(item.id):'value:'+stableBackupStringify(item)));let added=0;for(const item of incoming){if(!item||typeof item!=='object'||Array.isArray(item))continue;const key=item.id!=null?'id:'+String(item.id):'value:'+stableBackupStringify(item);if(seen.has(key))continue;seen.add(key);merged.push(item);added++}return{items:merged,added}}
+function mergeImportedData(imported){const next={...data};const added={};for(const key of ['customers','customBeans','invoices','checks']){const result=mergeBackupRecords(Array.isArray(data[key])?data[key]:[],Array.isArray(imported[key])?imported[key]:[]);next[key]=result.items;added[key]=result.added}next.paymentQrs={...(imported.paymentQrs||{}),...(data.paymentQrs||{})};added.paymentQrs=Object.keys(next.paymentQrs).filter(key=>!data.paymentQrs?.[key]&&!!imported.paymentQrs?.[key]).length;return{data:next,added}}
+function importBackupFile(file){if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const imported=normalizeImportedData(JSON.parse(reader.result));const total=[imported.invoices.length,imported.checks.length,imported.customers.length,imported.customBeans.length].reduce((a,b)=>a+b,0);if(!total&&!Object.keys(imported.paymentQrs).length)throw new Error('الملف لا تحتوي على بيانات محفوظة');const result=mergeImportedData(imported);const newTotal=Object.values(result.added).reduce((a,b)=>a+b,0);if(!confirm(`سيتم دمج بيانات النسخة مع بيانات التطبيق الحالية. سيُضاف ${fmt.format(newTotal)} سجل جديد، وستبقى البيانات الموجودة كما هي. العناصر المكررة لن تُضاف مرة أخرى. هل تريد المتابعة؟`))return;const previous=data;data=result.data;try{persist()}catch(storageError){data=previous;throw new Error('مساحة حفظ التطبيق غير كافية لإتمام الدمج؛ لم يتم تغيير البيانات')}const summary=`عملاء ${result.added.customers}، توليفات ${result.added.customBeans}، فواتير ${result.added.invoices}، شيكات ${result.added.checks}`;notify(newTotal?`تم الدمج بنجاح: ${summary}`:'لا توجد سجلات جديدة؛ البيانات الحالية محفوظة');setTimeout(()=>location.reload(),900)}catch(error){notify(error.message||'تعذر قراءة ملف البيانات')}};reader.onerror=()=>notify('تعذرت قراءة الملف');reader.readAsText(file)}
+
+function purgeExpiredInvoices(){const today=localDateValue();const kept=data.invoices.filter(invoice=>!(/^\d{4}-\d{2}-\d{2}$/.test(String(invoice.autoDeleteAt||''))&&invoice.autoDeleteAt<=today));const removed=data.invoices.length-kept.length;if(!removed)return 0;try{localStorage.setItem(STORE_KEY,JSON.stringify({...data,invoices:kept}));data.invoices=kept;return removed}catch{return 0}}
+const expiredInvoicesRemovedAtStartup=purgeExpiredInvoices();
+function allBeans(){return [...BASE_BEANS,...data.customBeans]}
+function money(value){return `${fmt.format(value)} جنيه`}
+function localDateValue(date=new Date()){const y=date.getFullYear();const m=String(date.getMonth()+1).padStart(2,'0');const d=String(date.getDate()).padStart(2,'0');return `${y}-${m}-${d}`}
+function addMonthsToDate(value,months=3){const [year,month,day]=String(value||localDateValue()).split('-').map(Number);const target=new Date(year,month-1+months,1);const lastDay=new Date(target.getFullYear(),target.getMonth()+1,0).getDate();target.setDate(Math.min(day,lastDay));return localDateValue(target)}
+function setInvoiceExpiry(){const date=document.getElementById('invoice-date').value||localDateValue();document.getElementById('invoice-expiry').value=addMonthsToDate(date,3)}
+function autoExpiryDate(invoiceDate){return addMonthsToDate(invoiceDate,3)}
+function paymentMethodLabel(method){return ({cash:'نقدي',vodafone:'Vodafone Cash',instapay:'InstaPay'})[method]||'نقدي'}
+function branchTypeLabel(type){return ({renewal:'تجديد',modified:'تعديل على الفاتورة',copy:'نسخة جديدة',suborder:'طلب فرعي'})[type]||'نسخة جديدة'}
+function invoiceDateKey(invoice){if(/^\d{4}-\d{2}-\d{2}$/.test(String(invoice.invoiceDate||'')))return invoice.invoiceDate;const date=new Date(invoice.createdAt||invoice.savedAt||0);return Number.isNaN(date.getTime())?localDateValue():localDateValue(date)}
+function dateText(value){try{if(/^\d{4}-\d{2}-\d{2}$/.test(String(value||'')))return dateOnlyFmt.format(new Date(`${value}T12:00:00`));return dateFmt.format(new Date(value))}catch{return '—'}}
+function escapeHTML(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function priceFor(bean,grams){return bean.pricePerKg*Number(grams||0)/1000}
+function notify(message){const el=document.getElementById('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2200)}
+function refreshHome(){document.getElementById('invoice-count').textContent=fmt.format(data.invoices.filter(item=>(item.documentType||'receipt')==='receipt').length);document.getElementById('bean-count').textContent=fmt.format(allBeans().length);document.getElementById('invoice-bean-count').textContent=fmt.format(allBeans().length);
+const netWEl=document.getElementById('invoice-net-weight');if(netWEl)netWEl.textContent=`${fmt.format(invoiceQuote().totalGrams)} جم`;
+const netWStripEl=document.getElementById('invoice-net-weight-strip');if(netWStripEl)netWStripEl.textContent=`${fmt.format(invoiceQuote().totalGrams)} جم`;
+const oc=document.getElementById('open-checks-count');if(oc)oc.textContent=fmt.format(data.checks.filter(c=>c.status==='open'||c.status==='partial').length);
+document.getElementById('customer-count').textContent=fmt.format(data.customers.length)}
+const views=['home','invoice','blends','checks'];
+const titles={home:'مندور كوفي',invoice:'إنشاء فاتورة',blends:'العملاء والتوليفات','add-bean':'إضافة نوع بن',checks:'الشيكات'};
+function openView(name,{push=false,animate=true}={}){if(!views.includes(name))name='home';if(push&&name!==currentView)history.pushState({mandourView:name},'',`${location.pathname}${location.search}#${name}`);views.forEach(id=>{const view=document.getElementById(`${id}-view`);if(!view)return;view.hidden=id!==name;view.classList.remove('leaving','entering');view.setAttribute('aria-hidden',String(id!==name))});const next=document.getElementById(`${name}-view`);if(!next)return;document.getElementById('back-button').hidden=name==='home';document.getElementById('bar-title').textContent=titles[name];currentView=name;document.body.classList.toggle('invoice-active',name==='invoice');document.getElementById('invoice-dock').hidden=name!=='invoice'||invoiceQuote().totalGrams<=0;document.querySelectorAll('#app-navigation [data-view]').forEach(button=>{if(button.dataset.view===name)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')});if(name==='invoice')renderInvoice();if(name==='blends'){renderRecipeLines();renderCustomers()}if(name==='checks'){renderCheckMenu();renderExtraDrinks();renderChecks();renderCheckDraft();setCheckPanel('list')}refreshHome();window.scrollTo(0,0)}
+document.getElementById('back-button').addEventListener('click',()=>{if(currentView!=='home'&&history.state?.mandourView)history.back();else openView('home',{animate:false})});
+document.addEventListener('click',event=>{const button=event.target.closest('[data-view]');if(button)openView(button.dataset.view,{push:true,animate:false})});
+window.addEventListener('popstate',event=>openView(event.state?.mandourView||'home',{push:false,animate:false}));
+window.mandourAndroidBack=function(){if(!document.getElementById('receipt-modal').hidden){closeReceipt();return true}if(!document.getElementById('move-modal').hidden){closeMoveDialog();return true}if(!document.getElementById('delete-modal').hidden){closeDeleteDialog();return true}if(currentView==='home')return false;if(history.state?.mandourView)history.back();else openView('home',{animate:false});return true};
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!document.getElementById('receipt-modal').hidden){closeReceipt();event.preventDefault();return}if(event.key==='Escape'&&!document.getElementById('move-modal').hidden){closeMoveDialog();event.preventDefault();return}if(event.key==='Escape'&&!document.getElementById('delete-modal').hidden){closeDeleteDialog();event.preventDefault();return}if((event.key==='Escape'||event.key==='Backspace')&&currentView!=='home'&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)){event.preventDefault();if(history.state?.mandourView)history.back();else openView('home',{animate:false})}});
+function renderInvoice(){const root=document.getElementById('invoice-beans');if(!document.getElementById('invoice-date').value)document.getElementById('invoice-date').value=localDateValue();document.querySelectorAll('[data-document-type]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.documentType===documentType)));document.getElementById('save-invoice').textContent=documentType==='quote'?'حفظ عرض السعر':'حفظ الإيصال';document.querySelectorAll('[data-payment-method]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.paymentMethod===paymentMethod)));if(!document.getElementById('invoice-expiry').value||document.getElementById('invoice-expiry').dataset.forDate!==document.getElementById('invoice-date').value){setInvoiceExpiry();document.getElementById('invoice-expiry').dataset.forDate=document.getElementById('invoice-date').value}root.innerHTML=allBeans().map(bean=>{const grams=invoiceGrams[bean.id]||'';const amount=priceFor(bean,grams);return `<article class="bean-card" data-invoice-bean="${escapeHTML(bean.id)}"><img class="bean-photo" src="${escapeHTML(bean.image)}" alt="حبوب ${escapeHTML(bean.name)}"><div class="bean-meta"><div class="bean-name">${escapeHTML(bean.name)}</div><div class="bean-rate">الكيلو ${money(bean.pricePerKg)}</div><div class="invoice-entry"><div class="gram-field"><label>الوزن بالجرام</label><input class="g" data-grams type="number" min="0" max="100000" step="1" inputmode="decimal" placeholder="٠" value="${escapeHTML(grams)}" aria-label="جرامات ${escapeHTML(bean.name)}"></div><div class="pr"><span data-line-price>${money(amount)}</span><small>سعر الوزن</small></div></div></div></article>`}).join('');root.oninput=event=>{if(!event.target.matches('[data-grams]'))return;const card=event.target.closest('[data-invoice-bean]');const bean=allBeans().find(item=>item.id===card.dataset.invoiceBean);invoiceGrams[bean.id]=event.target.value;card.querySelector('[data-line-price]').textContent=money(priceFor(bean,event.target.value));refreshInvoiceTotal()};refreshInvoiceTotal();renderInvoiceHistory()}
+function selectedInvoiceItems(){return allBeans().filter(bean=>Number(invoiceGrams[bean.id])>0).map(bean=>({beanId:bean.id,name:bean.name,grams:Number(invoiceGrams[bean.id]),pricePerKg:bean.pricePerKg,total:priceFor(bean,invoiceGrams[bean.id])}))}
+function invoiceQuote(items=selectedInvoiceItems()){const baseTotal=items.reduce((sum,item)=>sum+item.total,0);const totalGrams=items.reduce((sum,item)=>sum+item.grams,0);const seasoningFee=roastMode==='m7awag'?Math.round((totalGrams/125*10)*100)/100:0;return{baseTotal,totalGrams,seasoningFee,total:baseTotal+seasoningFee}}
+function refreshInvoiceTotal(){const quote=invoiceQuote();document.getElementById('base-total').textContent=money(quote.baseTotal);document.getElementById('seasoning-total').textContent=money(quote.seasoningFee);document.getElementById('weight-total').textContent=`${fmt.format(quote.totalGrams)} جم`;const netWeight=document.getElementById('invoice-net-weight');if(netWeight)netWeight.textContent=`${fmt.format(quote.totalGrams)} جم`;const netWeightStrip=document.getElementById('invoice-net-weight-strip');if(netWeightStrip)netWeightStrip.textContent=`${fmt.format(quote.totalGrams)} جم`;document.getElementById('invoice-total').textContent=money(quote.total);document.getElementById('dock-total').textContent=money(quote.total);document.getElementById('invoice-dock').hidden=currentView!=='invoice'||quote.totalGrams<=0;document.querySelectorAll('[data-roast]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.roast===roastMode)))}
+document.querySelector('.roast-options').addEventListener('click',event=>{const button=event.target.closest('[data-roast]');if(!button)return;roastMode=button.dataset.roast;refreshInvoiceTotal()});
+document.querySelectorAll('[data-document-type]').forEach(button=>button.addEventListener('click',()=>{documentType=button.dataset.documentType;document.querySelectorAll('[data-document-type]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));document.getElementById('save-invoice').textContent=documentType==='quote'?'حفظ عرض السعر':'حفظ الإيصال'}));
+document.querySelectorAll('[data-payment-method]').forEach(button=>button.addEventListener('click',()=>{paymentMethod=button.dataset.paymentMethod;document.querySelectorAll('[data-payment-method]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)))}));
+document.getElementById('invoice-date').addEventListener('change',()=>{setInvoiceExpiry();document.getElementById('invoice-expiry').dataset.forDate=document.getElementById('invoice-date').value});
+document.getElementById('invoice-customer').addEventListener('input',event=>{if(invoiceCustomerContext&&customerKey(event.target.value)!==customerKey(invoiceCustomerContext.name))invoiceCustomerContext=null});
+document.getElementById('save-invoice').addEventListener('click',()=>{const items=selectedInvoiceItems();if(!items.length){notify('أدخل وزن نوع بن واحد على الأقل');return}const invoiceDate=document.getElementById('invoice-date').value||localDateValue();const expiryDate=document.getElementById('invoice-expiry').value;if(expiryDate&&expiryDate<invoiceDate){notify('تاريخ الصلاحية لا يسبق تاريخ الشراء');return}const quote=invoiceQuote(items);const savedAt=new Date().toISOString();const serial=String(Date.now()).slice(-8);const invoice={id:`inv-${Date.now()}`,number:`${documentType==='quote'?'Q':'M'}-${String(new Date().getFullYear()).slice(-2)}-${serial}`,documentType,invoiceDate,expiryDate:autoExpiryDate(invoiceDate),autoDeleteAt:autoExpiryDate(invoiceDate),paymentMethod,phoneNumber:'01096872170',customer:document.getElementById('invoice-customer').value.trim(),customerCountry:customerCountryForInvoice(),items,roastMode,baseTotal:quote.baseTotal,seasoningFee:quote.seasoningFee,total:quote.total,...(invoiceLineage?{...(invoiceLineage.parentInvoiceId?{parentInvoiceId:invoiceLineage.parentInvoiceId,parentInvoiceNumber:invoiceLineage.parentInvoiceNumber,parentInvoiceDate:invoiceLineage.parentInvoiceDate}:{}),branchType:invoiceLineage.branchType}:{}),createdAt:savedAt,savedAt};data.invoices.unshift(invoice);try{persist()}catch{data.invoices.shift();notify('مساحة التخزين ممتلئة؛ احذف صورًا كبيرة أو فواتير قديمة');return}invoiceGrams={};roastMode='sada';documentType='receipt';paymentMethod='cash';invoiceLineage=null;invoiceCustomerContext=null;document.getElementById('invoice-date').value=localDateValue();document.getElementById('invoice-expiry').value='';document.getElementById('invoice-expiry').dataset.forDate='';document.getElementById('invoice-customer').value='';renderInvoice();refreshHome();renderCustomers();openReceipt(invoice.id)});
+function invoiceKind(invoice){return invoice.documentType==='quote'?'عرض سعر':'إيصال بيع'}
+function monthText(key){try{return new Intl.DateTimeFormat('ar-EG',{month:'long',year:'numeric'}).format(new Date(`${key}-15T12:00:00`))}catch{return key}}
+function invoiceMatches(invoice,query){if(!query)return true;const text=[invoice.number,invoice.customer,invoiceKind(invoice),invoice.roastMode==='m7awag'?'محوّج':'سادة',invoice.customerCountry||'',paymentMethodLabel(invoice.paymentMethod),invoice.parentInvoiceNumber||'',...(invoice.items||[]).map(item=>item.name),invoiceDateKey(invoice),invoice.expiryDate||''].join(' ').toLocaleLowerCase('ar');return text.includes(query)}
+function invoiceCardMarkup(invoice){const id=escapeHTML(invoice.id);const roast=invoice.roastMode==='m7awag'?'محوّج':'سادة';const fee=Number(invoice.seasoningFee||0);const details=(invoice.items||[]).map(item=>`${escapeHTML(item.name)}: ${fmt.format(item.grams)} جم — ${money(item.total)}`).join('<br>');return `<details class="saved-invoice"><summary><div><strong>${escapeHTML(invoice.number)}${invoice.customer?` · ${escapeHTML(invoice.customer)}`:''}</strong><small class="invoice-summary-meta">${dateText(invoiceDateKey(invoice))} · ${invoiceKind(invoice)} · ${roast}${invoice.customerCountry?` · ${escapeHTML(invoice.customerCountry)}`:''}</small></div><strong class="record-total">${money(invoice.total)}</strong></summary><div class="history-detail">${details}${fee?`<br>إضافة المحوّج: ${money(fee)}`:''}<br><strong>الإجمالي: ${money(invoice.total)}</strong><br>طريقة الدفع: ${paymentMethodLabel(invoice.paymentMethod)}${invoice.expiryDate?`<br>الصلاحية حتى: ${dateText(invoice.expiryDate)}`:''}${invoice.branchType?`<br><span class="invoice-lineage">${branchTypeLabel(invoice.branchType)}${invoice.parentInvoiceNumber?` من ${escapeHTML(invoice.parentInvoiceNumber)} بتاريخ ${dateText(invoice.parentInvoiceDate)}`:''}</span>`:''}<div class="record-actions"><button class="secondary" type="button" data-open-invoice="${id}">فتح الإيصال</button><button class="secondary" type="button" data-repeat-invoice="${id}">إعادة نفس الفاتورة</button><button class="danger" type="button" data-delete-invoice="${id}">حذف</button></div></div></details>`}
+function groupedRecords(records,keyFn,renderGroup,openFirst=false){return [...records.reduce((map,record)=>{const key=keyFn(record);if(!map.has(key))map.set(key,[]);map.get(key).push(record);return map},new Map()).entries()].sort((a,b)=>b[0].localeCompare(a[0])).map(([key,items],index)=>renderGroup(key,items,openFirst&&index===0)).join('')}
+function renderInvoiceHistory(){const root=document.getElementById('invoice-history');const query=document.getElementById('invoice-search').value.trim().toLocaleLowerCase('ar');const records=data.invoices.filter(invoice=>invoiceMatches(invoice,query));if(!records.length){root.innerHTML=`<div class="empty">${query?'لا توجد فواتير تطابق البحث.':'لسه مفيش فواتير محفوظة.'}</div>`;return}const cutoff=new Date();cutoff.setDate(cutoff.getDate()-30);const cutoffKey=localDateValue(cutoff);const recent=records.filter(invoice=>invoiceDateKey(invoice)>=cutoffKey);const older=records.filter(invoice=>invoiceDateKey(invoice)<cutoffKey);const recentHtml=recent.length?groupedRecords(recent,invoiceDateKey,(day,items,open)=>`<details class="history-day" ${open?'open':''}><summary>${dateText(day)}<span class="history-day-total">${fmt.format(items.length)} مستند · ${money(items.filter(i=>(i.documentType||'receipt')==='receipt').reduce((n,i)=>n+Number(i.total||0),0))} مبيعات</span></summary><div class="history-day-content">${items.sort((a,b)=>String(b.savedAt||b.createdAt).localeCompare(String(a.savedAt||a.createdAt))).map(invoiceCardMarkup).join('')}</div></details>`,true):'<div class="empty">لا توجد فواتير خلال آخر ٣٠ يومًا.</div>';const archiveHtml=older.length?`<details class="history-monthly-archive"><summary>الأرشيف الأقدم من شهر <small>${fmt.format(older.length)} مستند محفوظ</small></summary><div class="history-archive-content">${groupedRecords(older,invoice=>invoiceDateKey(invoice).slice(0,7),(month,items)=>`<details class="history-month"><summary>${monthText(month)}<span class="history-month-total">${fmt.format(items.length)} مستند</span></summary><div class="history-month-content">${items.sort((a,b)=>invoiceDateKey(b).localeCompare(invoiceDateKey(a))).map(invoiceCardMarkup).join('')}</div></details>`)}</div></details>`:'<div class="empty archive-empty">لا توجد فواتير أقدم من شهر.</div>';root.innerHTML=`<section class="history-section"><h4>الفواتير اليومية · آخر ٣٠ يومًا</h4>${recentHtml}</section><section class="history-section"><h4>الأرشيف</h4>${archiveHtml}</section>`}
+document.getElementById('invoice-search').addEventListener('input',renderInvoiceHistory);
+document.getElementById('invoice-history').addEventListener('click',event=>{const open=event.target.closest('[data-open-invoice]');if(open){openReceipt(open.dataset.openInvoice);return}const repeat=event.target.closest('[data-repeat-invoice]');if(repeat){repeatInvoice(repeat.dataset.repeatInvoice);return}const remove=event.target.closest('[data-delete-invoice]');if(remove)beginDeleteInvoice(remove.dataset.deleteInvoice)});
+function beginDeleteInvoice(id){const invoice=data.invoices.find(item=>item.id===id);if(!invoice)return;pendingDeleteInvoiceId=id;document.getElementById('delete-step-label').textContent='التأكيد الأول · ١ من ٢';document.getElementById('delete-title').textContent=`حذف ${invoice.number}؟`;document.getElementById('delete-copy').textContent=`فاتورة ${invoice.customer||'بدون اسم عميل'} بتاريخ ${dateText(invoiceDateKey(invoice))} ستُحذف نهائيًا بعد تأكيدين.`;document.getElementById('delete-step-one').hidden=false;document.getElementById('delete-step-two').hidden=true;document.getElementById('delete-modal').hidden=false}
+document.getElementById('delete-next').addEventListener('click',()=>{if(!pendingDeleteInvoiceId)return;document.getElementById('delete-step-label').textContent='التأكيد النهائي · ٢ من ٢';document.getElementById('delete-title').textContent='تأكيد الحذف نهائيًا';document.getElementById('delete-copy').textContent='لن يمكن استرجاع هذا الإيصال بعد الحذف. اضغط زر الحذف الأحمر للتأكيد النهائي.';document.getElementById('delete-step-one').hidden=true;document.getElementById('delete-step-two').hidden=false});
+document.getElementById('delete-final').addEventListener('click',()=>{if(!pendingDeleteInvoiceId)return;const index=data.invoices.findIndex(item=>item.id===pendingDeleteInvoiceId);if(index<0){closeDeleteDialog();return}const [removed]=data.invoices.splice(index,1);try{persist()}catch{data.invoices.splice(index,0,removed);notify('تعذر حفظ التغيير؛ لم تُحذف الفاتورة');return}const deletingId=pendingDeleteInvoiceId;closeDeleteDialog();if(activeReceipt?.id===deletingId)closeReceipt();renderInvoiceHistory();renderCustomers();refreshHome();notify('تم حذف الفاتورة بعد التأكيدين')});
+function closeDeleteDialog(){pendingDeleteInvoiceId=null;document.getElementById('delete-modal').hidden=true}
+document.querySelectorAll('[data-close-delete]').forEach(button=>button.addEventListener('click',closeDeleteDialog));
+let receiptStampImage=null;const paymentImageCache={};
+function drawPaymentLogo(method,x,y,maxWidth,maxHeight,invoice,canvas){if(!method)return;const source=method==='cash'?'assets/payments/cash.svg':method==='vodafone'?'assets/payments/vodafone-cash.png':'assets/payments/instapay.png';let image=paymentImageCache[method];if(!image){image=new Image();paymentImageCache[method]=image;image.onload=()=>{if(activeReceipt?.id===invoice.id)drawReceipt(invoice,canvas)};image.src=source;return}if(image.complete&&image.naturalWidth){const ctx=canvas.getContext('2d');const scale=Math.min(maxWidth/image.naturalWidth,maxHeight/image.naturalHeight);const width=image.naturalWidth*scale;const height=image.naturalHeight*scale;ctx.fillStyle='#fff';ctx.fillRect(x,y,width,height);ctx.drawImage(image,x,y,width,height)}}
+const mapQrImage=new Image();mapQrImage.onload=()=>{if(activeReceipt)drawReceipt(activeReceipt,document.getElementById('receipt-canvas'))};mapQrImage.src='assets/map-location-qr.png';function drawMapLocationQr(ctx){if(mapQrImage.complete&&mapQrImage.naturalWidth){ctx.fillStyle='#fff';ctx.fillRect(62,268,116,116);ctx.drawImage(mapQrImage,68,274,104,104);ctx.textAlign='center';ctx.font='600 16px Cairo, Arial, sans-serif';ctx.fillStyle='#76583b';ctx.fillText('موقع الفرع',120,402)}}const receiptQrCache={};function drawProviderPaymentQr(ctx,invoice,canvas){const src=data.paymentQrs?.[invoice.paymentMethod];if(!src)return;const key=invoice.paymentMethod;let image=receiptQrCache[key];if(!image||image.src!==src){image=new Image();receiptQrCache[key]=image;image.onload=()=>{if(activeReceipt?.id===invoice.id)drawReceipt(invoice,canvas)};image.src=src;return}if(image.complete&&image.naturalWidth){ctx.fillStyle='#fff';ctx.fillRect(194,430,112,112);ctx.drawImage(image,199,435,102,102);ctx.textAlign='center';ctx.font='600 15px Cairo, Arial, sans-serif';ctx.fillStyle='#76583b';ctx.fillText('QR الدفع',250,554)}}
+function drawReceipt(invoice,canvas){
+ const items=invoice.items||[];
+ const w=1080;
+ const rowHeight=92;
+ const headerHeight=590;
+ const footerHeight=420;
+ const hasSeasoning=Number(invoice.seasoningFee||0)>0;
+ const h=headerHeight+Math.max(items.length,1)*rowHeight+footerHeight+(hasSeasoning?rowHeight:0);
+ canvas.width=w;canvas.height=h;
+ const ctx=canvas.getContext('2d');
+ ctx.direction='rtl';ctx.textBaseline='middle';
+ ctx.fillStyle='#fbf7ef';ctx.fillRect(0,0,w,h);
+ ctx.strokeStyle='#8c6848';ctx.lineWidth=5;ctx.strokeRect(26,26,w-52,h-52);
+ ctx.strokeStyle='#c9a773';ctx.lineWidth=2;ctx.strokeRect(42,42,w-84,h-84);
+ ctx.fillStyle='#503827';ctx.textAlign='center';ctx.font='800 64px Cairo, Arial, sans-serif';ctx.fillText('مندور كوفي',w/2,88);
+ ctx.font='700 32px Cairo, Arial, sans-serif';ctx.fillStyle='#84674d';ctx.fillText(invoiceKind(invoice),w/2,143);
+ ctx.beginPath();ctx.arc(145,155,74,0,Math.PI*2);ctx.strokeStyle='#b8874e';ctx.lineWidth=3;ctx.stroke();
+ ctx.beginPath();ctx.arc(145,155,62,0,Math.PI*2);ctx.strokeStyle='#d4b68d';ctx.lineWidth=1;ctx.stroke();
+ if(!receiptStampImage){receiptStampImage=new Image();receiptStampImage.src='assets/receipt-stamp.png';receiptStampImage.onload=()=>{if(activeReceipt?.id===invoice.id)drawReceipt(invoice,canvas)}}
+ if(receiptStampImage.complete&&receiptStampImage.naturalWidth){ctx.save();ctx.globalAlpha=.36;ctx.drawImage(receiptStampImage,93,103,104,104);ctx.restore()}
+ ctx.font='700 26px Cairo, Arial, sans-serif';ctx.fillStyle='#503827';ctx.textAlign='right';
+ ctx.fillText(`رقم المستند: ${invoice.number}`,1010,178);
+ ctx.fillText(`تاريخ الشراء: ${dateText(invoiceDateKey(invoice))}`,1010,218);
+ ctx.fillText(`العميل: ${invoice.customer||'عميل نقدي'}`,1010,258);
+ ctx.fillText(`البلد: ${invoice.customerCountry||'—'}`,1010,298);
+ ctx.fillText(`التحضير: ${invoice.roastMode==='m7awag'?'محوّج':'سادة'}`,1010,338);
+
+ ctx.fillText(`الوزن الإجمالي: ${fmt.format(items.reduce((sum,item)=>sum+Number(item.grams||0),0))} جم`,1010,378);
+ ctx.fillText(`الصلاحية حتى: ${invoice.expiryDate?dateText(invoice.expiryDate):'غير محدد'}`,1010,418);
+ ctx.fillText(`طريقة الدفع: ${paymentMethodLabel(invoice.paymentMethod)}${invoice.paymentMethod==='vodafone'||invoice.paymentMethod==='instapay'?' · رقم الاستقبال: 01097110611':''}`,1010,458,790);
+ ctx.fillText(invoice.branchType?`${branchTypeLabel(invoice.branchType)}${invoice.parentInvoiceNumber?` من ${invoice.parentInvoiceNumber} · ${dateText(invoice.parentInvoiceDate)}`:''}`:'مستند جديد',1010,498);
+ ctx.fillText(`حذف تلقائي في: ${invoice.autoDeleteAt?dateText(invoice.autoDeleteAt):'غير محدد'}`,1010,538);
+ drawMapLocationQr(ctx,invoice,canvas);
+ drawPaymentLogo(invoice.paymentMethod,62,432,110,54,invoice,canvas);drawProviderPaymentQr(ctx,invoice,canvas);
+ const tableY=570;
+ ctx.fillStyle='#ede2d2';ctx.fillRect(62,tableY,w-124,64);
+ ctx.fillStyle='#503827';ctx.font='800 28px Cairo, Arial, sans-serif';ctx.textAlign='right';ctx.fillText('الصنف',875,tableY+32);
+ ctx.textAlign='center';ctx.fillText('الوزن',520,tableY+32);
+ ctx.textAlign='left';ctx.fillText('السعر',190,tableY+32);
+ let y=tableY+88;ctx.font='600 28px Cairo, Arial, sans-serif';
+ items.forEach(item=>{
+  ctx.fillStyle='#33261c';ctx.textAlign='right';let name=String(item.name||'');if(name.length>27)name=name.slice(0,26)+'…';ctx.fillText(name,875,y);
+  ctx.textAlign='center';ctx.fillText(`${fmt.format(item.grams)} جم`,520,y);
+  ctx.textAlign='left';ctx.fillText(money(item.total),190,y);
+  ctx.strokeStyle='#e7dccd';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(75,y+39);ctx.lineTo(w-75,y+39);ctx.stroke();y+=rowHeight;
+ });
+ if(hasSeasoning){ctx.font='600 25px Cairo, Arial, sans-serif';ctx.fillStyle='#94672f';ctx.textAlign='right';ctx.fillText('إضافة المحوّج',875,y);ctx.textAlign='left';ctx.fillText(money(invoice.seasoningFee),190,y);y+=rowHeight}
+ ctx.fillStyle='#ead9bf';ctx.fillRect(62,y-25,w-124,78);
+ ctx.font='800 34px Cairo, Arial, sans-serif';ctx.fillStyle='#503827';ctx.textAlign='right';ctx.fillText('الإجمالي النهائي',875,y+14);ctx.textAlign='left';ctx.fillText(money(invoice.total),190,y+14);
+ const afterTotalY=y+53;
+ ctx.font='700 25px Cairo, Arial, sans-serif';ctx.fillStyle='#84674d';ctx.textAlign='center';ctx.fillText('شكرًا لثقتكم · مندور كوفي',w/2,afterTotalY+60);
+ ctx.font='700 25px Cairo, Arial, sans-serif';ctx.fillStyle='#503827';ctx.fillText('للطلب عبر الهاتف أو واتساب: 01096872170',w/2,afterTotalY+120);
+ ctx.font='500 19px Cairo, Arial, sans-serif';ctx.fillStyle='#84674d';ctx.fillText(invoice.documentType==='quote'?'عرض سعر محفوظ على الجهاز · احتفظ به للرجوع إليه':'إيصال محفوظ على الجهاز · احتفظ به للرجوع إليه',w/2,afterTotalY+170);
+ ctx.font='500 18px Cairo, Arial, sans-serif';ctx.fillText(`يحذف المستند تلقائيًا في ${invoice.autoDeleteAt?dateText(invoice.autoDeleteAt):'—'}`,w/2,afterTotalY+210);
+}
+function openReceipt(id){const invoice=data.invoices.find(item=>item.id===id);if(!invoice)return;activeReceipt=invoice;document.getElementById('receipt-repeat').dataset.repeatInvoice=invoice.id;document.getElementById('receipt-modal-title').textContent=`${invoiceKind(invoice)} · ${invoice.number}`;document.getElementById('receipt-repeat').textContent=invoice.documentType==='quote'?'استخدام عرض السعر مجددًا':'إعادة نفس الفاتورة';const modal=document.getElementById('receipt-modal');const canvas=document.getElementById('receipt-canvas');modal.hidden=false;document.body.classList.add('modal-open');drawReceipt(invoice,canvas);if(document.fonts?.ready)document.fonts.ready.then(()=>{if(activeReceipt?.id===invoice.id)drawReceipt(invoice,canvas)});requestAnimationFrame(()=>document.getElementById('receipt-share').focus({preventScroll:true}))}
+function closeReceipt(){document.getElementById('receipt-modal').hidden=true;document.body.classList.remove('modal-open');activeReceipt=null}
+document.querySelectorAll('[data-close-receipt]').forEach(button=>button.addEventListener('click',closeReceipt));
+function repeatInvoice(id,branchType='copy'){const invoice=data.invoices.find(item=>item.id===id);if(!invoice)return;invoiceGrams={};(invoice.items||[]).forEach(item=>{if(item.beanId)invoiceGrams[item.beanId]=String(item.grams)});roastMode=invoice.roastMode||'sada';paymentMethod=invoice.paymentMethod||'cash';documentType='receipt';invoiceLineage={parentInvoiceId:invoice.id,parentInvoiceNumber:invoice.number,parentInvoiceDate:invoiceDateKey(invoice),branchType};invoiceCustomerContext={name:invoice.customer||'',country:invoice.customerCountry||''};closeReceipt();openView('invoice',{push:true,animate:true});document.getElementById('invoice-customer').value=invoice.customer||'';document.getElementById('invoice-date').value=localDateValue();document.getElementById('invoice-expiry').value=autoExpiryDate(localDateValue());document.getElementById('invoice-expiry').dataset.forDate=localDateValue();document.querySelectorAll('[data-document-type]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.documentType===documentType)));document.querySelectorAll('[data-payment-method]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.paymentMethod===paymentMethod)));renderInvoice();notify('جهزت نسخة جديدة مرتبطة بالفاتورة الأصلية')}
+function dataUrlFromBlob(blob){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error('تعذر تجهيز صورة الإيصال'));reader.readAsDataURL(blob)})}
+function receiptBlob(){return new Promise((resolve,reject)=>document.getElementById('receipt-canvas').toBlob(blob=>blob?resolve(blob):reject(new Error('تعذر تجهيز صورة الإيصال')),'image/png'))}
+function downloadReceipt(){if(!activeReceipt)return;receiptBlob().then(blob=>{const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`${activeReceipt.number}-receipt.png`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);notify('تم تنزيل صورة الإيصال')}).catch(error=>notify(error.message))}
+document.getElementById('receipt-download').addEventListener('click',downloadReceipt);document.getElementById('receipt-repeat').addEventListener('click',()=>{if(activeReceipt)repeatInvoice(activeReceipt.id)});
+document.getElementById('receipt-share').addEventListener('click',async()=>{if(!activeReceipt)return;try{const blob=await receiptBlob();if(window.MandourNative?.shareInvoiceImage){window.MandourNative.shareInvoiceImage(await dataUrlFromBlob(blob));notify('اختار التطبيق المناسب من قائمة المشاركة');return}const file=new File([blob],`${activeReceipt.number}-receipt.png`,{type:'image/png'});if(navigator.canShare?.({files:[file]})&&navigator.share){await navigator.share({title:`إيصال ${activeReceipt.number}`,text:'إيصال من مندور كوفي',files:[file]});return}downloadReceipt();notify('تم تجهيز الصورة؛ شاركها من المعرض') }catch(error){if(error?.name!=='AbortError')notify(error.message||'تعذرت مشاركة الإيصال')}});
+document.getElementById('receipt-print').addEventListener('click',async()=>{if(!activeReceipt)return;if(window.MandourNative?.shareInvoiceImage){try{const blob=await receiptBlob();const dataUrl=await dataUrlFromBlob(blob);window.MandourNative.shareInvoiceImage(dataUrl);notify('اختر الطباعة أو احفظ الصورة من قائمة المشاركة')}catch(error){notify(error.message||'تعذرت المشاركة')}return}window.print()});
+document.addEventListener('click',event=>{if(event.target.closest('[data-close-delete]'))closeDeleteDialog();if(event.target.closest('[data-close-receipt]'))closeReceipt();if(event.target.closest('[data-close-move]'))closeMoveDialog();if(event.target.closest('[data-close-report]'))closeDailyReport()});
+function updateRecipeTotal(){const total=recipeLines.reduce((sum,line)=>sum+Number(line.grams||0),0);const el=document.getElementById('recipe-total-weight');if(el)el.textContent=`${fmt.format(total)} جم`}
+function renderRecipeLines(){const root=document.getElementById('recipe-lines');const options=allBeans().map(bean=>`<option value="${escapeHTML(bean.id)}">${escapeHTML(bean.name)}</option>`).join('');root.innerHTML=recipeLines.map((line,index)=>`<div class="recipe-line" data-recipe-line="${index}"><select aria-label="نوع البن">${options}</select><input type="number" min="1" max="100000" step="1" inputmode="decimal" placeholder="جرام" value="${escapeHTML(line.grams)}" aria-label="الوزن بالجرام"><button type="button" class="remove-line" data-remove-line="${index}" aria-label="حذف المكون">×</button></div>`).join('');root.querySelectorAll('.recipe-line').forEach((el,index)=>{el.querySelector('select').value=recipeLines[index].beanId;el.querySelector('select').addEventListener('change',event=>recipeLines[index].beanId=event.target.value);el.querySelector('input').addEventListener('input',event=>{recipeLines[index].grams=event.target.value;updateRecipeTotal()})});updateRecipeTotal()}
+document.getElementById('add-recipe-line').addEventListener('click',()=>{recipeLines.push({beanId:allBeans()[0]?.id||'',grams:''});renderRecipeLines()});
+document.getElementById('recipe-lines').addEventListener('click',event=>{const button=event.target.closest('[data-remove-line]');if(!button)return;if(recipeLines.length===1){notify('التوليفة لازم تحتوي على نوع بن واحد على الأقل');return}recipeLines.splice(Number(button.dataset.removeLine),1);renderRecipeLines()});
+function customerKey(value){return String(value||'').trim().toLocaleLowerCase('ar')}
+function findCustomerByName(name){return data.customers.find(customer=>customerKey(customer.name)===customerKey(name))}
+function customerInvoicesFor(name){const key=customerKey(name);return data.invoices.filter(invoice=>customerKey(invoice.customer)===key&&(invoice.documentType||'receipt')==='receipt').sort((a,b)=>invoiceActivityTime(b)-invoiceActivityTime(a)||invoiceDateKey(b).localeCompare(invoiceDateKey(a)))}
+function invoiceActivityTime(invoice){const raw=invoice?.savedAt||invoice?.createdAt;const value=raw?Date.parse(raw):NaN;return Number.isFinite(value)?value:0}
+function lastInvoiceFor(name){return customerInvoicesFor(name)[0]}
+function purchaseDateTime(invoice){const timestamp=invoiceActivityTime(invoice);if(timestamp){return new Intl.DateTimeFormat('ar-EG',{year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(timestamp))}return dateText(invoiceDateKey(invoice))}
+function relativeQuantity(value,unit){const singular={minute:'دقيقة',hour:'ساعة',day:'يوم',month:'شهر',year:'سنة'};const dual={minute:'دقيقتين',hour:'ساعتين',day:'يومين',month:'شهرين',year:'سنتين'};const few={minute:'دقائق',hour:'ساعات',day:'أيام',month:'أشهر',year:'سنوات'};const many={minute:'دقيقة',hour:'ساعة',day:'يومًا',month:'شهرًا',year:'سنة'};if(value===1)return singular[unit];if(value===2)return dual[unit];return `${fmt.format(value)} ${value<=10?few[unit]:many[unit]}`}
+function relativePurchaseLabel(invoice){if(!invoice)return'لا يوجد شراء مسجل';const timestamp=invoiceActivityTime(invoice);if(timestamp){const elapsed=Date.now()-timestamp;if(elapsed< -60000)return`آخر شراء بتاريخ ${purchaseDateTime(invoice)}`;if(elapsed<60000)return'آخر شراء منذ أقل من دقيقة';const minutes=Math.floor(elapsed/60000);if(minutes<60)return`آخر شراء منذ ${relativeQuantity(minutes,'minute')}`;const hours=Math.floor(minutes/60);if(hours<24)return`آخر شراء منذ ${relativeQuantity(hours,'hour')}`;const days=Math.floor(hours/24);if(days<30)return`آخر شراء منذ ${relativeQuantity(days,'day')}`;const months=Math.floor(days/30);if(months<12)return`آخر شراء منذ ${relativeQuantity(months,'month')}`;return`آخر شراء منذ ${relativeQuantity(Math.floor(days/365),'year')}`}
+ const key=invoiceDateKey(invoice);const [y,m,d]=key.split('-').map(Number);const [ty,tm,td]=localDateValue().split('-').map(Number);const days=Math.floor((Date.UTC(ty,tm-1,td)-Date.UTC(y,m-1,d))/86400000);if(days<0)return`آخر شراء بتاريخ ${dateText(key)}`;if(days===0)return'آخر شراء اليوم';if(days<30)return`آخر شراء منذ ${relativeQuantity(days,'day')}`;const months=Math.floor(days/30);if(months<12)return`آخر شراء منذ ${relativeQuantity(months,'month')}`;return`آخر شراء منذ ${relativeQuantity(Math.floor(days/365),'year')}`}
+function customerCountryForInvoice(){const name=document.getElementById('invoice-customer').value.trim();const customer=findCustomerByName(name);if(customer?.country)return String(customer.country).trim();if(invoiceCustomerContext&&customerKey(invoiceCustomerContext.name)===customerKey(name))return String(invoiceCustomerContext.country||'').trim();return''}
+document.getElementById('blend-form').addEventListener('submit',event=>{event.preventDefault();const name=document.getElementById('blend-customer').value.trim();const country=document.getElementById('blend-country').value.trim();const blendName=document.getElementById('blend-name').value.trim();const ingredients=recipeLines.filter(line=>Number(line.grams)>0).map(line=>{const bean=allBeans().find(item=>item.id===line.beanId);return bean?{beanId:bean.id,name:bean.name,grams:Number(line.grams),pricePerKg:bean.pricePerKg}:null}).filter(Boolean);if(!ingredients.length){notify('أضف وزنًا لمكون واحد على الأقل');return}let customer=data.customers.find(item=>customerKey(item.name)===customerKey(name));if(!customer){customer={id:`customer-${Date.now()}`,name,country,recipes:[]};data.customers.unshift(customer)}else if(country)customer.country=country;customer.recipes.unshift({id:`blend-${Date.now()}`,name:blendName,ingredients,createdAt:new Date().toISOString()});try{persist()}catch{notify('تعذر الحفظ؛ مساحة الجهاز قد تكون ممتلئة');return}event.target.reset();recipeLines=[{beanId:allBeans()[0]?.id||'',grams:''}];renderRecipeLines();renderCustomers();refreshHome();notify('اتحفظت التوليفة للعميل')});
+function renderCustomers(){
+ const root=document.getElementById('customer-list');
+ if(!data.customers.length){root.innerHTML='<div class="empty">لا يوجد عملاء محفوظون بعد. سجّل بيانات العميل وتوليفته من النموذج أعلاه.</div>';return}
+ const orderedCustomers=[...data.customers].sort((a,b)=>invoiceActivityTime(lastInvoiceFor(b.name))-invoiceActivityTime(lastInvoiceFor(a.name)));
+ root.innerHTML=orderedCustomers.map(customer=>{
+  const id=escapeHTML(customer.id);
+  const purchases=customerInvoicesFor(customer.name);
+  const last=purchases[0];
+  const country=String(customer.country||'').trim();
+  const totalSaved=purchases.reduce((sum,invoice)=>sum+Number(invoice.total||0),0);
+  const history=purchases.slice(0,5).map(invoice=>`<div class="customer-purchase-row"><span><strong>${escapeHTML(invoice.number)}</strong><small>${purchaseDateTime(invoice)} · ${paymentMethodLabel(invoice.paymentMethod)}</small></span><strong>${money(invoice.total)}</strong></div>`).join('')||'<div class="empty">لا توجد مشتريات محفوظة بعد.</div>';
+  const recipes=(customer.recipes||[]).map(recipe=>{
+   const ingredients=(recipe.ingredients||[]).map(item=>{
+    const bean=allBeans().find(x=>x.id===item.beanId)||allBeans().find(x=>customerKey(x.name)===customerKey(item.name));
+    const grams=Number(item.grams||0);
+    const pricePerKg=bean?bean.pricePerKg:Number(item.pricePerKg||0);
+    return `${escapeHTML(item.name)} — ${fmt.format(grams)} جم · ${money(pricePerKg*grams/1000)}`
+   }).join(' · ');
+   const total=(recipe.ingredients||[]).reduce((sum,item)=>{
+    const bean=allBeans().find(x=>x.id===item.beanId)||allBeans().find(x=>customerKey(x.name)===customerKey(item.name));
+    return sum+(bean?bean.pricePerKg:Number(item.pricePerKg||0))*Number(item.grams||0)/1000
+   },0);
+   return `<div class="customer-template-row"><div class="recipe"><div class="recipe-title">${escapeHTML(recipe.name)} · ${dateText(recipe.createdAt)}</div><div class="ingredient-list">${ingredients}<br><strong>قيمة البن بالتسعير الحالي: ${money(total)}</strong></div></div><button type="button" class="secondary" data-customer-recipe-order="${id}" data-recipe-id="${escapeHTML(recipe.id)}">فاتورة بهذه التوليفة</button></div>`
+  }).join('')||'<span class="muted">لا توجد توليفات محفوظة بعد</span>';
+  const lastDetails=last?`${escapeHTML(last.number)} · ${purchaseDateTime(last)} · ${last.roastMode==='m7awag'?'محوّج':'سادة'} · الدفع: ${paymentMethodLabel(last.paymentMethod)}${last.expiryDate?` · الصلاحية حتى ${dateText(last.expiryDate)}`:''}`:'لم تسجّل فاتورة بيع بعد';
+  return `<article class="customer-card"><button class="customer-toggle" type="button" data-customer-toggle="${id}" aria-expanded="false" aria-controls="customer-details-${id}"><span class="customer-ident"><span class="customer-name-row"><strong>👤 ${escapeHTML(customer.name)}</strong>${country?`<span class="customer-country">${escapeHTML(country)}</span>`:''}</span><small class="customer-last-buy">${relativePurchaseLabel(last)}</small></span><span class="customer-chevron" aria-hidden="true">⌄</span></button><section class="customer-expanded" id="customer-details-${id}" hidden><div class="customer-stats"><div><small>إجمالي المشتريات المحفوظة</small><strong>${money(totalSaved)}</strong></div><div><small>عدد إيصالات البيع المحفوظة</small><strong>${fmt.format(purchases.length)}</strong></div></div><small class="customer-stats-note">الإجمالي من الفواتير المحفوظة على الجهاز، وليس صافي الربح.</small><div class="customer-invoice-actions"><button type="button" class="primary" data-add-customer-order="${id}">إضافة طلب</button><button type="button" class="secondary" data-add-customer-suborder="${id}">طلب فرعي</button></div><small class="customer-branch-note">«إضافة طلب» يحمّل آخر فاتورة، أو أحدث توليفة محفوظة إذا لم توجد فاتورة. «طلب فرعي» يبدأ أصنافًا إضافية مرتبطة بآخر فاتورة. الأسعار تُحسب تلقائيًا.</small><div class="customer-section"><strong>آخر المشتريات المحفوظة</strong><div class="customer-purchase-list">${history}</div></div><div class="history-detail"><strong>آخر فاتورة بيع:</strong> ${lastDetails}<br><strong>التوليفات المحفوظة:</strong>${recipes}</div></section></article>`
+ }).join('')
+}
+function startCustomerOrder(customerId,isSuborder=false,recipeId=''){
+ const customer=data.customers.find(item=>item.id===customerId);if(!customer)return;
+ const last=lastInvoiceFor(customer.name);
+ const recipes=Array.isArray(customer.recipes)?customer.recipes:[];
+ let recipe=recipeId?recipes.find(item=>item.id===recipeId):null;
+ const reuseLast=!isSuborder&&!recipeId&&Boolean(last);
+ if(!recipe&&!reuseLast&&!isSuborder&&recipes.length)recipe=recipes[0];
+ invoiceGrams={};
+ if(recipe){(recipe.ingredients||[]).forEach(item=>{const bean=allBeans().find(x=>x.id===item.beanId)||allBeans().find(x=>customerKey(x.name)===customerKey(item.name));if(bean)invoiceGrams[bean.id]=String(Number(invoiceGrams[bean.id]||0)+Number(item.grams||0))})}
+ else if(reuseLast){(last.items||[]).forEach(item=>{const bean=allBeans().find(x=>x.id===item.beanId)||allBeans().find(x=>customerKey(x.name)===customerKey(item.name));if(bean)invoiceGrams[bean.id]=String(Number(invoiceGrams[bean.id]||0)+Number(item.grams||0))})}
+ roastMode=last?.roastMode||'sada';documentType='receipt';paymentMethod=last?.paymentMethod||customer.defaultPaymentMethod||'cash';
+ invoiceLineage=isSuborder?{branchType:'suborder',...(last?{parentInvoiceId:last.id,parentInvoiceNumber:last.number,parentInvoiceDate:invoiceDateKey(last)}:{})}:null;
+ invoiceCustomerContext={name:customer.name,country:customer.country||''};
+ closeReceipt();openView('invoice',{push:true,animate:true});
+ document.getElementById('invoice-customer').value=customer.name;
+ document.getElementById('invoice-date').value=localDateValue();
+ document.getElementById('invoice-expiry').value=autoExpiryDate(localDateValue());
+ document.getElementById('invoice-expiry').dataset.forDate=localDateValue();
+ document.querySelectorAll('[data-document-type]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.documentType===documentType)));
+ document.querySelectorAll('[data-payment-method]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.paymentMethod===paymentMethod)));
+ renderInvoice();
+ const loaded=recipe?`التوليفة «${recipe.name}»`:(reuseLast?'آخر فاتورة محفوظة':'');
+ notify(isSuborder?'بدأ الطلب الفرعي؛ طريقة الدفع من آخر فاتورة':loaded?`حمّلنا ${loaded} وأسعار البن تتحسب تلقائيًا`:`بدأ طلب جديد للعميل ${customer.name}`)
+}
+document.getElementById('customer-list').addEventListener('click',event=>{
+ const saved=event.target.closest('[data-customer-recipe-order]');
+ if(saved){startCustomerOrder(saved.dataset.customerRecipeOrder,false,saved.dataset.recipeId);return}
+ const add=event.target.closest('[data-add-customer-order]');
+ if(add){startCustomerOrder(add.dataset.addCustomerOrder,false);return}
+ const sub=event.target.closest('[data-add-customer-suborder]');
+ if(sub){startCustomerOrder(sub.dataset.addCustomerSuborder,true);return}
+ const toggle=event.target.closest('[data-customer-toggle]');if(!toggle)return;
+ const details=document.getElementById(`customer-details-${toggle.dataset.customerToggle}`);if(!details)return;
+ details.hidden=!details.hidden;toggle.setAttribute('aria-expanded',String(!details.hidden))
+});
+function renderCustomBeans(){const root=document.getElementById('custom-bean-list');if(!root)return;if(!data.customBeans.length){root.innerHTML='<div class="empty">الأنواع الأربعة الأساسية جاهزة. أي نوع تضيفه هيظهر هنا وفي شاشة الفواتير.</div>';return}root.innerHTML=data.customBeans.map(bean=>`<article class="custom-bean-row"><img src="${escapeHTML(bean.image)}" alt="${escapeHTML(bean.name)}"><div class="info"><strong>${escapeHTML(bean.name)}</strong><small>الكيلو ${money(bean.pricePerKg)}</small></div></article>`).join('')}
+function compressImage(file){return new Promise((resolve,reject)=>{if(!file||!file.type.startsWith('image/')){reject(new Error('اختار ملف صورة صالح'));return}const reader=new FileReader();reader.onerror=()=>reject(new Error('تعذرت قراءة الصورة'));reader.onload=()=>{const image=new Image();image.onerror=()=>reject(new Error('الصورة غير مدعومة'));image.onload=()=>{const scale=Math.min(1,900/Math.max(image.width,image.height));const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);resolve(canvas.toDataURL('image/jpeg',.76))};image.src=reader.result};reader.readAsDataURL(file)})}
+document.getElementById('export-data').addEventListener('click',downloadBackup);document.getElementById('share-data').addEventListener('click',shareBackup);document.getElementById('backup-folder-settings').addEventListener('click',()=>{if(window.MandourNative?.chooseFolder)window.MandourNative.chooseFolder('backup');else notify('اختيار المجلد متاح في تطبيق Android')});document.getElementById('import-data').addEventListener('change',event=>{importBackupFile(event.target.files?.[0]);event.target.value='' });window.mandourFolderChosen=(kind,name)=>{if(kind==='backup')notify('تم اختيار مجلد النسخ الاحتياطي: '+name)};
+document.addEventListener('visibilitychange',()=>{if(document.hidden)return;deferExpiredChecks();if(currentView==='checks')renderChecks();const removed=purgeExpiredInvoices();if(removed){renderInvoiceHistory();renderCustomers();refreshHome();notify(`تم حذف ${fmt.format(removed)} مستند انتهت صلاحيته تلقائيًا`)}});
+setInterval(()=>{if(document.hidden)return;const moved=deferExpiredChecks();if(moved&&currentView==='checks')renderChecks();const removed=purgeExpiredInvoices();if(removed){renderInvoiceHistory();renderCustomers();refreshHome();notify(`تم حذف ${fmt.format(removed)} مستند انتهت صلاحيته تلقائيًا`)}},60*60*1000);
+const MAP_LOCATION_URL='https://maps.app.goo.gl/phv48EMLHnG28rVP9';
+const WALLET_NUMBER='01097110611';
+const CHECK_MENU=[
+ {id:'turkish',name:'قهوة تركي',image:'assets/menu/real2/turkish.jpg',options:[{id:'single',label:'سنجل',price:20},{id:'double',label:'دبل',price:40}]},
+ {id:'turkish-milk',name:'قهوة بلبن عادية',image:'assets/menu/real2/turkish-milk.jpg',options:[{id:'regular',label:'عادية',price:30}]},
+ {id:'hazelnut',name:'قهوة بندق',image:'assets/menu/real2/hazelnut.jpg',options:[{id:'regular',label:'عادية',price:30}]},
+ {id:'french',name:'قهوة فرنساوي',image:'assets/menu/real2/french.jpg',options:[{id:'regular',label:'عادية',price:30}]},
+ {id:'espresso',name:'إسبريسو',image:'assets/menu/real2/espresso.jpg',espresso:true,defaultOption:'single',options:[{id:'single',label:'سنجل شوت',price:25},{id:'double',label:'دبل شوت',price:40}]},
+ {id:'latte',name:'لاتيه',image:'assets/menu/real2/latte.jpg',espresso:true,defaultOption:'single',options:[{id:'single',label:'سنجل إسبريسو',price:40},{id:'double',label:'دبل إسبريسو',price:60}]},
+ {id:'cappuccino',name:'كابتشينو',image:'assets/menu/real2/cappuccino.jpg',espresso:true,defaultOption:'single',options:[{id:'single',label:'سنجل إسبريسو',price:40},{id:'double',label:'دبل إسبريسو',price:60}]},
+ {id:'cortado',name:'كورتادو',image:'assets/menu/real2/cortado.jpg',espresso:true,defaultOption:'double',options:[{id:'single',label:'سنجل شوت',price:40},{id:'double',label:'دبل شوت',price:50}]},
+ {id:'biscuit',name:'بسكوت',image:'assets/menu/real2/biscuit.jpg',options:[{id:'piece',label:'القطعة',price:5}]},
+ {id:'dates',name:'تمر',image:'assets/menu/real2/dates.jpg',options:[{id:'piece',label:'الحبة',price:15}]},
+ {id:'tea',name:'الشاي',image:'assets/menu/real2/tea.jpg',options:[{id:'regular',label:'كوب',price:10}]},
+ {id:'tea-clove',name:'شاي بقرنفل',image:'assets/menu/real2/tea-clove.jpg',options:[{id:'regular',label:'كوب',price:10}]},
+ {id:'clove',name:'قرنفل',image:'assets/menu/real2/clove.jpg',options:[{id:'regular',label:'كوب',price:10}]},
+ {id:'anise',name:'ينسون',image:'assets/menu/real2/anise.jpg',options:[{id:'regular',label:'كوب',price:10}]},
+ {id:'mint',name:'نعناع',image:'assets/menu/real2/mint.jpg',options:[{id:'regular',label:'كوب',price:10}]},
+ {id:'green-tea',name:'شاي أخضر',image:'assets/menu/real2/green-tea.jpg',options:[{id:'regular',label:'كوب',price:10}]},
+ {id:'nescafe',name:'نسكافية',image:'assets/menu/real2/nescafe.jpg',options:[{id:'regular',label:'كوب',price:30}]}
+];
+let checkDraft=[];let checkFilter='unpaid';let checkModeFilter='all';let checkPanel='list';let moveState=null;
+const EXTRA_DRINKS=[
+ {id:'rani',name:'راني',image:'assets/menu/cold/rani.jpg',options:[{id:'regular',label:'زجاجة',price:20}]},
+ {id:'pepsi',name:'بيبسي',image:'assets/menu/cold/pepsi.jpg',options:[{id:'regular',label:'زجاجة',price:20}]},
+ {id:'seven-up',name:'سفن أب',image:'assets/menu/cold/seven-up.jpg',options:[{id:'regular',label:'زجاجة',price:20}]},
+ {id:'sting',name:'ستينغ',image:'assets/menu/cold/sting.jpg',options:[{id:'regular',label:'علبة',price:20}]},
+ {id:'fayrouz',name:'فيروز',image:'assets/menu/cold/fayrouz.jpg',options:[{id:'regular',label:'زجاجة',price:20}]},
+ {id:'mirinda',name:'ميرندا',image:'assets/menu/cold/mirinda.jpg',options:[{id:'regular',label:'زجاجة',price:20}]},
+ {id:'pepsi-diet',name:'بيبسي دايت',image:'assets/menu/cold/pepsi-diet.jpg',options:[{id:'regular',label:'زجاجة',price:20}]},
+ {id:'water-small',name:'مياه صغيرة',image:'assets/menu/cold/water-small.jpg',options:[{id:'regular',label:'زجاجة',price:10}]},
+ {id:'water-large',name:'مياه كبيرة',image:'assets/menu/cold/water-large.jpg',options:[{id:'regular',label:'زجاجة',price:15}]},
+ {id:'volt',name:'فولت',image:'assets/menu/cold/volt.jpg',options:[{id:'regular',label:'علبة',price:10}]},
+ {id:'monster',name:'مونستر',image:'assets/menu/cold/monster.jpg',options:[{id:'regular',label:'علبة',price:60}]},
+ {id:'redbull',name:'ريد بُل',image:'assets/menu/cold/redbull.jpg',options:[{id:'regular',label:'علبة',price:70}]},
+ {id:'juice',name:'عصير',image:'assets/menu/cold/juice.jpg',options:[{id:'regular',label:'زجاجة',price:20}]}
+];
+function allCheckProducts(){return CHECK_MENU.concat(EXTRA_DRINKS)}
+function activeChecks(){return data.checks.filter(c=>c.status==='open'||c.status==='partial')}function availableChecks(){return data.checks.filter(c=>c.status!=='paid')}
+function netUnitPrice(item){
+  const base=Number(item.unitPrice||0);
+  const qty=Math.max(1,Number(item.qty||1));
+  const lineDiscount=Math.max(0,Math.min(base*qty,Number(item.lineDiscount||0)));
+  return Math.max(0,(base*qty-lineDiscount)/qty);
+}
+function priceText(item){const base=Number(item.unitPrice||0),net=netUnitPrice(item);return Number(item.lineDiscount||0)>0?`<del>${money(base)}</del> <strong>${money(net)}</strong>`:money(net)}
+function lineLabel(item){
+  const qty = Math.max(1, Number(item.qty||1));
+  const unit = Number(item.unitPrice||0);
+  const discount = Number(item.lineDiscount||0);
+  const gross = unit * qty;
+  if(discount > 0){
+    return `العدد: ${fmt.format(qty)} · الإجمالي: <del>${money(gross)}</del> <strong>${money(gross - discount)}</strong> · خصم ${money(discount)}`;
+  }
+  return `العدد: ${fmt.format(qty)} · السعر: ${money(unit)}`;
+}
+function checkGuestTotal(guest){return(guest.items||[]).reduce((sum,item)=>sum+(netUnitPrice(item)*Number(item.qty||0)),0)}
+function checkPaidTotal(check){const itemsPaid=(check.guests||[]).reduce((sum,guest)=>sum+(guest.items||[]).reduce((n,item)=>n+(netUnitPrice(item)*Math.min(Number(item.qty||0),Number(item.paidQty||0))),0),0);return itemsPaid+(check.tipPaid?Number(check.tip||0):0)}
+function checkTotal(check){return(check.guests||[]).reduce((sum,guest)=>sum+checkGuestTotal(guest),0)+Number(check.tip||0)}
+function checkDue(check){return Math.max(0,checkTotal(check)-checkPaidTotal(check))}
+function checkItemLabel(item){return `${item.name}${item.optionLabel&&item.optionLabel!=='عادية'&&item.optionLabel!=='القطعة'&&item.optionLabel!=='الحبة'&&item.optionLabel!=='كوب'&&item.optionLabel!=='زجاجة'&&item.optionLabel!=='علبة'?` · ${item.optionLabel}`:''}`}
+function localShiftDayKey(date=new Date()){const d=new Date(date);if(d.getHours()<2)d.setDate(d.getDate()-1);return localDateValue(d)}
+function deferExpiredChecks(){const cutoff=localShiftDayKey();let changed=false;data.checks.forEach(c=>{if((c.status==='open'||c.status==='partial')&&checkDue(c)>0&&localDateValue(new Date(c.createdAt))<cutoff){c.status='deferred';c.deferredAt=new Date().toISOString();changed=true}});if(changed)try{persist()}catch{}return changed}
+function menuCards(list,buttonAttr){
+  return list.map(item=>{
+    const opts = item.options||[];
+    if(opts.length>1){
+      const defaultOptId = item.defaultOption || opts[0].id;
+      const buttons = opts.map(o=>`<button type="button" class="option-btn${o.id===defaultOptId?' is-default':''}" ${buttonAttr}="${item.id}" data-option-id="${o.id}"><span class="opt-label">${escapeHTML(o.label)}</span><span class="opt-price">${money(o.price)}</span></button>`).join('');
+      return `<article class="check-menu-card" data-menu-card="${item.id}"><img src="${item.image}" alt="${escapeHTML(item.name)}" loading="lazy"><div class="check-menu-info"><strong>${escapeHTML(item.name)}</strong><div class="option-buttons">${buttons}</div></div></article>`;
+    }
+    const option=opts[0];
+    return `<article class="check-menu-card" data-menu-card="${item.id}"><img src="${item.image}" alt="${escapeHTML(item.name)}" loading="lazy"><div class="check-menu-info"><strong>${escapeHTML(item.name)}</strong><small class="check-menu-price">السعر: ${money(option.price)}</small><button type="button" ${buttonAttr}="${item.id}">＋ إضافة</button></div></article>`;
+  }).join('')
+}
+function renderQuickAdd(){const root=document.getElementById('quick-add');if(!root)return;const counts={};(data.checks||[]).forEach(c=>{(c.guests||[]).forEach(g=>{(g.items||[]).forEach(item=>{if(!item.productId||!item.optionId)return;const key=item.productId+'::'+item.optionId;if(!counts[key])counts[key]={productId:item.productId,optionId:item.optionId,count:0};counts[key].count+=Number(item.qty||0)})})});const top=Object.values(counts).sort((a,b)=>b.count-a.count).slice(0,6);const simpleLabels=['عادية','كوب','زجاجة','علبة','القطعة','الحبة'];const items=top.map(t=>{const product=allCheckProducts().find(p=>p.id===t.productId);if(!product)return '';const opt=(product.options||[]).find(o=>o.id===t.optionId);if(!opt)return '';const label=simpleLabels.includes(opt.label)?'':' · '+opt.label;return `<button type="button" class="quick-add-btn" data-quick-add="${escapeHTML(t.productId)}" data-quick-option="${escapeHTML(t.optionId)}"><span class="qa-name">${escapeHTML(product.name)}${escapeHTML(label)}</span><span class="qa-price">${money(opt.price)}</span></button>`}).filter(Boolean).join('');root.innerHTML=items;root.hidden=!items}
+function renderCheckMenu(){const root=document.getElementById('check-menu');if(!root)return;const count=document.getElementById('menu-count');if(count)count.textContent=`${fmt.format(CHECK_MENU.length)} صنف`;root.innerHTML=menuCards(CHECK_MENU,'data-menu-add');renderQuickAdd()}
+function renderExtraDrinks(){const root=document.getElementById('extra-drinks-menu');if(root)root.innerHTML=menuCards(EXTRA_DRINKS,'data-extra-menu-add')}
+function renderCheckTargets(){const select=document.getElementById('check-existing');if(!select)return;const selected=select.value;const options=availableChecks().map(c=>`<option value="${escapeHTML(c.id)}">${c.mode==='inside'?'طاولة '+escapeHTML(c.tableName||'—'):'تيك أواي'} · ${(c.guests||[]).length} عميل · ${money(checkTotal(c))}</option>`).join('');select.innerHTML='<option value="">إنشاء حساب جديد</option>'+options;if(availableChecks().some(c=>c.id===selected))select.value=selected;syncCheckTarget()}
+function syncCheckTarget(){const existing=document.getElementById('check-existing')?.value;const check=availableChecks().find(c=>c.id===existing);const mode=document.getElementById('check-service-mode');const table=document.getElementById('check-table-name');const tableField=document.getElementById('check-table-field');if(!mode||!table)return;if(check){mode.value=check.mode;mode.disabled=true;table.value=check.tableName||'';table.disabled=true}else{mode.disabled=false;table.disabled=false}tableField.hidden=mode.value!=='inside';table.required=mode.value==='inside'&&!check;const preview=document.getElementById('check-user-preview');if(preview)preview.textContent=check?`العميل الحالي: ${(check.guests||[]).map(g=>g.name).join(' · ')||'بدون اسم'}`:(document.getElementById('check-customer')?.value.trim()?`العميل الحالي: ${document.getElementById('check-customer').value.trim()}`:'أصناف بدون اسم عميل')}
+function renderCheckDraft(){
+ const root=document.getElementById('check-draft-lines');
+ if(!root)return;
+ const total=checkDraft.reduce((sum,item)=>sum+(netUnitPrice(item)*item.qty),0);
+ document.getElementById('check-draft-total').textContent=money(total);
+ root.innerHTML=checkDraft.length
+  ?`<div class="check-draft-list">${checkDraft.map((item,index)=>`<div class="check-draft-line"><span class="check-line-name">${escapeHTML(checkItemLabel(item))}<small class="line-qty-label">${lineLabel(item)}</small><input type="text" class="draft-customer-input" placeholder="اسم العميل (اختياري)" value="${escapeHTML(item.customerName||'')}" data-draft-customer="${index}" maxlength="60" aria-label="اسم عميل ${escapeHTML(checkItemLabel(item))}"></span><label class="discount-field"><span>خصم على السطر (جنيه)</span><input type="number" min="0" max="${Number(item.unitPrice||0)*Number(item.qty||1)}" step="1" value="${item.lineDiscount||''}" placeholder="0" data-draft-discount="${index}"></label><span class="qty-controls"><button type="button" data-draft-dec="${index}">−</button><strong>${fmt.format(item.qty)}</strong><button type="button" data-draft-inc="${index}">＋</button><button type="button" data-draft-remove="${index}">×</button></span></div>`).join('')}</div>`
+  :'<div class="empty">اختار صنفًا من القائمة.</div>';
+}
+function setCheckPanel(mode='list'){checkPanel=mode;const form=document.getElementById('check-order-form'),list=document.getElementById('checks-only-panel');if(form)form.hidden=mode!=='orders';if(list)list.hidden=mode!=='list';document.querySelectorAll('[data-check-panel]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.checkPanel===mode)));if(mode==='orders')window.scrollTo({top:0,behavior:'smooth'})}
+function renderChecks(){const root=document.getElementById('check-list');if(!root)return;deferExpiredChecks();renderCheckTargets();const opened=activeChecks().sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));const deferred=data.checks.filter(c=>c.status==='deferred').sort((a,b)=>String(b.deferredAt||b.createdAt).localeCompare(String(a.deferredAt||a.createdAt)));const paid=data.checks.filter(c=>c.status==='paid').sort((a,b)=>String(b.paidAt||b.createdAt).localeCompare(String(a.paidAt||a.createdAt)));const closed=data.checks.filter(c=>c.status==='closed').sort((a,b)=>String(b.closedAt||b.createdAt).localeCompare(String(a.closedAt||a.createdAt)));let list=checkFilter==='unpaid'?[...opened,...deferred]:checkFilter==='paid'?paid:[...opened,...deferred,...paid,...closed];function card(c){const due=checkDue(c);const status=c.status==='paid'?'مدفوع بالكامل':c.status==='deferred'?'مؤجل':c.status==='closed'?'مغلق':due<checkTotal(c)?'مدفوع جزئيًا':'مفتوح';const guests=(c.guests||[]).map(g=>`<div class="compact-guest"><div class="compact-guest-head"><strong>${escapeHTML(g.name)} <button type="button" class="edit-guest" data-edit-guest="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}" aria-label="تعديل الاسم" title="تعديل اسم العميل">✎</button></strong><button type="button" class="remove-guest" data-remove-guest="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}">حذف</button></div><div class="compact-items">${(g.items||[]).map((item,index)=>{const paidQty=Math.min(Number(item.qty||0),Number(item.paidQty||0));const fullyPaid=paidQty>=Number(item.qty||0);return `<div class="compact-item ${fullyPaid?'paid-line':''}"><span class="check-line-name">${escapeHTML(checkItemLabel(item))}<small>${lineLabel(item)}</small></span><label class="discount-field saved-discount"><span>خصم على السطر (جنيه)</span><input type="number" min="0" max="${Number(item.unitPrice||0)*Number(item.qty||1)}" step="1" value="${item.lineDiscount||''}" placeholder="0" data-check-discount="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}" data-item-index="${index}"></label><span class="qty-controls compact-qty"><button type="button" data-check-qty="-1" data-check-id="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}" data-item-index="${index}">−</button><strong>${fmt.format(item.qty)}</strong><button type="button" data-check-qty="1" data-check-id="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}" data-item-index="${index}">＋</button><button type="button" class="pay-item ${fullyPaid?'is-paid':''}" data-pay-item="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}" data-item-index="${index}">${fullyPaid?'✓':'دفع'}</button><button type="button" class="move-item" data-move-item="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}" data-item-index="${index}" aria-label="نقل لعميل آخر" title="نقل لعميل آخر">↪</button></span></div>`}).join('')}</div></div>`).join('');return `<article class="check-card compact-check-card ${c.status==='deferred'?'deferred-card':''}"><header class="compact-check-header"><div><h4>${c.mode==='inside'?`طاولة ${escapeHTML(c.tableName||'—')}`:'تيك أواي'}</h4><strong class="compact-customer">العميل: ${(c.guests||[]).map(g=>escapeHTML(g.name)).join(' · ')||'—'}</strong><small>الطلب: ${dateFmt.format(new Date(c.lastOrderAt||c.createdAt))}${c.paidAt?` · الدفع: ${dateFmt.format(new Date(c.paidAt))}`:''}</small></div><div class="compact-total"><strong>${money(checkTotal(c))}</strong><span class="check-state ${c.status==='deferred'?'deferred':''}">${status}</span><small>المتبقي ${money(due)}</small></div></header><div class="compact-guest-list">${guests||'<div class="empty">لا توجد أصناف</div>'}</div><div class="compact-actions"><label class="tip-field"><span>بقشيش</span><input type="number" min="0" step="1" value="${c.tip||''}" placeholder="0" data-check-tip="${escapeHTML(c.id)}"></label>${c.status!=='paid'&&c.status!=='closed'?`<button type="button" class="primary" data-pay-check="${escapeHTML(c.id)}">دفع كامل</button>`:''}<button type="button" class="secondary" data-add-order="${escapeHTML(c.id)}">＋ إضافة طلب</button>${c.status==='open'||c.status==='partial'?`<button type="button" class="secondary add-guest-btn" data-add-guest="${escapeHTML(c.id)}">＋ عميل</button>`:''}${c.status==='deferred'?`<button type="button" class="secondary" data-reopen-check="${escapeHTML(c.id)}">إرجاع</button>`:''}${c.status==='open'||c.status==='partial'?`<button type="button" class="secondary" data-close-check="${escapeHTML(c.id)}">إنهاء</button>`:''}<button type="button" class="danger" data-delete-check="${escapeHTML(c.id)}">حذف</button></div></article>`}const modeFilter=checkModeFilter||'all';
+const filteredList=list.filter(c=>{if(modeFilter==='inside')return c.mode==='inside';if(modeFilter==='takeaway')return c.mode==='takeaway';return true});
+
+const toolbar=`<div class="check-filter-bar" style="flex-direction:column;align-items:stretch;gap:8px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <strong>نوع الخدمة</strong>
+    <div style="display:flex;gap:5px;">
+      ${[['all','الكل'],['inside','داخل الكافيه'],['takeaway','تيك أواي']].map(([id,label])=>`<button type="button" data-mode-filter="${id}" aria-pressed="${modeFilter===id}">${label}</button>`).join('')}
+    </div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:7px;">
+    <strong>الحالة</strong>
+    <div style="display:flex;gap:5px;">
+      ${[['unpaid','غير المدفوعة'],['all','الكل'],['paid','المدفوعة']].map(([id,label])=>`<button type="button" data-check-filter="${id}" aria-pressed="${checkFilter===id}">${label}</button>`).join('')}
+    </div>
+  </div>
+</div>`;
+
+root.innerHTML=toolbar+(filteredList.length?`<div class="check-list">${filteredList.map(card).join('')}</div>`:'<div class="empty">لا توجد شيكات تطابق خيارات التصفية الحالية.</div>');
+}
+
+function menuAdd(itemId, optionId){
+ const customer=document.getElementById('check-customer').value.trim();
+ const existingId=document.getElementById('check-existing').value;
+ const check=availableChecks().find(c=>c.id===existingId);
+ const mode=check?.mode||document.getElementById('check-service-mode').value;
+ const tableName=check?.tableName||document.getElementById('check-table-name').value.trim();
+ if(mode==='inside'&&!tableName){document.getElementById('check-table-name').focus();notify('اكتب رقم أو اسم الطاولة');return}
+ const product=allCheckProducts().find(x=>x.id===itemId);
+ if(!product)return;
+ const opts=product.options||[];
+ let option=opts[0];
+ if(optionId){option=opts.find(o=>o.id===optionId)||option}
+ else if(product.defaultOption){option=opts.find(o=>o.id===product.defaultOption)||option}
+ const old=checkDraft.find(x=>x.productId===itemId&&x.optionId===option.id&&(x.customerName||'')===customer);
+ if(old)old.qty++;
+ else checkDraft.push({productId:itemId,name:product.name,optionId:option.id,optionLabel:option.label,unitPrice:option.price,lineDiscount:0,qty:1,customerName:customer});
+ renderCheckDraft();
+ notify(`اتضاف ${product.name} · ${option.label}`);
+}
+
+document.getElementById('check-menu').addEventListener('click',event=>{const b=event.target.closest('[data-menu-add]');if(b)menuAdd(b.dataset.menuAdd,b.dataset.optionId)});
+document.getElementById('extra-drinks-menu').addEventListener('click',event=>{const b=event.target.closest('[data-extra-menu-add]');if(b)menuAdd(b.dataset.extraMenuAdd,b.dataset.optionId)});
+document.getElementById('quick-add').addEventListener('click',event=>{const b=event.target.closest('[data-quick-add]');if(b)menuAdd(b.dataset.quickAdd,b.dataset.quickOption)});
+document.getElementById('extra-drinks-toggle').addEventListener('click',()=>{const root=document.getElementById('extra-drinks-menu'),button=document.getElementById('extra-drinks-toggle');const open=root.hidden;root.hidden=!open;button.setAttribute('aria-expanded',String(open));button.querySelector('small').textContent=open?'إخفاء القائمة':'افتح القائمة'});
+
+document.getElementById('check-draft-lines').addEventListener('input',event=>{
+ const custInput=event.target.closest('[data-draft-customer]');
+ if(custInput){
+  const i=Number(custInput.dataset.draftCustomer);
+  if(checkDraft[i])checkDraft[i].customerName=custInput.value.trim();
+  return;
+ }
+ const input=event.target.closest('[data-draft-discount]');
+ if(!input)return;
+ const index=Number(input.dataset.draftDiscount);
+ const item=checkDraft[index];
+ if(item){
+  const val=Number(input.value)||0;
+  const max=Number(item.unitPrice||0)*Number(item.qty||1);
+  const clamped=Math.max(0,Math.min(max,val));
+  item.lineDiscount=clamped;
+  input.max=String(max);
+  if(clamped!==val)input.value=clamped;
+  const total=checkDraft.reduce((sum,x)=>sum+(netUnitPrice(x)*x.qty),0);
+  document.getElementById('check-draft-total').textContent=money(total);
+  const line=input.closest('.check-draft-line');
+  if(line){
+   const priceEl=line.querySelector('.line-qty-label');
+   if(priceEl)priceEl.innerHTML=lineLabel(item);
+  }
+ }
+});
+
+document.getElementById('check-draft-lines').addEventListener('click',event=>{const b=event.target.closest('[data-draft-inc],[data-draft-dec],[data-draft-remove]');if(!b)return;const i=Number(b.dataset.draftInc??b.dataset.draftDec??b.dataset.draftRemove),item=checkDraft[i];if(!item)return;if(b.hasAttribute('data-draft-remove'))checkDraft.splice(i,1);else{item.qty+=b.hasAttribute('data-draft-inc')?1:-1;if(item.qty<=0)checkDraft.splice(i,1)}renderCheckDraft()});
+document.getElementById('check-existing').addEventListener('change',syncCheckTarget);
+document.getElementById('check-service-mode').addEventListener('change',syncCheckTarget);
+document.getElementById('check-customer').addEventListener('input',syncCheckTarget);
+document.getElementById('commit-check-order').addEventListener('click',()=>{
+ if(!checkDraft.length){notify('أضف صنفًا واحدًا على الأقل');return}
+ const existingId=document.getElementById('check-existing').value;
+ let target=availableChecks().find(c=>c.id===existingId);
+ const mode=target?.mode||document.getElementById('check-service-mode').value;
+ const tableName=target?.tableName||document.getElementById('check-table-name').value.trim();
+ if(mode==='inside'&&!tableName){document.getElementById('check-table-name').focus();notify('اكتب رقم أو اسم الطاولة');return}
+ const before=JSON.stringify(data.checks);
+ try{
+  const orderNow=new Date().toISOString();
+  if(!target){target={id:`check-${Date.now()}`,mode,tableName:mode==='inside'?tableName:'',status:'open',createdAt:orderNow,lastOrderAt:orderNow,guests:[]};data.checks.unshift(target)}
+  else{target.lastOrderAt=orderNow;if(target.status==='closed')target.status='open'}
+  const groups={};
+  checkDraft.forEach(draft=>{const key=(draft.customerName||'').trim();if(!groups[key])groups[key]=[];groups[key].push(draft)});
+  for(const [rawName,items] of Object.entries(groups)){
+   const guestName=rawName||'بدون اسم';
+   let guest=target.guests.find(g=>customerKey(g.name)===customerKey(guestName));
+   if(!guest){guest={id:`guest-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,name:guestName,items:[]};target.guests.push(guest)}
+   items.forEach(draft=>{
+    const existing=guest.items.find(x=>x.productId===draft.productId&&x.optionId===draft.optionId&&Number(x.lineDiscount||0)===Number(draft.lineDiscount||0));
+    if(existing)existing.qty+=draft.qty;
+    else guest.items.push({productId:draft.productId,name:draft.name,optionId:draft.optionId,optionLabel:draft.optionLabel,unitPrice:draft.unitPrice,lineDiscount:draft.lineDiscount,qty:draft.qty,paidQty:0});
+   });
+  }
+  persist();
+ }catch{data.checks=JSON.parse(before);notify('تعذر حفظ الحساب');return}
+ checkDraft=[];
+ renderCheckMenu();
+ renderExtraDrinks();
+ document.getElementById('check-existing').value=target.id;
+ syncCheckTarget();
+ renderCheckDraft();
+ renderChecks();
+ notify('اتضاف الطلب للحساب بنجاح');
+});
+
+document.getElementById('check-list').addEventListener('input',event=>{
+ const tipInput=event.target.closest('[data-check-tip]');
+ if(tipInput){
+  const c=data.checks.find(x=>x.id===tipInput.dataset.checkTip);
+  if(c){
+   const val=Math.max(0,Number(tipInput.value)||0);
+   c.tip=val;
+   if(String(val)!==tipInput.value&&tipInput.value!=='')tipInput.value=val;
+   persist();
+   const card=tipInput.closest('.compact-check-card');
+   if(card){
+    const totalEl=card.querySelector('.compact-total strong');
+    const dueEl=card.querySelector('.compact-total small');
+    if(totalEl)totalEl.textContent=money(checkTotal(c));
+    if(dueEl)dueEl.textContent=`المتبقي ${money(checkDue(c))}`;
+   }
+  }
+  return;
+ }
+ const input=event.target.closest('[data-check-discount]');
+ if(!input)return;
+ const c=data.checks.find(x=>x.id===input.dataset.checkDiscount);
+ const g=c?.guests.find(x=>x.id===input.dataset.guestId);
+ const item=g?.items[Number(input.dataset.itemIndex)];
+ if(item){
+  const val=Number(input.value)||0;
+  const max=Number(item.unitPrice||0)*Number(item.qty||1);
+  const clamped=Math.max(0,Math.min(max,val));
+  item.lineDiscount=clamped;
+  input.max=String(max);
+  if(clamped!==val)input.value=clamped;
+  persist();
+  const card=input.closest('.compact-check-card');
+  if(card){
+   const due=checkDue(c);
+   const totalEl=card.querySelector('.compact-total strong');
+   const dueEl=card.querySelector('.compact-total small');
+   if(totalEl)totalEl.textContent=money(checkTotal(c));
+   if(dueEl)dueEl.textContent=`المتبقي ${money(due)}`;
+   const itemRow=input.closest('.compact-item');
+   if(itemRow){
+    const nameEl=itemRow.querySelector('.check-line-name');
+    if(nameEl){
+     const smallEl=nameEl.querySelector('small');
+     if(smallEl)smallEl.innerHTML=lineLabel(item);
+    }
+   }
+  }
+ }
+});
+
+document.getElementById('check-list').addEventListener('click',event=>{
+ const editGuestBtn=event.target.closest('[data-edit-guest]');
+ if(editGuestBtn){
+  const c=data.checks.find(x=>x.id===editGuestBtn.dataset.editGuest);
+  const g=c?.guests?.find(x=>x.id===editGuestBtn.dataset.guestId);
+  if(!c||!g)return;
+  const current=g.name==='بدون اسم'?'':g.name;
+  const rawName=prompt('اكتب اسم العميل (اتركه فاضي ليعود «بدون اسم»):',current);
+  if(rawName===null)return;
+  const trimmed=rawName.trim();
+  if(!trimmed){
+   if(g.name==='بدون اسم'){notify('الاسم لم يتغيّر');return}
+   const clash=c.guests.find(x=>x.id!==g.id&&x.name==='بدون اسم');
+   if(clash){
+    if(!confirm('يوجد عميل «بدون اسم» بالفعل. هل تريد دمج الأصناف معه؟'))return;
+    g.items.forEach(item=>{
+     const found=clash.items.find(x=>x.productId===item.productId&&x.optionId===item.optionId&&Number(x.lineDiscount||0)===Number(item.lineDiscount||0));
+     if(found){found.qty+=item.qty;found.paidQty=Number(found.paidQty||0)+Number(item.paidQty||0)}
+     else clash.items.push(item);
+    });
+    c.guests=c.guests.filter(x=>x.id!==g.id);
+   }else{
+    g.name='بدون اسم';
+   }
+   persist();
+   renderChecks();
+   notify('تم تحديث اسم العميل');
+   return;
+  }
+  if(customerKey(trimmed)===customerKey(g.name)){notify('الاسم لم يتغيّر');return}
+  const existing=c.guests.find(x=>x.id!==g.id&&customerKey(x.name)===customerKey(trimmed));
+  if(existing){
+   if(!confirm(`يوجد عميل بنفس الاسم «${trimmed}» في هذا الشيك. هل تريد دمج أصناف العميلين؟`))return;
+   g.items.forEach(item=>{
+    const found=existing.items.find(x=>x.productId===item.productId&&x.optionId===item.optionId&&Number(x.lineDiscount||0)===Number(item.lineDiscount||0));
+    if(found){found.qty+=item.qty;found.paidQty=Number(found.paidQty||0)+Number(item.paidQty||0)}
+    else existing.items.push(item);
+   });
+   c.guests=c.guests.filter(x=>x.id!==g.id);
+  }else{
+   g.name=trimmed;
+  }
+  persist();
+  renderChecks();
+  notify('تم تحديث اسم العميل');
+  return;
+ }
+ const addGuestBtn=event.target.closest('[data-add-guest]');
+ if(addGuestBtn){
+  const c=data.checks.find(x=>x.id===addGuestBtn.dataset.addGuest);
+  if(!c)return;
+  const rawName=prompt('اكتب اسم العميل الجديد:','');
+  if(rawName===null)return;
+  const trimmed=rawName.trim();
+  if(!trimmed){notify('الاسم مطلوب');return}
+  if(c.guests.some(x=>customerKey(x.name)===customerKey(trimmed))){notify('يوجد عميل بنفس الاسم في هذا الشيك');return}
+  c.guests.push({id:`guest-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,name:trimmed,items:[]});
+  persist();
+  renderChecks();
+  notify('تمت إضافة عميل. استخدم «إضافة طلب» لإدخال أصنافه');
+  return;
+ }
+ const moveBtn=event.target.closest('[data-move-item]');
+ if(moveBtn){
+  openMoveDialog(moveBtn.dataset.moveItem, moveBtn.dataset.guestId, Number(moveBtn.dataset.itemIndex));
+  return;
+ }
+ const filter=event.target.closest('[data-check-filter]');
+ if(filter){checkFilter=filter.dataset.checkFilter;renderChecks();return}
+ const modeFilterBtn=event.target.closest('[data-mode-filter]');
+ if(modeFilterBtn){checkModeFilter=modeFilterBtn.dataset.modeFilter;renderChecks();return}
+ const removeGuestBtn=event.target.closest('[data-remove-guest]');
+ if(removeGuestBtn){const c=data.checks.find(x=>x.id===removeGuestBtn.dataset.removeGuest);if(c){c.guests=c.guests.filter(g=>g.id!==removeGuestBtn.dataset.guestId);if(!c.guests.length)c.status='closed';persist();renderChecks();notify('تم حذف العميل من الحساب')}return}
+ const add=event.target.closest('[data-add-order]');
+ if(add){setCheckPanel('orders');const c=data.checks.find(x=>x.id===add.dataset.addOrder),g=c?.guests?.[0];document.getElementById('check-existing').value=c?.id||'';document.getElementById('check-customer').value=g?.name||'';syncCheckTarget();document.getElementById('check-order-form').scrollIntoView({behavior:'smooth',block:'start'});notify('اختار المشروب لإضافته إلى نفس الحساب');return}
+ const pay=event.target.closest('[data-pay-check]');
+ if(pay){const c=data.checks.find(x=>x.id===pay.dataset.payCheck);if(c){(c.guests||[]).forEach(g=>(g.items||[]).forEach(i=>{i.paidQty=i.qty;i.paidAt=new Date().toISOString()}));c.tipPaid=true;c.status='paid';c.paidAt=new Date().toISOString();persist();renderChecks();notify('تم تسجيل دفع الفاتورة بالكامل')}return}
+ const payItem=event.target.closest('[data-pay-item]');
+ if(payItem){const c=data.checks.find(x=>x.id===payItem.dataset.payItem),g=c?.guests.find(x=>x.id===payItem.dataset.guestId),item=g?.items[Number(payItem.dataset.itemIndex)];if(item){item.paidQty=Math.min(Number(item.qty||0),Number(item.paidQty||0))>=Number(item.qty||0)?0:Number(item.qty||0);item.paidAt=item.paidQty?new Date().toISOString():null;c.status=checkDue(c)<=0?'paid':'partial';if(c.status==='paid')c.paidAt=new Date().toISOString();persist();renderChecks();notify(item.paidQty?'تم تعليم الصنف كمدفوع':'تم إلغاء دفع الصنف')}return}
+ const qty=event.target.closest('[data-check-qty]');
+ if(qty){const c=data.checks.find(x=>x.id===qty.dataset.checkId),g=c?.guests.find(x=>x.id===qty.dataset.guestId),item=g?.items[Number(qty.dataset.itemIndex)];if(item){item.qty+=Number(qty.dataset.checkQty);if(item.qty<=0)g.items.splice(Number(qty.dataset.itemIndex),1);else item.paidQty=Math.min(Number(item.paidQty||0),Number(item.qty));persist();renderChecks()}return}
+ const del=event.target.closest('[data-delete-check]');
+ if(del){if(!confirm('حذف الحساب وكل طلبات العملاء فيه؟'))return;data.checks=data.checks.filter(c=>c.id!==del.dataset.deleteCheck);persist();renderChecks();notify('تم حذف الحساب');return}
+ const close=event.target.closest('[data-close-check]');
+ if(close){const c=data.checks.find(x=>x.id===close.dataset.closeCheck);if(c){c.status=checkDue(c)<=0?'paid':'closed';c.closedAt=new Date().toISOString();persist();renderChecks();notify('تم تحديث حالة الحساب')}return}
+ const reopen=event.target.closest('[data-reopen-check]');
+ if(reopen){const c=data.checks.find(x=>x.id===reopen.dataset.reopenCheck);if(c){c.status='open';delete c.closedAt;delete c.deferredAt;persist();renderChecks();notify('تمت إعادة الحساب إلى المفتوحة')}}
+});
+renderExtraDrinks();
+
+function openMoveDialog(checkId, guestId, itemIndex){
+ const c=data.checks.find(x=>x.id===checkId);
+ const g=c?.guests?.find(x=>x.id===guestId);
+ const item=g?.items?.[itemIndex];
+ if(!c||!g||!item)return;
+ const maxQty=Number(item.qty||0);
+ if(maxQty<=0)return;
+ moveState={checkId,guestId,itemIndex,maxQty};
+ document.getElementById('move-title').textContent=`نقل «${checkItemLabel(item)}»`;
+ document.getElementById('move-sub').textContent=`الإجمالي الحالي: ${fmt.format(maxQty)} قطعة`;
+ const qtyInput=document.getElementById('move-qty');
+ qtyInput.max=String(maxQty);
+ qtyInput.value='1';
+ document.getElementById('move-qty-total').textContent=fmt.format(maxQty);
+ const custInput=document.getElementById('move-customer');
+ custInput.value='';
+ const sugg=document.getElementById('move-suggestions');
+ const others=c.guests.filter(x=>x.id!==g.id).map(x=>x.name);
+ sugg.innerHTML=others.map(name=>`<button type="button" data-move-suggest="${escapeHTML(name)}">${escapeHTML(name)}</button>`).join('');
+ document.getElementById('move-modal').hidden=false;
+ document.body.classList.add('modal-open');
+ setTimeout(()=>qtyInput.focus({preventScroll:true}),80);
+}
+
+function closeMoveDialog(){
+ moveState=null;
+ document.getElementById('move-modal').hidden=true;
+ document.body.classList.remove('modal-open');
+}
+
+document.getElementById('move-confirm').addEventListener('click',()=>{
+ if(!moveState)return;
+ const c=data.checks.find(x=>x.id===moveState.checkId);
+ const g=c?.guests?.find(x=>x.id===moveState.guestId);
+ const item=g?.items?.[moveState.itemIndex];
+ if(!c||!g||!item){closeMoveDialog();return}
+ const requested=Math.max(1,Math.floor(Number(document.getElementById('move-qty').value)||1));
+ const qty=Math.min(moveState.maxQty,requested);
+ const targetName=document.getElementById('move-customer').value.trim();
+ if(!targetName){document.getElementById('move-customer').focus();notify('اكتب اسم العميل');return}
+ if(customerKey(targetName)===customerKey(g.name)){notify('الصنف بالفعل باسم هذا العميل');return}
+ const itemQty=Number(item.qty||0);
+ const itemDiscount=Number(item.lineDiscount||0);
+ const itemPaid=Number(item.paidQty||0);
+ const movedDiscount=qty>=itemQty?itemDiscount:Math.round(itemDiscount*qty/itemQty*100)/100;
+ const movedPaid=qty>=itemQty?itemPaid:Math.min(itemPaid,qty);
+ let targetGuest=c.guests.find(x=>customerKey(x.name)===customerKey(targetName));
+ if(!targetGuest){
+  targetGuest={id:`guest-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,name:targetName,items:[]};
+  c.guests.push(targetGuest);
+ }
+ const existing=targetGuest.items.find(x=>x.productId===item.productId&&x.optionId===item.optionId);
+ if(existing){
+  existing.qty+=qty;
+  existing.lineDiscount=Math.round((Number(existing.lineDiscount||0)+movedDiscount)*100)/100;
+  existing.paidQty=Number(existing.paidQty||0)+movedPaid;
+ }else{
+  targetGuest.items.push({productId:item.productId,name:item.name,optionId:item.optionId,optionLabel:item.optionLabel,unitPrice:item.unitPrice,lineDiscount:movedDiscount,qty,paidQty:movedPaid});
+ }
+ if(qty>=itemQty){
+  g.items.splice(moveState.itemIndex,1);
+ }else{
+  item.qty=itemQty-qty;
+  item.lineDiscount=Math.round((itemDiscount-movedDiscount)*100)/100;
+  item.paidQty=itemPaid-movedPaid;
+ }
+ if(!g.items.length){
+  c.guests=c.guests.filter(x=>x.id!==g.id);
+ }
+ persist();
+ renderChecks();
+ closeMoveDialog();
+ notify(`تم نقل ${fmt.format(qty)} لـ «${targetName}»`);
+});
+
+function openDailyReport(){
+ const shiftDay=localShiftDayKey(new Date());
+ const todayChecks=data.checks.filter(c=>localShiftDayKey(new Date(c.createdAt))===shiftDay);
+ const openChecks=todayChecks.filter(c=>c.status==='open'||c.status==='partial');
+ const paidChecks=todayChecks.filter(c=>c.status==='paid');
+ const deferredChecks=todayChecks.filter(c=>c.status==='deferred');
+ const totalSales=todayChecks.reduce((s,c)=>s+checkTotal(c),0);
+ const totalPaidToday=paidChecks.reduce((s,c)=>s+checkTotal(c),0);
+ const openDue=openChecks.reduce((s,c)=>s+checkDue(c),0);
+ const totalTips=todayChecks.reduce((s,c)=>s+Number(c.tip||0),0);
+ const itemCounts={};
+ todayChecks.forEach(c=>{(c.guests||[]).forEach(g=>{(g.items||[]).forEach(item=>{const key=checkItemLabel(item);if(!itemCounts[key])itemCounts[key]={label:key,qty:0,revenue:0};itemCounts[key].qty+=Number(item.qty||0);itemCounts[key].revenue+=netUnitPrice(item)*Number(item.qty||0)})})});
+ const topItems=Object.values(itemCounts).sort((a,b)=>b.qty-a.qty).slice(0,5);
+ document.getElementById('report-date').textContent=dateText(shiftDay);
+ document.getElementById('report-body').innerHTML=`<div class="report-stats"><div class="report-stat"><small>إجمالي مبيعات اليوم</small><strong>${money(totalSales)}</strong></div><div class="report-stat"><small>محصّل اليوم</small><strong>${money(totalPaidToday)}</strong></div><div class="report-stat"><small>شيكات مفتوحة</small><strong>${fmt.format(openChecks.length)}</strong></div><div class="report-stat"><small>متبقي مفتوح</small><strong>${money(openDue)}</strong></div><div class="report-stat"><small>البقشيش</small><strong>${money(totalTips)}</strong></div><div class="report-stat"><small>عدد الشيكات</small><strong>${fmt.format(todayChecks.length)}</strong></div></div><div class="report-section"><h4>حالة الشيكات</h4><div class="report-top-item"><span>مفتوح / جزئي</span><strong>${fmt.format(openChecks.length)}</strong></div><div class="report-top-item"><span>مدفوع بالكامل</span><strong>${fmt.format(paidChecks.length)}</strong></div><div class="report-top-item"><span>مؤجل</span><strong>${fmt.format(deferredChecks.length)}</strong></div></div><div class="report-section"><h4>الأكثر مبيعًا اليوم</h4>${topItems.length?topItems.map(t=>`<div class="report-top-item"><span>${escapeHTML(t.label)}</span><strong>${fmt.format(t.qty)} · ${money(t.revenue)}</strong></div>`).join(''):'<div class="empty">لا توجد مبيعات اليوم بعد.</div>'}</div>`;
+ document.getElementById('report-modal').hidden=false;
+ document.body.classList.add('modal-open');
+}
+function closeDailyReport(){document.getElementById('report-modal').hidden=true;document.body.classList.remove('modal-open')}
+document.getElementById('open-report-btn').addEventListener('click',openDailyReport);
+document.querySelectorAll('[data-close-report]').forEach(b=>b.addEventListener('click',closeDailyReport));
+
+document.getElementById('move-suggestions').addEventListener('click',event=>{
+ const btn=event.target.closest('[data-move-suggest]');
+ if(!btn)return;
+ document.getElementById('move-customer').value=btn.dataset.moveSuggest;
+});
+
+document.addEventListener('click',event=>{const b=event.target.closest('[data-check-panel]');if(b){setCheckPanel(b.dataset.checkPanel)}});
+function renderPaymentQrs(){for(const method of ['vodafone','instapay']){const image=document.getElementById(`${method}-qr-preview`);if(!image)continue;const value=data.paymentQrs?.[method]||'';image.src=value;image.hidden=!value}}
+document.querySelectorAll('[data-payment-qr]').forEach(input=>input.addEventListener('change',async()=>{const file=input.files?.[0];if(!file)return;try{const dataUrl=await compressImage(file);data.paymentQrs=data.paymentQrs||{};data.paymentQrs[input.dataset.paymentQr]=dataUrl;persist();renderPaymentQrs();notify('اتحفظ رمز الدفع على الجهاز')}catch(error){notify(error.message||'تعذر حفظ رمز الدفع')}input.value=''}));
+document.addEventListener('click',async event=>{const button=event.target.closest('[data-copy-wallet]');if(!button)return;try{await navigator.clipboard.writeText(WALLET_NUMBER);notify('اتنسخ الرقم: '+WALLET_NUMBER)}catch{const field=document.createElement('textarea');field.value=WALLET_NUMBER;document.body.appendChild(field);field.select();document.execCommand('copy');field.remove();notify('اتنسخ الرقم: '+WALLET_NUMBER)}});
+renderPaymentQrs();
+document.getElementById('backup-reminder-btn').addEventListener('click',downloadBackup);
+updateBackupBanner();
+
+const CHECK_NOTIFICATION_IDS = [12001, 12002];
+
+async function requestNotificationPermission() {
+  if (!LocalNotifications) return 'unsupported';
+
+  try {
+    let permission = await LocalNotifications.checkPermissions();
+
+    if (permission.display !== 'granted') {
+      permission = await LocalNotifications.requestPermissions();
+    }
+
+    return permission.display || 'denied';
+  } catch (error) {
+    console.error('Notification permission error:', error);
+    return 'unsupported';
+  }
+}
+
+async function syncLocalCheckNotifications() {
+  if (!LocalNotifications) {
+    updateNotifStatus('تعذر الوصول إلى إضافة إشعارات Android. أعد بناء التطبيق بعد تثبيت الإضافة.');
+    return;
+  }
+
+  const permission = await LocalNotifications.checkPermissions();
+
+  if (permission.display !== 'granted') {
+    updateNotifStatus('فعّل الإشعارات من الزر أدناه.');
+    return;
+  }
+
+  const unpaidChecks = data.checks.filter(check =>
+    (check.status === 'open' || check.status === 'partial') &&
+    checkDue(check) > 0
+  );
+
+  await LocalNotifications.cancel({
+    notifications: CHECK_NOTIFICATION_IDS.map(id => ({ id }))
+  }).catch(() => {});
+
+  if (unpaidChecks.length === 0) {
+    updateNotifStatus('لا توجد شيكات غير مدفوعة حاليًا؛ لن يتم إرسال تذكير.');
+    return;
+  }
+
+  await LocalNotifications.schedule({
+    notifications: [
+      {
+        id: CHECK_NOTIFICATION_IDS[0],
+        title: 'مندور كوفي · مراجعة الشيكات',
+        body: 'افتح التطبيق لمراجعة الشيكات غير المدفوعة.',
+        schedule: {
+          on: { hour: 0, minute: 0 },
+          repeats: true
+        }
+      },
+      {
+        id: CHECK_NOTIFICATION_IDS[1],
+        title: 'مندور كوفي · تذكير بالشيكات',
+        body: 'تأكد من مراجعة الشيكات المفتوحة قبل ترحيلها.',
+        schedule: {
+          on: { hour: 1, minute: 30 },
+          repeats: true
+        }
+      }
+    ]
+  });
+
+  updateNotifStatus('التنبيهات المحلية مفعّلة: يوميًا الساعة 12:00 و1:30.');
+}
+
+function updateNotifStatus(message) {
+  const element = document.getElementById('notif-status');
+  if (element && message) element.textContent = message;
+}
+
+document.getElementById('enable-notif-btn')?.addEventListener('click', async () => {
+  const result = await requestNotificationPermission();
+
+  if (result === 'granted') {
+    await syncLocalCheckNotifications();
+    notify('تم تفعيل تنبيهات Android المحلية');
+  } else if (result === 'denied') {
+    updateNotifStatus('الإذن مرفوض. فعّل إشعارات التطبيق من إعدادات Android.');
+    notify('إذن الإشعارات مرفوض');
+  } else {
+    updateNotifStatus('الإضافة غير موجودة. أعد بناء التطبيق بعد تعديل ملف البناء.');
+    notify('تعذر الوصول إلى إشعارات Android');
+  }
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    syncLocalCheckNotifications().catch(console.error);
+    updateBackupBanner();
+  }
+});
+
+syncLocalCheckNotifications().catch(console.error);
+
+const splash=document.getElementById('splash');setTimeout(()=>splash.classList.add('leaving'),2600);setTimeout(()=>{splash.remove();document.body.classList.add('app-ready')},3550);
+history.replaceState({mandourView:'home'},'',`${location.pathname}${location.search}#home`);refreshHome();openView('home',{push:false,animate:false});if(expiredInvoicesRemovedAtStartup)setTimeout(()=>notify(`تم حذف ${fmt.format(expiredInvoicesRemovedAtStartup)} مستند انتهت صلاحيته تلقائيًا`),3650);
+</script>
+</body>
+</html>

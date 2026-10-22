@@ -19,18 +19,13 @@ jobs:
           java-version: 17
       - name: Build Android app from the Arabic web interface
         run: |
-          mkdir -p www/assets/beans
-          mkdir -p www/assets/payments
-          mkdir -p www/assets/menu
-          cp index.html www/index.html
-          cp assets/beans/*-card.jpg www/assets/beans/
-          cp assets/mandour-home-banner.jpg assets/mandour-app-icon.png assets/mandour-welcome-poster.png assets/receipt-stamp.png www/assets/
-          cp assets/payments/* www/assets/payments/
-          cp assets/menu/*.jpg www/assets/menu/
-          cp assets/map-location-qr.png www/assets/
+          mkdir -p www/assets
+          cp assets/public/index.html www/index.html
+          cp -R assets/. www/assets/
           npm init -y
-          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor/local-notifications@6
           npx cap init "Mandour Coffee" com.mandour.coffee.v5 --web-dir www
+          node -e "const fs=require('fs');const p='capacitor.config.json';const c=JSON.parse(fs.readFileSync(p));c.plugins={...(c.plugins||{}),LocalNotifications:{smallIcon:'ic_stat_mandour',iconColor:'#503827'}};fs.writeFileSync(p,JSON.stringify(c,null,2))"
           npx cap add android
           npx cap sync android
           mkdir -p android/app/src/main/java/com/mandour/coffee/v5
@@ -38,7 +33,11 @@ jobs:
           mkdir -p android/app/src/main/res/xml
           cp android-res/xml/file_paths.xml android/app/src/main/res/xml/file_paths.xml
           cp -R android-res/mipmap-* android/app/src/main/res/
+          mkdir -p android/app/src/main/res/drawable
+          cp android-res/drawable/ic_stat_mandour.xml android/app/src/main/res/drawable/
           cp android-res/values/ic_launcher_background.xml android/app/src/main/res/values/
+          sed -i "s/versionCode [0-9]*/versionCode $((29 + GITHUB_RUN_NUMBER))/" android/app/build.gradle
+          sed -i "s/versionName \"[^\"]*\"/versionName \"1.0.$((29 + GITHUB_RUN_NUMBER))\"/" android/app/build.gradle
           chmod +x android/gradlew
           cd android
           ./gradlew assembleDebug
