@@ -50,6 +50,26 @@ public class MainActivity extends BridgeActivity {
         @JavascriptInterface public void saveBackup(String json, String fileName) {
             saveOrChooseFolder(json, "application/json", fileName, "backup");
         }
+        @JavascriptInterface public void saveBackupToChosenFolder(String json, String fileName) {
+            runOnUiThread(() -> {
+                if (json == null || json.length() > 30_000_000) {
+                    notifyAutoBackupResult(false);
+                    return;
+                }
+                String savedTree = getSharedPreferences(PREFS, MODE_PRIVATE).getString("uri_backup", "");
+                if (savedTree.isEmpty()) {
+                    notifyAutoBackupResult(false);
+                    return;
+                }
+                pendingSaveData = json;
+                pendingSaveMime = "application/json";
+                pendingSaveName = (fileName == null || fileName.trim().isEmpty()) ? "mandour-coffee-backup.json" : fileName;
+                pendingFolderKind = "backup";
+                boolean saved = writeToTree(Uri.parse(savedTree));
+                if (!saved) clearPendingSave();
+                notifyAutoBackupResult(saved);
+            });
+        }
         @JavascriptInterface public void saveReceipt(String dataUrl, String fileName) {
             String encoded = dataUrl == null ? "" : dataUrl;
             int separator = encoded.indexOf(',');
@@ -152,6 +172,14 @@ public class MainActivity extends BridgeActivity {
         if (getBridge() == null || getBridge().getWebView() == null) return;
         String safe = message.replace("\\", "\\\\").replace("'", "\\'");
         getBridge().getWebView().evaluateJavascript("if (window.notify) window.notify('" + safe + "');", null);
+    }
+
+    private void notifyAutoBackupResult(boolean success) {
+        if (getBridge() == null || getBridge().getWebView() == null) return;
+        getBridge().getWebView().evaluateJavascript(
+            "if (window.mandourAutoBackupResult) window.mandourAutoBackupResult(" + success + ", '" + (success ? "" : "تعذر الحفظ في المجلد المختار؛ اختره مرة أخرى.") + "');",
+            null
+        );
     }
 
     private void shareInvoiceImageOnUiThread(String dataUrl) {
