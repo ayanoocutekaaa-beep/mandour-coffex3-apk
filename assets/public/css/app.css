@@ -3116,6 +3116,35 @@ main {
   border-radius: 14px;
   box-shadow: 0 3px 12px #3526190c;
 }
+.check-accordion > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.check-accordion > summary::-webkit-details-marker {
+  display: none;
+}
+.check-accordion[open] > summary {
+  border-bottom: 1px solid #eee1cf;
+}
+.accordion-chevron {
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  flex: 0 0 27px;
+  border: 1px solid #d8c7ad;
+  border-radius: 50%;
+  color: var(--acc);
+  font-size: 16px;
+  transition: transform 160ms ease, background 160ms ease;
+}
+.check-accordion[open] .accordion-chevron {
+  transform: rotate(180deg);
+  background: #f3e5ce;
+}
+.check-accordion-body {
+  background: #fffefa;
+}
 .compact-check-header {
   display: flex;
   justify-content: space-between;
@@ -3127,6 +3156,9 @@ main {
 .compact-check-header h4 {
   margin: 0 0 2px;
   font-size: 14px;
+}
+.compact-check-header > div:first-child {
+  min-width: 0;
 }
 .compact-customer {
   display: block;
@@ -3278,6 +3310,11 @@ main {
   padding: 5px 10px;
   border-radius: 8px;
   font-size: 10px;
+}
+.compact-actions .primary {
+  min-width: 112px;
+  min-height: 38px;
+  font-size: 11px;
 }
 .compact-actions .danger {
   margin-inline-start: auto;
