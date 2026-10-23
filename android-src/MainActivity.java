@@ -116,13 +116,13 @@ public class MainActivity extends BridgeActivity {
         if (key.equals(activePaidAudioKey) && paidAudioPlayer != null) return;
         stopPaidSoundSequence();
         activePaidAudioKey = key;
-        playPaidAudioAsset("public/assets/audio/paid-checks.m4a");
+        playPaidAudioAsset("public/assets/audio/Ayano.mp3");
     }
 
     private void playPaidAudioAsset(String assetPath) {
         MediaPlayer player = null;
         try (InputStream input = getAssets().open(assetPath)) {
-            File audioFile = new File(getCacheDir(), "mandour-paid-checks.m4a");
+            File audioFile = new File(getCacheDir(), "mandour-Ayano.mp3");
             try (FileOutputStream output = new FileOutputStream(audioFile)) {
                 byte[] buffer = new byte[8192];
                 int count;

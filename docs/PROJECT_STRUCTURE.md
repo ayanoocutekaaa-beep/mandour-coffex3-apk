@@ -5,7 +5,7 @@
 - `assets/public/index.html` — هيكل الشاشة ونصوصها وربط ملفات الواجهة.
 - `assets/public/css/app.css` — تنسيقات التطبيق وألوانه وتخطيط الشاشات.
 - `assets/public/js/app.js` — منطق التطبيق، التخزين المحلي، الفواتير، العملاء، الشيكات والبحث.
-- `assets/audio/paid-checks.m4a` — المقطع الصوتي الأول الذي أرسله المستخدم.
+- `assets/audio/Ayano.mp3` — المقطع الصوتي الموجود في ملف المستخدم: `Ayano.mp3`.
 - `android-src/MainActivity.java` — جسر Android للنسخ الاحتياطي ومشاركة الإيصالات وتشغيل المقطع الصوتي.
 - `.github/workflows/build.yml` — إعداد بناء Android على GitHub Actions.
 
