@@ -44,15 +44,6 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onResume() {
         super.onResume();
-        WebView webView = getBridge() == null ? null : getBridge().getWebView();
-        if (webView == null) return;
-        webView.onResume();
-        webView.postDelayed(() -> webView.evaluateJavascript(
-            "(document.body && document.body.children.length > 0) ? 'ready' : 'empty'",
-            result -> {
-                if ("\"empty\"".equals(result)) webView.reload();
-            }
-        ), 250);
     }
 
     @Override

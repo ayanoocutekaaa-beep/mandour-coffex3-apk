@@ -3185,15 +3185,19 @@ main {
 }
 .compact-item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 5px;
-  padding: 5px 6px;
+  gap: 8px;
+  padding: 8px;
   border-radius: 8px;
   background: #fff;
 }
+.item-main {
+  min-width: 0;
+}
 .compact-item .check-line-name {
   font-size: 10px;
+  font-weight: 800;
 }
 .compact-item .check-line-name small {
   display: block;
@@ -3203,8 +3207,41 @@ main {
 .compact-item .check-line-price {
   font-size: 9px;
 }
+.item-line-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 5px;
+  color: var(--mut);
+  font-size: 9px;
+}
+.item-line-meta > strong {
+  color: var(--acc);
+  font-size: 10px;
+  white-space: nowrap;
+}
+.item-line-meta .discount-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+}
+.item-line-meta .discount-field span {
+  font-size: 8px;
+  color: var(--mut);
+}
+.item-line-meta .discount-field input {
+  width: 54px;
+  min-height: 27px;
+  padding: 3px 5px;
+  text-align: center;
+}
 .compact-qty {
   gap: 3px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 142px;
 }
 .compact-qty button {
   width: 23px;
@@ -3217,8 +3254,9 @@ main {
 }
 .compact-qty .pay-item {
   width: auto;
-  min-width: 30px;
-  padding: 2px 5px;
+  min-width: 42px;
+  min-height: 27px;
+  padding: 3px 6px;
   border-radius: 6px;
   background: #f5ead8;
   color: #78552f;
@@ -3243,6 +3281,51 @@ main {
 }
 .compact-actions .danger {
   margin-inline-start: auto;
+}
+.check-filter-bar {
+  position: sticky;
+  top: 7px;
+  z-index: 6;
+  padding: 9px;
+  border: 1px solid #e0ceb4;
+  border-radius: 13px;
+  background: rgba(255, 250, 242, 0.97);
+  box-shadow: 0 5px 16px rgba(68, 43, 22, 0.1);
+  backdrop-filter: blur(8px);
+}
+.check-filter-bar strong {
+  color: var(--acc);
+  font-size: 10px;
+}
+.check-filter-bar button {
+  min-height: 29px;
+  padding: 4px 8px;
+  border: 1px solid #ddcbb1;
+  border-radius: 8px;
+  background: #fffdf8;
+  color: var(--mut);
+  font: inherit;
+  font-size: 9px;
+  font-weight: 800;
+}
+.check-filter-bar button[aria-pressed="true"] {
+  border-color: var(--acc);
+  background: var(--acc);
+  color: #fffaf0;
+}
+@media (max-width: 390px) {
+  .compact-item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .compact-qty {
+    justify-content: flex-start;
+    max-width: none;
+    padding-top: 3px;
+    border-top: 1px dashed #eadfce;
+  }
+  .compact-qty .pay-item {
+    margin-inline-start: 3px;
+  }
 }
 .account-section-head {
   display: flex;
