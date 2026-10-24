@@ -2756,6 +2756,7 @@ function globalSearchRender() {
 }
 let lastPaidSoundKey = "";
 let paidSoundRequested = false;
+const expandedCheckIds = new Set();
 function syncPaidSound() {
   const allPaid =
     currentView === "checks" &&
@@ -2789,7 +2790,7 @@ function syncPaidSound() {
 }
 function playCheckActionSound(kind) {
   try {
-    window.MandourNative?.playPaidSound?.(`${kind}-${Date.now()}-${Math.random()}`);
+    window.MandourNative?.playActionSound?.(`${kind}-${Date.now()}-${Math.random()}`);
   } catch (error) {}
 }
 function renderChecks() {
@@ -2862,7 +2863,7 @@ function renderChecks() {
       )
       .join("");
     const detailActions = `<div class="compact-actions"><label class="tip-field"><span>بقشيش</span><input type="number" min="0" step="1" value="${c.tip || ""}" placeholder="0" data-check-tip="${escapeHTML(c.id)}"></label>${c.status === "open" || c.status === "partial" ? `<button type="button" class="secondary add-guest-btn" data-add-guest="${escapeHTML(c.id)}">＋ عميل</button>` : ""}${c.status === "deferred" ? `<button type="button" class="secondary" data-reopen-check="${escapeHTML(c.id)}">إرجاع</button>` : ""}${c.status === "open" || c.status === "partial" ? `<button type="button" class="secondary" data-close-check="${escapeHTML(c.id)}">إنهاء</button>` : ""}<button type="button" class="danger" data-delete-check="${escapeHTML(c.id)}">حذف</button></div>`;
-    return `<article data-check-card-id="${escapeHTML(c.id)}" class="check-card redesigned-check-card ${c.status === "deferred" ? "deferred-card" : ""}"><div class="check-card-priority"><div class="priority-heading"><div><span class="check-kind">${c.mode === "inside" ? "طاولة" : "تيك أواي"}</span><h4>${c.mode === "inside" ? escapeHTML(c.tableName || "—") : "طلب خارجي"}</h4><strong class="compact-customer">${(c.guests || []).map((g) => escapeHTML(g.name)).join(" · ") || "بدون اسم"}</strong></div><span class="check-state ${c.status === "deferred" ? "deferred" : ""}">${status}</span></div><div class="check-card-metrics"><span><small>الإجمالي</small><strong>${money(total)}</strong></span><span><small>المدفوع</small><strong>${money(paid)}</strong></span><span class="remaining"><small>المتبقي</small><strong>${money(due)}</strong></span></div><div class="check-card-quick-actions">${quickPay}<button type="button" class="secondary quick-add-order" data-add-order="${escapeHTML(c.id)}">＋ إضافة طلب</button></div></div><details class="check-accordion"><summary class="check-details-toggle"><span>عرض تفاصيل الطلب والأصناف</span><span class="accordion-chevron" aria-hidden="true">⌄</span></summary><div class="check-accordion-body"><div class="compact-guest-list">${guests || '<div class="empty">لا توجد أصناف</div>'}</div><div class="check-note-grid"><label>موعد السداد<input type="date" value="${escapeHTML(c.dueDate || "")}" data-check-due-date="${escapeHTML(c.id)}"></label><label>ملاحظات الشيك<textarea rows="2" maxlength="500" data-check-note="${escapeHTML(c.id)}" placeholder="ملاحظة أو تفضيل الطلب">${escapeHTML(c.notes || "")}</textarea></label></div>${renderCheckTimeline(c)}${detailActions}</div></details></article>`;
+    return `<article data-check-card-id="${escapeHTML(c.id)}" class="check-card redesigned-check-card ${c.status === "deferred" ? "deferred-card" : ""}"><div class="check-card-priority"><div class="priority-heading"><div><span class="check-kind">${c.mode === "inside" ? "طاولة" : "تيك أواي"}</span><h4>${c.mode === "inside" ? escapeHTML(c.tableName || "—") : "طلب خارجي"}</h4><strong class="compact-customer">${(c.guests || []).map((g) => escapeHTML(g.name)).join(" · ") || "بدون اسم"}</strong></div><span class="check-state ${c.status === "deferred" ? "deferred" : ""}">${status}</span></div><div class="check-card-metrics"><span><small>الإجمالي</small><strong>${money(total)}</strong></span><span><small>المدفوع</small><strong>${money(paid)}</strong></span><span class="remaining"><small>المتبقي</small><strong>${money(due)}</strong></span></div><div class="check-card-quick-actions">${quickPay}<button type="button" class="secondary quick-add-order" data-add-order="${escapeHTML(c.id)}">＋ إضافة طلب</button></div></div><details class="check-accordion" ${expandedCheckIds.has(c.id) ? "open" : ""}><summary class="check-details-toggle"><span>عرض تفاصيل الطلب والأصناف</span><span class="accordion-chevron" aria-hidden="true">⌄</span></summary><div class="check-accordion-body"><div class="compact-guest-list">${guests || '<div class="empty">لا توجد أصناف</div>'}</div><div class="check-note-grid"><label>موعد السداد<input type="date" value="${escapeHTML(c.dueDate || "")}" data-check-due-date="${escapeHTML(c.id)}"></label><label>ملاحظات الشيك<textarea rows="2" maxlength="500" data-check-note="${escapeHTML(c.id)}" placeholder="ملاحظة أو تفضيل الطلب">${escapeHTML(c.notes || "")}</textarea></label></div>${renderCheckTimeline(c)}${detailActions}</div></details></article>`;
   }
   const modeFilter = checkModeFilter || "all";
   const filteredList = list.filter((c) => {
@@ -3183,6 +3184,13 @@ document.getElementById("commit-check-order").addEventListener("click", () => {
   notify("اتضاف الطلب للحساب بنجاح");
 });
 
+document.getElementById("check-list").addEventListener("toggle", (event) => {
+  const details = event.target.closest(".check-accordion");
+  const card = details?.closest("[data-check-card-id]");
+  if (!details || !card) return;
+  if (details.open) expandedCheckIds.add(card.dataset.checkCardId);
+  else expandedCheckIds.delete(card.dataset.checkCardId);
+});
 document.getElementById("check-list").addEventListener("change", (event) => {
   const note = event.target.closest("[data-check-note]");
   const due = event.target.closest("[data-check-due-date]");
@@ -3284,6 +3292,17 @@ document.getElementById("check-list").addEventListener("input", (event) => {
 });
 
 document.getElementById("check-list").addEventListener("click", (event) => {
+  const detailsSummary = event.target.closest(".check-details-toggle");
+  if (detailsSummary) {
+    const details = detailsSummary.closest(".check-accordion");
+    const card = details?.closest("[data-check-card-id]");
+    if (details && card) {
+      setTimeout(() => {
+        if (details.open) expandedCheckIds.add(card.dataset.checkCardId);
+        else expandedCheckIds.delete(card.dataset.checkCardId);
+      }, 0);
+    }
+  }
   const editGuestBtn = event.target.closest("[data-edit-guest]");
   if (editGuestBtn) {
     const c = data.checks.find((x) => x.id === editGuestBtn.dataset.editGuest);

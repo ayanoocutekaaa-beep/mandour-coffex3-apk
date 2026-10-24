@@ -96,24 +96,28 @@ public class MainActivity extends BridgeActivity {
         }
         @JavascriptInterface public void playPaidSound(String key) {
             String requestKey = key == null ? "paid" : key;
-            runOnUiThread(() -> startPaidSoundSequence(requestKey));
+            runOnUiThread(() -> startAudioSequence(requestKey, "public/assets/audio/Ayano.mp3", "mandour-Ayano.mp3"));
+        }
+        @JavascriptInterface public void playActionSound(String key) {
+            String requestKey = key == null ? "action" : key;
+            runOnUiThread(() -> startAudioSequence(requestKey, "public/assets/audio/check-action.mp3", "mandour-check-action.mp3"));
         }
         @JavascriptInterface public void stopPaidSound() {
             runOnUiThread(() -> stopPaidSoundSequence());
         }
     }
 
-    private void startPaidSoundSequence(String key) {
+    private void startAudioSequence(String key, String assetPath, String cacheName) {
         if (key.equals(activePaidAudioKey) && paidAudioPlayer != null) return;
         stopPaidSoundSequence();
         activePaidAudioKey = key;
-        playPaidAudioAsset("public/assets/audio/Ayano.mp3");
+        playAudioAsset(assetPath, cacheName);
     }
 
-    private void playPaidAudioAsset(String assetPath) {
+    private void playAudioAsset(String assetPath, String cacheName) {
         MediaPlayer player = null;
         try (InputStream input = getAssets().open(assetPath)) {
-            File audioFile = new File(getCacheDir(), "mandour-Ayano.mp3");
+            File audioFile = new File(getCacheDir(), cacheName);
             try (FileOutputStream output = new FileOutputStream(audioFile)) {
                 byte[] buffer = new byte[8192];
                 int count;
