@@ -2866,6 +2866,11 @@ function renderChecks() {
     return true;
   });
 
+  const visibleOpenChecks = data.checks.filter(
+    (c) => c.status === "open" || c.status === "partial" || c.status === "deferred",
+  );
+  const checksSummary = `<div class="checks-summary-strip"><div class="checks-summary-card open"><span>الحسابات المفتوحة</span><strong>${fmt.format(visibleOpenChecks.length)}</strong><small>شيك نشط</small></div><div class="checks-summary-card due"><span>إجمالي المتبقي</span><strong>${money(visibleOpenChecks.reduce((sum, c) => sum + checkDue(c), 0))}</strong><small>مطلوب تحصيله</small></div><div class="checks-summary-card paid"><span>المدفوع</span><strong>${money(data.checks.reduce((sum, c) => sum + checkPaidTotal(c), 0))}</strong><small>كل الشيكات</small></div></div>`;
+
   const toolbar = `<div class="check-filter-bar" style="flex-direction:column;align-items:stretch;gap:8px;">
   <div style="display:flex;justify-content:space-between;align-items:center;">
     <strong>نوع الخدمة</strong>
@@ -2900,6 +2905,7 @@ function renderChecks() {
 </div>`;
 
   root.innerHTML =
+    checksSummary +
     toolbar +
     (filteredList.length
       ? `<div class="check-list">${filteredList.map(card).join("")}</div>`

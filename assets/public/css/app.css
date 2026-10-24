@@ -3319,6 +3319,52 @@ main {
 .compact-actions .danger {
   margin-inline-start: auto;
 }
+.checks-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 12px;
+}
+.checks-summary-card {
+  min-width: 0;
+  padding: 10px 8px;
+  border: 1px solid #eadbc7;
+  border-radius: 13px;
+  background: #fffaf2;
+  box-shadow: 0 3px 12px rgba(68, 43, 22, 0.06);
+}
+.checks-summary-card span,
+.checks-summary-card small {
+  display: block;
+  color: var(--mut);
+  font-size: 8px;
+  line-height: 1.3;
+}
+.checks-summary-card strong {
+  display: block;
+  margin: 3px 0;
+  color: var(--acc);
+  font-size: 17px;
+  line-height: 1.1;
+}
+.checks-summary-card.open {
+  border-color: #e4c486;
+  background: #fff5df;
+}
+.checks-summary-card.due {
+  border-color: #d9b2a5;
+  background: #fff0ec;
+}
+.checks-summary-card.due strong {
+  color: #a24e3f;
+}
+.checks-summary-card.paid {
+  border-color: #b9d3bd;
+  background: #edf7ee;
+}
+.checks-summary-card.paid strong {
+  color: #39734a;
+}
 .check-filter-bar {
   position: sticky;
   top: 7px;
