@@ -4080,8 +4080,8 @@ function finishSplash() {
     document.body.classList.add("app-ready");
   }, 700);
 }
-window.setTimeout(finishSplash, 2600);
-window.setTimeout(finishSplash, 5000);
+document.getElementById("splash-enter")?.addEventListener("click", finishSplash);
+window.setTimeout(finishSplash, 12000);
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) window.setTimeout(finishSplash, 120);
 });
