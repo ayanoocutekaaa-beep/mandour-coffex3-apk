@@ -126,6 +126,7 @@ function loadData() {
           ? saved.paymentQrs
           : {},
       activityLog: Array.isArray(saved.activityLog) ? saved.activityLog : [],
+      notifications: Array.isArray(saved.notifications) ? saved.notifications : [],
       auditActor: String(saved.auditActor || ""),
     };
   } catch {
@@ -136,6 +137,7 @@ function loadData() {
       checks: [],
       paymentQrs: {},
       activityLog: [],
+      notifications: [],
       auditActor: "",
     };
   }
@@ -297,7 +299,7 @@ function updateBackupBanner() {
   const days = Math.floor(
     (Date.now() - new Date(last).getTime()) / (24 * 60 * 60 * 1000),
   );
-  if (days >= 7) {
+  if (days >= 1) {
     banner.hidden = false;
     banner.querySelector("small").textContent =
       `آخر نسخة احتياطية كانت من ${fmt.format(days)} يوم`;
@@ -364,6 +366,9 @@ function normalizeImportedData(value) {
         : {},
     activityLog: Array.isArray(candidate.activityLog)
       ? candidate.activityLog
+      : [],
+    notifications: Array.isArray(candidate.notifications)
+      ? candidate.notifications
       : [],
     auditActor: String(candidate.auditActor || ""),
   };
@@ -598,7 +603,56 @@ function notify(message) {
   el.classList.add("show");
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
+  recordNotification(message);
 }
+let activeNotificationFilter = "all";
+function notificationType(message) {
+  const text = String(message || "");
+  if (text.includes("دفع") || text.includes("مدفوع") || text.includes("تحصيل")) return "payments";
+  if (text.includes("طلب") || text.includes("فاتورة") || text.includes("شيك")) return "orders";
+  if (text.includes("نسخة") || text.includes("تذكير") || text.includes("تنبيه")) return "reminders";
+  return "system";
+}
+function recordNotification(message) {
+  if (!message || !data) return;
+  const item = { id: `n-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, message: String(message), type: notificationType(message), createdAt: new Date().toISOString(), read: false };
+  data.notifications = [item, ...(data.notifications || [])].slice(0, 80);
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch {}
+  updateNotificationBadge();
+  if (currentView === "notifications") renderNotifications();
+}
+function updateNotificationBadge() {
+  const unread = (data.notifications || []).filter((n) => !n.read).length;
+  const badge = document.getElementById("nav-notification-badge");
+  if (badge) { badge.hidden = unread === 0; badge.textContent = fmt.format(unread); }
+  ["all", "orders", "payments", "reminders"].forEach((type) => {
+    const el = document.getElementById(`notification-count-${type}`);
+    if (el) el.textContent = fmt.format(type === "all" ? (data.notifications || []).length : (data.notifications || []).filter((n) => n.type === type).length);
+  });
+}
+function renderNotifications() {
+  const root = document.getElementById("notification-list");
+  if (!root) return;
+  const all = data.notifications || [];
+  const items = activeNotificationFilter === "all" ? all : all.filter((n) => n.type === activeNotificationFilter);
+  root.innerHTML = items.length ? items.map((n) => `<article class="notification-item ${n.read ? "is-read" : ""}" data-notification-id="${escapeHTML(n.id)}"><span class="notification-icon">${n.type === "payments" ? "✓" : n.type === "orders" ? "☕" : n.type === "reminders" ? "!" : "•"}</span><div><strong>${escapeHTML(n.message)}</strong><small>${dateFmt.format(new Date(n.createdAt))}</small></div></article>`).join("") : '<div class="empty">لا توجد إشعارات في هذا القسم.</div>';
+  const unread = all.filter((n) => !n.read).length;
+  const summary = document.getElementById("notification-summary");
+  if (summary) summary.textContent = unread ? `${fmt.format(unread)} إشعارات غير مقروءة` : "كل الإشعارات مقروءة";
+  updateNotificationBadge();
+}
+document.querySelectorAll("[data-notification-filter]").forEach((button) => {
+  button.addEventListener("click", () => {
+    activeNotificationFilter = button.dataset.notificationFilter;
+    document.querySelectorAll("[data-notification-filter]").forEach((b) => b.classList.toggle("active", b === button));
+    renderNotifications();
+  });
+});
+document.getElementById("clear-notifications-btn")?.addEventListener("click", () => {
+  data.notifications = (data.notifications || []).map((n) => ({ ...n, read: true }));
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch {}
+  renderNotifications();
+});
 function refreshHome() {
   document.getElementById("invoice-count").textContent = fmt.format(
     data.invoices.filter(
@@ -626,14 +680,29 @@ function refreshHome() {
   document.getElementById("customer-count").textContent = fmt.format(
     data.customers.length,
   );
+  const recentRoot = document.getElementById("home-recent-orders");
+  const tableRoot = document.getElementById("home-table-status");
+  if (tableRoot) {
+    const activeTables = data.checks.filter((c) => c.status === "open" || c.status === "partial" || c.status === "deferred").slice(0, 10);
+    tableRoot.innerHTML = activeTables.length ? activeTables.map((c) => `<button type="button" class="home-table-card ${c.status}" data-view="checks"><strong>${c.mode === "inside" ? escapeHTML(c.tableName || "—") : "خارجية"}</strong><span>${c.status === "partial" ? "مدفوع جزئيًا" : c.status === "deferred" ? "مؤجل" : "مفتوحة"}</span><small>${money(checkDue(c))} متبقي</small></button>`).join("") : '<div class="empty">لا توجد طاولات نشطة.</div>';
+  }
+  if (recentRoot) {
+    const recent = [
+      ...data.checks.map((c) => ({ at: c.lastOrderAt || c.createdAt, title: c.mode === "inside" ? `طاولة ${c.tableName || "—"}` : "تيك أواي", detail: `${(c.guests || []).map((g) => g.name).join(" · ") || "بدون اسم"} · ${money(checkTotal(c))}`, type: "check" })),
+      ...data.invoices.map((i) => ({ at: i.createdAt || i.date, title: `فاتورة ${i.number || ""}`, detail: `${i.customer || "بدون اسم"} · ${money(Number(i.total || 0))}`, type: "invoice" })),
+    ].filter((item) => item.at).sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 4);
+    recentRoot.innerHTML = recent.length ? recent.map((item) => `<article class="home-recent-item"><span class="home-recent-icon">${item.type === "check" ? "🧾" : "☕"}</span><div><strong>${escapeHTML(item.title)}</strong><small>${escapeHTML(item.detail)}</small></div><time>${dateFmt.format(new Date(item.at))}</time></article>`).join("") : '<div class="empty">لا توجد عمليات بعد.</div>';
+  }
+  updateNotificationBadge();
 }
-const views = ["home", "invoice", "blends", "checks"];
+const views = ["home", "invoice", "blends", "checks", "notifications"];
 const titles = {
   home: "مندور كوفي",
   invoice: "إنشاء فاتورة",
   blends: "العملاء والتوليفات",
   "add-bean": "إضافة نوع بن",
   checks: "الشيكات",
+  notifications: "مركز الإشعارات",
 };
 function openView(name, { push = false, animate = true } = {}) {
   if (!views.includes(name)) name = "home";
@@ -676,6 +745,7 @@ function openView(name, { push = false, animate = true } = {}) {
     renderCheckDraft();
     setCheckPanel("list");
   }
+  if (name === "notifications") renderNotifications();
   refreshHome();
   window.scrollTo(0, 0);
 }
@@ -3819,7 +3889,7 @@ document
   .addEventListener("click", downloadBackup);
 updateBackupBanner();
 function autoBackupIntervalDays() {
-  return 7;
+  return 1;
 }
 function updateAutoBackupStatus(text) {
   const el = document.getElementById("auto-backup-status");
@@ -3835,7 +3905,7 @@ function maybeRunAutoBackup() {
   const bridge = window.MandourNative;
   if (!bridge?.saveBackupToChosenFolder || !bridge?.getFolderName?.("backup")) {
     updateAutoBackupStatus(
-      "اختار مجلد الحفظ من زر «اختيار مجلد الحفظ» لتفعيل النسخ الأسبوعي.",
+      "اختار مجلد الحفظ من زر «اختيار مجلد الحفظ» لتفعيل النسخ اليومي.",
     );
     return;
   }
@@ -3852,11 +3922,11 @@ function maybeRunAutoBackup() {
       ),
     );
     updateAutoBackupStatus(
-      `النسخة الأسبوعية مفعّلة؛ النسخة التالية خلال ${fmt.format(days)} يوم.`,
+      `النسخة اليومية مفعّلة؛ النسخة التالية خلال ${fmt.format(days)} يوم.`,
     );
     return;
   }
-  updateAutoBackupStatus("جارٍ حفظ النسخة الأسبوعية في المجلد المختار…");
+  updateAutoBackupStatus("جارٍ حفظ النسخة اليومية في المجلد المختار…");
   try {
     bridge.saveBackupToChosenFolder(
       JSON.stringify(backupSnapshot(), null, 2),
@@ -3874,7 +3944,7 @@ window.mandourAutoBackupResult = (success, message) => {
       localStorage.setItem("mandour-auto-backup-at", String(Date.now()));
     } catch {}
     markBackupDone();
-    updateAutoBackupStatus("تم حفظ نسخة احتياطية أسبوعية في المجلد المختار.");
+    updateAutoBackupStatus("تم حفظ نسخة احتياطية يومية في المجلد المختار.");
   } else
     updateAutoBackupStatus(
       message || "تعذر حفظ النسخة الاحتياطية؛ اختر المجلد مرة أخرى.",
@@ -3883,16 +3953,29 @@ window.mandourAutoBackupResult = (success, message) => {
 const autoBackupToggle = document.getElementById("auto-backup-enabled");
 if (autoBackupToggle) {
   autoBackupToggle.checked =
-    localStorage.getItem("mandour-auto-backup-enabled") === "true";
+    localStorage.getItem("mandour-auto-backup-enabled") !== "false";
   autoBackupToggle.addEventListener("change", () => {
     localStorage.setItem(
       "mandour-auto-backup-enabled",
       String(autoBackupToggle.checked),
     );
     if (autoBackupToggle.checked) maybeRunAutoBackup();
-    else updateAutoBackupStatus("تم إيقاف النسخ الاحتياطي الأسبوعي التلقائي.");
+    else updateAutoBackupStatus("تم إيقاف النسخ الاحتياطي اليومي التلقائي.");
   });
 }
+function applyTheme(theme) {
+  document.body.classList.toggle("dark-theme", theme === "dark");
+  const button = document.getElementById("theme-toggle-btn");
+  if (button) button.textContent = theme === "dark" ? "☀️ تفعيل الوضع الفاتح" : "🌙 تفعيل الوضع الداكن";
+}
+let savedTheme = "light";
+try { savedTheme = localStorage.getItem("mandour-theme") || "light"; } catch {}
+applyTheme(savedTheme);
+document.getElementById("theme-toggle-btn")?.addEventListener("click", () => {
+  const theme = document.body.classList.contains("dark-theme") ? "light" : "dark";
+  try { localStorage.setItem("mandour-theme", theme); } catch {}
+  applyTheme(theme);
+});
 const auditActorInput = document.getElementById("audit-actor");
 if (auditActorInput)
   auditActorInput.addEventListener("change", () => {
