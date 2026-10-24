@@ -2828,6 +2828,8 @@ function renderChecks() {
         ? paid
         : [...opened, ...deferred, ...paid, ...closed];
   function card(c) {
+    const total = checkTotal(c);
+    const paid = checkPaidTotal(c);
     const due = checkDue(c);
     const status =
       c.status === "paid"
@@ -2836,28 +2838,31 @@ function renderChecks() {
           ? "مؤجل"
           : c.status === "closed"
             ? "مغلق"
-            : due < checkTotal(c)
+            : due < total
               ? "مدفوع جزئيًا"
               : "مفتوح";
+    const quickPay =
+      c.status !== "paid" && c.status !== "closed"
+        ? `<button type="button" class="primary quick-pay" data-pay-check="${escapeHTML(c.id)}">دفع المتبقي <strong>${money(due)}</strong></button>`
+        : `<span class="paid-stamp">✓ ${status}</span>`;
     const guests = (c.guests || [])
       .map(
         (g) =>
-          `<div class="compact-guest"><div class="compact-guest-head"><strong>${escapeHTML(g.name)} <button type="button" class="edit-guest" data-edit-guest="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}" aria-label="تعديل الاسم" title="تعديل اسم العميل">✎</button></strong><button type="button" class="remove-guest" data-remove-guest="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}">حذف</button></div><div class="compact-items">${(
+          `<div class="compact-guest"><div class="compact-guest-head"><strong>${escapeHTML(g.name)} <button type="button" class="edit-guest" data-edit-guest="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}" aria-label="تعديل اسم العميل" title="تعديل اسم العميل">✎</button></strong><button type="button" class="remove-guest" data-remove-guest="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}">حذف</button></div><div class="compact-items">${(
             g.items || []
           )
             .map((item, index) => {
-              const paidQty = Math.min(
-                Number(item.qty || 0),
-                Number(item.paidQty || 0),
-              );
+              const paidQty = Math.min(Number(item.qty || 0), Number(item.paidQty || 0));
               const fullyPaid = paidQty >= Number(item.qty || 0);
               const lineTotal = netUnitPrice(item) * Number(item.qty || 0);
-              return `<div class="compact-item ${fullyPaid ? "paid-line" : ""}"><div class="item-main"><div class="check-line-name">${escapeHTML(checkItemLabel(item))}<small>${lineLabel(item)}</small></div><div class="item-line-meta"><strong>الإجمالي: ${money(lineTotal)}</strong><label class="discount-field saved-discount"><span>خصم</span><input aria-label="خصم على السطر" type="number" min="0" max="${Number(item.unitPrice || 0) * Number(item.qty || 1)}" step="1" value="${item.lineDiscount || ""}" data-saved-discount="${Number(item.lineDiscount || 0)}" placeholder="٠" data-check-discount="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}" data-item-index="${index}"></label></div></div><span class="qty-controls compact-qty"><button type="button" data-check-qty="-1" data-check-id="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}" data-item-index="${index}" aria-label="تقليل العدد">−</button><strong>${fmt.format(item.qty)}</strong><button type="button" data-check-qty="1" data-check-id="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}" data-item-index="${index}" aria-label="زيادة العدد">＋</button><button type="button" class="pay-item ${fullyPaid ? "is-paid" : ""}" data-pay-item="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}" data-item-index="${index}">${fullyPaid ? "✓ مدفوع" : "دفع"}</button><button type="button" class="move-item" data-move-item="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}" data-item-index="${index}" aria-label="نقل لعميل آخر" title="نقل لعميل آخر">↪</button></span></div>`;
+              const product = allCheckProducts().find((p) => p.id === item.productId);
+              return `<div class="compact-item ${fullyPaid ? "paid-line" : ""}"><img class="check-item-thumb" src="${escapeHTML(product?.image || "assets/mandour-welcome-poster.png")}" alt="" loading="lazy"><div class="item-main"><div class="check-line-name">${escapeHTML(checkItemLabel(item))}<small>${lineLabel(item)}</small></div><div class="item-line-meta"><strong>الإجمالي: ${money(lineTotal)}</strong><label class="discount-field saved-discount"><span>خصم</span><input aria-label="خصم على السطر" type="number" min="0" max="${Number(item.unitPrice || 0) * Number(item.qty || 1)}" step="1" value="${item.lineDiscount || ""}" data-saved-discount="${Number(item.lineDiscount || 0)}" placeholder="٠" data-check-discount="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}" data-item-index="${index}"></label></div></div><span class="qty-controls compact-qty"><button type="button" data-check-qty="-1" data-check-id="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}" data-item-index="${index}" aria-label="تقليل العدد">−</button><strong>${fmt.format(item.qty)}</strong><button type="button" data-check-qty="1" data-check-id="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}" data-item-index="${index}" aria-label="زيادة العدد">＋</button><button type="button" class="pay-item ${fullyPaid ? "is-paid" : ""}" data-pay-item="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}" data-item-index="${index}">${fullyPaid ? "✓ مدفوع" : "دفع"}</button><button type="button" class="move-item" data-move-item="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}" data-item-index="${index}" aria-label="نقل لعميل آخر" title="نقل لعميل آخر">↪</button></span></div>`;
             })
             .join("")}</div></div>`,
       )
       .join("");
-    return `<article data-check-card-id="${escapeHTML(c.id)}" class="check-card compact-check-card ${c.status === "deferred" ? "deferred-card" : ""}"><details class="check-accordion" ${c.status === "paid" || c.status === "closed" ? "" : "open"}><summary class="compact-check-header"><div><h4>${c.mode === "inside" ? `طاولة ${escapeHTML(c.tableName || "—")}` : "تيك أواي"}</h4><strong class="compact-customer">العميل: ${(c.guests || []).map((g) => escapeHTML(g.name)).join(" · ") || "—"}</strong><small>الطلب: ${dateFmt.format(new Date(c.lastOrderAt || c.createdAt))}${c.paidAt ? ` · الدفع: ${dateFmt.format(new Date(c.paidAt))}` : ""}</small></div><div class="compact-total"><strong>${money(checkTotal(c))}</strong><span class="check-state ${c.status === "deferred" ? "deferred" : ""}">${status}</span><small>المتبقي ${money(due)}</small></div><span class="accordion-chevron" aria-hidden="true">⌄</span></summary><div class="check-accordion-body"><div class="compact-guest-list">${guests || '<div class="empty">لا توجد أصناف</div>'}</div><div class="check-note-grid"><label>موعد السداد<input type="date" value="${escapeHTML(c.dueDate || "")}" data-check-due-date="${escapeHTML(c.id)}"></label><label>ملاحظات الشيك<textarea rows="2" maxlength="500" data-check-note="${escapeHTML(c.id)}" placeholder="ملاحظة أو تفضيل الطلب">${escapeHTML(c.notes || "")}</textarea></label></div>${renderCheckTimeline(c)}<div class="compact-actions"><label class="tip-field"><span>بقشيش</span><input type="number" min="0" step="1" value="${c.tip || ""}" placeholder="0" data-check-tip="${escapeHTML(c.id)}"></label>${c.status !== "paid" && c.status !== "closed" ? `<button type="button" class="primary" data-pay-check="${escapeHTML(c.id)}">دفع كامل</button>` : ""}<button type="button" class="secondary" data-add-order="${escapeHTML(c.id)}">＋ إضافة طلب</button>${c.status === "open" || c.status === "partial" ? `<button type="button" class="secondary add-guest-btn" data-add-guest="${escapeHTML(c.id)}">＋ عميل</button>` : ""}${c.status === "deferred" ? `<button type="button" class="secondary" data-reopen-check="${escapeHTML(c.id)}">إرجاع</button>` : ""}${c.status === "open" || c.status === "partial" ? `<button type="button" class="secondary" data-close-check="${escapeHTML(c.id)}">إنهاء</button>` : ""}<button type="button" class="danger" data-delete-check="${escapeHTML(c.id)}">حذف</button></div></div></details></article>`;
+    const detailActions = `<div class="compact-actions"><label class="tip-field"><span>بقشيش</span><input type="number" min="0" step="1" value="${c.tip || ""}" placeholder="0" data-check-tip="${escapeHTML(c.id)}"></label>${c.status === "open" || c.status === "partial" ? `<button type="button" class="secondary add-guest-btn" data-add-guest="${escapeHTML(c.id)}">＋ عميل</button>` : ""}${c.status === "deferred" ? `<button type="button" class="secondary" data-reopen-check="${escapeHTML(c.id)}">إرجاع</button>` : ""}${c.status === "open" || c.status === "partial" ? `<button type="button" class="secondary" data-close-check="${escapeHTML(c.id)}">إنهاء</button>` : ""}<button type="button" class="danger" data-delete-check="${escapeHTML(c.id)}">حذف</button></div>`;
+    return `<article data-check-card-id="${escapeHTML(c.id)}" class="check-card redesigned-check-card ${c.status === "deferred" ? "deferred-card" : ""}"><div class="check-card-priority"><div class="priority-heading"><div><span class="check-kind">${c.mode === "inside" ? "طاولة" : "تيك أواي"}</span><h4>${c.mode === "inside" ? escapeHTML(c.tableName || "—") : "طلب خارجي"}</h4><strong class="compact-customer">${(c.guests || []).map((g) => escapeHTML(g.name)).join(" · ") || "بدون اسم"}</strong></div><span class="check-state ${c.status === "deferred" ? "deferred" : ""}">${status}</span></div><div class="check-card-metrics"><span><small>الإجمالي</small><strong>${money(total)}</strong></span><span><small>المدفوع</small><strong>${money(paid)}</strong></span><span class="remaining"><small>المتبقي</small><strong>${money(due)}</strong></span></div><div class="check-card-quick-actions">${quickPay}<button type="button" class="secondary quick-add-order" data-add-order="${escapeHTML(c.id)}">＋ إضافة طلب</button></div></div><details class="check-accordion"><summary class="check-details-toggle"><span>عرض تفاصيل الطلب والأصناف</span><span class="accordion-chevron" aria-hidden="true">⌄</span></summary><div class="check-accordion-body"><div class="compact-guest-list">${guests || '<div class="empty">لا توجد أصناف</div>'}</div><div class="check-note-grid"><label>موعد السداد<input type="date" value="${escapeHTML(c.dueDate || "")}" data-check-due-date="${escapeHTML(c.id)}"></label><label>ملاحظات الشيك<textarea rows="2" maxlength="500" data-check-note="${escapeHTML(c.id)}" placeholder="ملاحظة أو تفضيل الطلب">${escapeHTML(c.notes || "")}</textarea></label></div>${renderCheckTimeline(c)}${detailActions}</div></details></article>`;
   }
   const modeFilter = checkModeFilter || "all";
   const filteredList = list.filter((c) => {
@@ -3726,6 +3731,9 @@ function closeDailyReport() {
 document
   .getElementById("open-report-btn")
   .addEventListener("click", openDailyReport);
+document
+  .querySelector("[data-report-nav]")
+  ?.addEventListener("click", openDailyReport);
 document
   .querySelectorAll("[data-close-report]")
   .forEach((b) => b.addEventListener("click", closeDailyReport));

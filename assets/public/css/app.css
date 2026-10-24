@@ -3588,6 +3588,190 @@ main {
   background: linear-gradient(145deg, #fffaf2, #f6ead8);
   box-shadow: 0 7px 20px #4a2b1710;
 }
+.redesigned-check-card {
+  overflow: hidden;
+  border: 1px solid #e3d0b5;
+  border-radius: 21px;
+  background: #fffdf9;
+  box-shadow: 0 8px 22px rgba(68, 43, 22, 0.09);
+}
+.check-card-priority {
+  padding: 14px;
+  background: linear-gradient(145deg, #fffaf1, #f7ead7);
+}
+.priority-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.priority-heading h4 {
+  margin: 1px 0 3px;
+  color: var(--ink);
+  font-size: 19px;
+}
+.check-kind {
+  color: var(--mut);
+  font-size: 9px;
+  font-weight: 800;
+}
+.priority-heading .compact-customer {
+  color: var(--acc);
+  font-size: 12px;
+}
+.check-card-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 13px;
+}
+.check-card-metrics > span {
+  min-width: 0;
+  padding: 9px 7px;
+  border: 1px solid #eadbc7;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+}
+.check-card-metrics small,
+.check-card-metrics strong {
+  display: block;
+}
+.check-card-metrics small {
+  color: var(--mut);
+  font-size: 8px;
+}
+.check-card-metrics strong {
+  margin-top: 3px;
+  color: var(--acc);
+  font-size: 14px;
+  white-space: nowrap;
+}
+.check-card-metrics .remaining {
+  border-color: #d9b1a4;
+  background: #fff0eb;
+}
+.check-card-metrics .remaining strong {
+  color: #a24e3f;
+}
+.check-card-quick-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 8px;
+  margin-top: 11px;
+}
+.check-card-quick-actions button {
+  min-height: 46px;
+  border-radius: 13px;
+  font-size: 11px;
+  font-weight: 900;
+}
+.check-card-quick-actions .quick-pay {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  padding-inline: 11px;
+}
+.check-card-quick-actions .quick-pay strong {
+  font-size: 10px;
+}
+.paid-stamp {
+  display: grid;
+  place-items: center;
+  min-height: 46px;
+  border: 1px solid #b8d5bd;
+  border-radius: 13px;
+  background: #e9f5ea;
+  color: #39734a;
+  font-size: 11px;
+  font-weight: 900;
+}
+.check-details-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 14px;
+  background: #fffdf9;
+  color: var(--acc);
+  font-size: 11px;
+  font-weight: 900;
+}
+.check-details-toggle .accordion-chevron {
+  width: auto;
+  min-width: 28px;
+  padding-inline: 7px;
+  border-radius: 9px;
+  font-size: 13px;
+}
+.check-item-thumb {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border: 1px solid #e4d5c1;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #f3e7d6;
+}
+.compact-item {
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+}
+@media (max-width: 390px) {
+  .check-card-priority {
+    padding: 12px;
+  }
+  .check-card-metrics strong {
+    font-size: 12px;
+  }
+  .check-card-quick-actions {
+    grid-template-columns: 1fr;
+  }
+  .compact-item {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+  .check-item-thumb {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+  .compact-item .compact-qty {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+.bottom-nav {
+  gap: 7px;
+  padding-top: 8px;
+  border-top: 1px solid #dfcdb4;
+  background: rgba(255, 250, 242, 0.97);
+}
+.bottom-nav button {
+  min-height: 54px;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  color: #887a6d;
+}
+.bottom-nav button.nav-primary {
+  color: #8a5a27;
+  background: #fff0d5;
+  border-color: #e9c993;
+}
+.bottom-nav button[aria-current="page"] {
+  color: #fffaf0;
+  background: var(--acc);
+  border-color: var(--acc);
+  box-shadow: 0 5px 13px rgba(88, 58, 35, 0.2);
+}
+.bottom-nav button.nav-primary[aria-current="page"] {
+  color: #fffaf0;
+  background: #9a642e;
+  border-color: #9a642e;
+}
+.bottom-nav button svg {
+  width: 21px;
+  height: 21px;
+}
 .backup-panel-head {
   display: flex;
   justify-content: space-between;
