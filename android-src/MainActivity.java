@@ -23,9 +23,12 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /** Native Android bridge for sharing and user-selected persistent save folders. */
 public class MainActivity extends BridgeActivity {
+    private static final String BACKUP_RELATIVE_PATH = Environment.DIRECTORY_DOWNLOADS + "/test/";
     private static final int REQUEST_CREATE_DOCUMENT = 4107;
     private static final int REQUEST_PICK_FOLDER = 4108;
     private String pendingSaveData;
@@ -35,6 +38,7 @@ public class MainActivity extends BridgeActivity {
     private MediaPlayer paidAudioPlayer;
     private String activePaidAudioKey = "";
     private final String PREFS = "mandour_save_folders";
+    private final ExecutorService backupExecutor = Executors.newSingleThreadExecutor();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,10 +69,10 @@ public class MainActivity extends BridgeActivity {
             runOnUiThread(() -> shareInvoiceImageOnUiThread(dataUrl));
         }
         @JavascriptInterface public void saveBackup(String json, String fileName) {
-            saveBackupAutomatically(json);
+            backupExecutor.execute(() -> saveBackupAutomatically(json));
         }
         @JavascriptInterface public void saveBackupToChosenFolder(String json, String fileName) {
-            runOnUiThread(() -> {
+            backupExecutor.execute(() -> {
                 if (json == null || json.length() > 30_000_000) {
                     notifyAutoBackupResult(false);
                     return;
@@ -180,20 +184,19 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onDestroy() {
         stopPaidSoundSequence();
+        backupExecutor.shutdownNow();
         super.onDestroy();
     }
 
     private void saveBackupAutomatically(String json) {
-        runOnUiThread(() -> {
-            if (json == null || json.length() > 30_000_000) {
-                notifyWeb("ملف النسخة كبير جدًا");
-                return;
-            }
-            String savedTree = getSharedPreferences(PREFS, MODE_PRIVATE).getString("uri_backup", "");
-            boolean saved = !savedTree.isEmpty() && saveBackupToTree(json, Uri.parse(savedTree));
-            if (!saved) saved = saveToDownloads(json);
-            if (!saved) notifyWeb("تعذر حفظ Ayanoo.json تلقائيًا");
-        });
+        if (json == null || json.length() > 30_000_000) {
+            notifyWeb("ملف النسخة كبير جدًا");
+            return;
+        }
+        String savedTree = getSharedPreferences(PREFS, MODE_PRIVATE).getString("uri_backup", "");
+        boolean saved = !savedTree.isEmpty() && saveBackupToTree(json, Uri.parse(savedTree));
+        if (!saved) saved = saveToDownloads(json);
+        if (!saved) notifyWeb("تعذر حفظ Ayanoo.json تلقائيًا");
     }
 
     private boolean saveBackupToTree(String json, Uri treeUri) {
@@ -209,14 +212,14 @@ public class MainActivity extends BridgeActivity {
     private boolean saveToDownloads(String json) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             try {
-                File downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                File downloads = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "test");
                 if (!downloads.exists() && !downloads.mkdirs()) return false;
                 File file = new File(downloads, "Ayanoo.json");
                 try (FileOutputStream output = new FileOutputStream(file, false)) {
                     output.write(json.getBytes(StandardCharsets.UTF_8));
                     output.flush();
                 }
-                notifyWeb("تم تحديث Ayanoo.json تلقائيًا في Downloads");
+                notifyWeb("تم تحديث Ayanoo.json تلقائيًا في Downloads/test");
                 return true;
             } catch (Exception error) { return false; }
         }
@@ -224,11 +227,11 @@ public class MainActivity extends BridgeActivity {
             Uri collection = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
             getContentResolver().delete(collection,
                 MediaStore.MediaColumns.DISPLAY_NAME + "=? AND " + MediaStore.MediaColumns.RELATIVE_PATH + "=?",
-                new String[]{"Ayanoo.json", Environment.DIRECTORY_DOWNLOADS + "/"});
+                new String[]{"Ayanoo.json", BACKUP_RELATIVE_PATH});
             ContentValues values = new ContentValues();
             values.put(MediaStore.MediaColumns.DISPLAY_NAME, "Ayanoo.json");
             values.put(MediaStore.MediaColumns.MIME_TYPE, "application/json");
-            values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/");
+            values.put(MediaStore.MediaColumns.RELATIVE_PATH, BACKUP_RELATIVE_PATH);
             Uri target = getContentResolver().insert(collection, values);
             if (target == null) return false;
             try (OutputStream output = getContentResolver().openOutputStream(target)) {
@@ -236,7 +239,7 @@ public class MainActivity extends BridgeActivity {
                 output.write(json.getBytes(StandardCharsets.UTF_8));
                 output.flush();
             }
-            notifyWeb("تم تحديث Ayanoo.json تلقائيًا في Downloads");
+            notifyWeb("تم تحديث Ayanoo.json تلقائيًا في Downloads/test");
             return true;
         } catch (Exception error) { return false; }
     }
@@ -353,17 +356,21 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void notifyWeb(String message) {
-        if (getBridge() == null || getBridge().getWebView() == null) return;
         String safe = message.replace("\\", "\\\\").replace("'", "\\'");
-        getBridge().getWebView().evaluateJavascript("if (window.notify) window.notify('" + safe + "');", null);
+        runOnUiThread(() -> {
+            if (getBridge() == null || getBridge().getWebView() == null) return;
+            getBridge().getWebView().evaluateJavascript("if (window.notify) window.notify('" + safe + "');", null);
+        });
     }
 
     private void notifyAutoBackupResult(boolean success) {
-        if (getBridge() == null || getBridge().getWebView() == null) return;
-        getBridge().getWebView().evaluateJavascript(
-            "if (window.mandourAutoBackupResult) window.mandourAutoBackupResult(" + success + ", '" + (success ? "" : "تعذر الحفظ في المجلد المختار؛ اختره مرة أخرى.") + "');",
-            null
-        );
+        runOnUiThread(() -> {
+            if (getBridge() == null || getBridge().getWebView() == null) return;
+            getBridge().getWebView().evaluateJavascript(
+                "if (window.mandourAutoBackupResult) window.mandourAutoBackupResult(" + success + ", '" + (success ? "" : "تعذر الحفظ التلقائي؛ سيُجرّب Downloads/test.") + "');",
+                null
+            );
+        });
     }
 
     private void shareInvoiceImageOnUiThread(String dataUrl) {
