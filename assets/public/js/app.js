@@ -813,6 +813,7 @@ function openView(name, { push = false, animate = true } = {}) {
     renderExtraDrinks();
     renderChecks();
     renderCheckDraft();
+    syncCheckTarget();
     setCheckPanel("list");
   }
   if (name === "notifications") renderNotifications();
@@ -2493,9 +2494,9 @@ const EXTRA_DRINKS = [
   },
   {
     id: "juice",
-    name: "عصير",
+    name: "عصير بيتي",
     image: "assets/menu/cold/juice.jpg",
-    options: [{ id: "regular", label: "زجاجة", price: 20 }],
+    options: [{ id: "regular", label: "زجاجة", price: 10 }],
   },
 ];
 function allCheckProducts() {
@@ -2710,14 +2711,42 @@ function syncCheckTarget() {
   }
   tableField.hidden = mode.value !== "inside";
   table.required = mode.value === "inside" && !check;
+
+  const customerName = document.getElementById("check-customer")?.value.trim() || "";
+  const draftCustomerNames = [...new Set(checkDraft.map((item) => (item.customerName || customerName).trim()).filter(Boolean))];
+  const draftHasUnnamed = checkDraft.some((item) => !(item.customerName || "").trim() && !customerName);
+  const draftCustomerSummary = checkDraft.length
+    ? `${draftCustomerNames.join(" · ") || "بدون اسم"}${draftHasUnnamed && draftCustomerNames.length ? " · أصناف بدون اسم" : ""}`
+    : customerName || "بدون اسم";
+  const customerSummaryLabel = checkDraft.length ? "الأسماء على الطلب" : "الاسم الافتراضي";
+  const serviceLabel = mode.value === "inside" ? "داخل الكافيه" : "تيك أواي";
+  const tableLabel = mode.value === "inside" ? (table.value.trim() || "اختر الطاولة") : "لا تحتاج طاولة";
+  const accountGuests = (check?.guests || []).map((guest) => guest.name).filter(Boolean).join(" · ");
+  const accountLabel = check
+    ? `${check.mode === "inside" ? `طاولة ${check.tableName || "—"}` : "حساب تيك أواي"}${accountGuests ? ` · ${accountGuests}` : ""}`
+    : "حساب جديد";
   const preview = document.getElementById("check-user-preview");
-  if (preview)
-    preview.textContent = check
-      ? `العميل الحالي: ${(check.guests || []).map((g) => g.name).join(" · ") || "بدون اسم"}`
-      : document.getElementById("check-customer")?.value.trim()
-        ? `العميل الحالي: ${document.getElementById("check-customer").value.trim()}`
-        : "أصناف بدون اسم عميل";
+  if (preview) {
+    preview.innerHTML = `<div class="check-context-head"><strong>ملخص وجهة الطلب</strong><small>${check ? "حساب مفتوح" : "حساب جديد"}</small></div><div class="check-context-grid"><div class="check-context-cell"><small>${customerSummaryLabel}</small><strong>${escapeHTML(draftCustomerSummary)}</strong></div><div class="check-context-cell"><small>نوع الطلب</small><strong>${escapeHTML(serviceLabel)}</strong></div><div class="check-context-cell"><small>الطاولة</small><strong>${escapeHTML(tableLabel)}</strong></div><div class="check-context-cell"><small>${check ? "الأسماء بالحساب" : "الحساب"}</small><strong>${escapeHTML(check ? (accountGuests || "لا يوجد عميل مسجل") : accountLabel)}</strong></div></div>`;
+  }
+  const destination = check
+    ? `${draftCustomerSummary} · ${serviceLabel} · ${mode.value === "inside" ? `طاولة ${table.value.trim() || "—"}` : "تيك أواي"}`
+    : `${draftCustomerSummary} · ${serviceLabel}${mode.value === "inside" ? ` · طاولة ${table.value.trim() || "—"}` : ""}`;
+  const destinationNode = document.getElementById("check-commit-destination");
+  if (destinationNode) destinationNode.textContent = `سيُضاف إلى: ${destination}`;
+  syncCheckOrderDock();
 }
+function syncCheckOrderDock() {
+  const dock = document.getElementById("check-order-dock");
+  if (!dock) return;
+  const active = document.activeElement;
+  const editingField = Boolean(active && active.closest("#check-order-form") && ["INPUT", "SELECT", "TEXTAREA"].includes(active.tagName));
+  const keyboardOpen = Boolean(window.visualViewport && window.innerHeight - window.visualViewport.height > 150);
+  const visible = checkPanel === "orders" && checkDraft.length > 0 && !editingField && !keyboardOpen;
+  dock.hidden = !visible;
+  document.body.classList.toggle("check-dock-open", visible);
+}
+
 function renderCheckDraft() {
   const root = document.getElementById("check-draft-lines");
   if (!root) return;
@@ -2725,17 +2754,35 @@ function renderCheckDraft() {
     (sum, item) => sum + netUnitPrice(item) * item.qty,
     0,
   );
-  document.getElementById("check-draft-total").textContent = money(total);
+  const units = checkDraft.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+  const countText = checkDraft.length
+    ? `${fmt.format(checkDraft.length)} صنف · ${fmt.format(units)} قطعة`
+    : "لم تضف مشروبات بعد";
+  const countNode = document.getElementById("check-draft-count");
+  const dockCount = document.getElementById("check-dock-count");
+  const totalNode = document.getElementById("check-draft-total");
+  const confirmButton = document.getElementById("commit-check-order");
+  if (countNode) countNode.textContent = countText;
+  if (dockCount) dockCount.textContent = countText;
+  if (totalNode) totalNode.textContent = money(total);
+  if (confirmButton) confirmButton.disabled = !checkDraft.length;
   root.innerHTML = checkDraft.length
-    ? `<div class="check-draft-list">${checkDraft.map((item, index) => `<div class="check-draft-line"><span class="check-line-name">${escapeHTML(checkItemLabel(item))}<small class="line-qty-label">${lineLabel(item)}</small><input type="text" class="draft-customer-input" placeholder="اسم العميل (اختياري)" value="${escapeHTML(item.customerName || "")}" data-draft-customer="${index}" maxlength="60" aria-label="اسم عميل ${escapeHTML(checkItemLabel(item))}"></span><label class="discount-field"><span>خصم على السطر (جنيه)</span><input type="number" min="0" max="${Number(item.unitPrice || 0) * Number(item.qty || 1)}" step="1" value="${item.lineDiscount || ""}" placeholder="0" data-draft-discount="${index}"></label><span class="qty-controls"><button type="button" data-draft-dec="${index}">−</button><strong>${fmt.format(item.qty)}</strong><button type="button" data-draft-inc="${index}">＋</button><button type="button" data-draft-remove="${index}">×</button></span></div>`).join("")}</div>`
-    : '<div class="empty">اختار صنفًا من القائمة.</div>';
+    ? `<div class="check-draft-list">${checkDraft.map((item, index) => {
+        const lineTotal = Math.max(0, Number(item.unitPrice || 0) * Number(item.qty || 0) - Number(item.lineDiscount || 0));
+        const itemLabel = checkItemLabel(item);
+        return `<article class="check-draft-line"><div class="draft-item-header"><span class="draft-item-index">${fmt.format(index + 1)}</span><div class="draft-item-copy"><strong>${escapeHTML(itemLabel)}</strong><small class="line-qty-label">${lineLabel(item)}</small></div><strong class="draft-line-total" data-draft-line-total>${money(lineTotal)}</strong></div><label class="draft-customer-field"><span>اسم العميل</span><input type="text" class="draft-customer-input" placeholder="اسم العميل لهذا الصنف" value="${escapeHTML(item.customerName || "")}" data-draft-customer="${index}" maxlength="60" aria-label="اسم عميل ${escapeHTML(itemLabel)}"></label><div class="draft-item-controls"><label class="discount-field draft-line-discount"><span>خصم (جنيه)</span><input type="number" min="0" max="${Number(item.unitPrice || 0) * Number(item.qty || 1)}" step="1" value="${item.lineDiscount || ""}" placeholder="٠" data-draft-discount="${index}"></label><div class="draft-quantity-field"><small>الكمية</small><span class="qty-controls"><button type="button" data-draft-dec="${index}" aria-label="تقليل الكمية">−</button><strong>${fmt.format(item.qty)}</strong><button type="button" data-draft-inc="${index}" aria-label="زيادة الكمية">＋</button><button type="button" class="draft-remove-btn" data-draft-remove="${index}" aria-label="حذف الصنف">حذف</button></span></div></div></article>`;
+      }).join("")}</div>`
+    : '<div class="draft-empty-state"><strong>الطلب فارغ حتى الآن</strong><small>اختار مشروبًا من القائمة وسيظهر هنا للمراجعة.</small></div>';
+  syncCheckOrderDock();
 }
+
 function setCheckPanel(mode = "list") {
   checkPanel = mode;
   const form = document.getElementById("check-order-form"),
     list = document.getElementById("checks-only-panel");
   if (form) form.hidden = mode !== "orders";
   if (list) list.hidden = mode !== "list";
+  syncCheckOrderDock();
   document
     .querySelectorAll("[data-check-panel]")
     .forEach((b) =>
@@ -3035,7 +3082,17 @@ function renderChecks() {
       )
       .join("");
     const detailActions = `<div class="compact-actions"><label class="tip-field"><span>بقشيش</span><input type="number" min="0" step="1" value="${c.tip || ""}" placeholder="0" data-check-tip="${escapeHTML(c.id)}"></label>${c.status === "open" || c.status === "partial" ? `<button type="button" class="secondary add-guest-btn" data-add-guest="${escapeHTML(c.id)}">＋ عميل</button>` : ""}${c.status === "deferred" ? `<button type="button" class="secondary" data-reopen-check="${escapeHTML(c.id)}">إرجاع</button>` : ""}${c.status === "open" || c.status === "partial" ? `<button type="button" class="secondary" data-close-check="${escapeHTML(c.id)}">إنهاء</button>` : ""}<button type="button" class="danger" data-delete-check="${escapeHTML(c.id)}">حذف</button></div>`;
-    return `<article data-check-card-id="${escapeHTML(c.id)}" class="check-card redesigned-check-card ${c.status === "deferred" ? "deferred-card" : ""}"><div class="check-card-priority"><div class="priority-heading"><div><span class="check-kind">${c.mode === "inside" ? "طاولة" : "تيك أواي"}</span><h4>${c.mode === "inside" ? escapeHTML(c.tableName || "—") : "طلب خارجي"}</h4><strong class="compact-customer">${(c.guests || []).map((g) => escapeHTML(g.name)).join(" · ") || "بدون اسم"}</strong></div><span class="check-state ${c.status === "deferred" ? "deferred" : ""}">${status}</span></div><div class="check-card-metrics"><span><small>الإجمالي</small><strong>${money(total)}</strong></span><span><small>المدفوع</small><strong>${money(paid)}</strong></span><span class="remaining"><small>المتبقي</small><strong>${money(due)}</strong></span></div><div class="check-card-quick-actions">${quickPay}<button type="button" class="secondary quick-add-order" data-add-order="${escapeHTML(c.id)}">＋ إضافة طلب</button></div></div><details class="check-accordion" ${expandedCheckIds.has(c.id) ? "open" : ""}><summary class="check-details-toggle"><span>عرض تفاصيل الطلب والأصناف</span><span class="accordion-chevron" aria-hidden="true">⌄</span></summary><div class="check-accordion-body"><div class="compact-guest-list">${guests || '<div class="empty">لا توجد أصناف</div>'}</div><div class="check-note-grid"><label>موعد السداد<input type="date" value="${escapeHTML(c.dueDate || "")}" data-check-due-date="${escapeHTML(c.id)}"></label><label>ملاحظات الشيك<textarea rows="2" maxlength="500" data-check-note="${escapeHTML(c.id)}" placeholder="ملاحظة أو تفضيل الطلب">${escapeHTML(c.notes || "")}</textarea></label></div>${renderCheckTimeline(c)}${detailActions}</div></details></article>`;
+    const guestNames = (c.guests || []).map((guest) => guest.name).filter(Boolean).join(" · ") || "بدون اسم";
+    const orderedItems = (c.guests || []).flatMap((guest) => guest.items || []);
+    const drinkNames = orderedItems
+      .slice(0, 3)
+      .map((item) => `${checkItemLabel(item)} × ${fmt.format(item.qty)}`)
+      .join(" · ") || "لا توجد أصناف";
+    const extraItemCount = orderedItems.length > 3 ? ` · +${fmt.format(orderedItems.length - 3)}` : "";
+    const serviceLabel = c.mode === "inside" ? "داخل الكافيه" : "تيك أواي";
+    const locationTitle = c.mode === "inside" ? `طاولة ${c.tableName || "—"}` : "طلب تيك أواي";
+    const statusClass = c.status === "deferred" ? "deferred" : c.status === "paid" ? "paid" : c.status === "closed" ? "closed" : due < total ? "partial" : "open";
+    return `<article data-check-card-id="${escapeHTML(c.id)}" class="check-card redesigned-check-card ${c.status === "deferred" ? "deferred-card" : ""}"><div class="check-card-priority"><div class="check-card-summary-top"><div class="check-card-label-row"><span class="check-kind">${escapeHTML(serviceLabel)}</span><span class="check-state ${statusClass}">${status}</span></div><h4>${escapeHTML(locationTitle)}</h4><div class="check-card-info-grid"><div class="check-card-info-cell"><small>العميل</small><strong class="compact-customer">${escapeHTML(guestNames)}</strong></div><div class="check-card-info-cell check-card-drink-cell"><small>المشروبات</small><strong class="check-card-drinks">${escapeHTML(drinkNames + extraItemCount)}</strong></div></div></div><div class="check-card-metrics"><span><small>الإجمالي</small><strong>${money(total)}</strong></span><span><small>المدفوع</small><strong>${money(paid)}</strong></span><span class="remaining"><small>المتبقي</small><strong>${money(due)}</strong></span></div><div class="check-card-quick-actions">${quickPay}<button type="button" class="secondary quick-add-order" data-add-order="${escapeHTML(c.id)}">＋ إضافة طلب</button></div></div><details class="check-accordion" ${expandedCheckIds.has(c.id) ? "open" : ""}><summary class="check-details-toggle"><span>عرض تفاصيل الطلب والأصناف</span><span class="accordion-chevron" aria-hidden="true">⌄</span></summary><div class="check-accordion-body"><div class="compact-guest-list">${guests || '<div class="empty">لا توجد أصناف</div>'}</div><div class="check-note-grid"><label>موعد السداد<input type="date" value="${escapeHTML(c.dueDate || "")}" data-check-due-date="${escapeHTML(c.id)}"></label><label>ملاحظات الشيك<textarea rows="2" maxlength="500" data-check-note="${escapeHTML(c.id)}" placeholder="ملاحظة أو تفضيل الطلب">${escapeHTML(c.notes || "")}</textarea></label></div>${renderCheckTimeline(c)}${detailActions}</div></details></article>`;
   }
   const modeFilter = checkModeFilter || "all";
   const filteredList = list.filter((c) => {
@@ -3136,6 +3193,8 @@ function menuAdd(itemId, optionId) {
     (x) =>
       x.productId === itemId &&
       x.optionId === option.id &&
+      x.name === product.name &&
+      Number(x.unitPrice || 0) === Number(option.price || 0) &&
       (x.customerName || "") === customer,
   );
   if (old) old.qty++;
@@ -3187,6 +3246,7 @@ document
     if (custInput) {
       const i = Number(custInput.dataset.draftCustomer);
       if (checkDraft[i]) checkDraft[i].customerName = custInput.value.trim();
+      syncCheckTarget();
       return;
     }
     const input = event.target.closest("[data-draft-discount]");
@@ -3209,6 +3269,9 @@ document
       if (line) {
         const priceEl = line.querySelector(".line-qty-label");
         if (priceEl) priceEl.innerHTML = lineLabel(item);
+        const lineTotalEl = line.querySelector("[data-draft-line-total]");
+        if (lineTotalEl)
+          lineTotalEl.textContent = money(Math.max(0, Number(item.unitPrice || 0) * Number(item.qty || 0) - Number(item.lineDiscount || 0)));
       }
     }
   });
@@ -3229,6 +3292,7 @@ document
     else {
       item.qty += b.hasAttribute("data-draft-inc") ? 1 : -1;
       if (item.qty <= 0) checkDraft.splice(i, 1);
+      else item.lineDiscount = Math.max(0, Math.min(Number(item.lineDiscount || 0), Number(item.unitPrice || 0) * item.qty));
     }
     renderCheckDraft();
   });
@@ -3241,6 +3305,14 @@ document
 document
   .getElementById("check-customer")
   .addEventListener("input", syncCheckTarget);
+document
+  .getElementById("check-table-name")
+  .addEventListener("input", syncCheckTarget);
+const checkOrderFormElement = document.getElementById("check-order-form");
+checkOrderFormElement?.addEventListener("focusin", syncCheckOrderDock);
+checkOrderFormElement?.addEventListener("focusout", () => setTimeout(syncCheckOrderDock, 120));
+window.visualViewport?.addEventListener("resize", syncCheckOrderDock);
+window.addEventListener("resize", syncCheckOrderDock);
 document.getElementById("commit-check-order").addEventListener("click", () => {
   if (!checkDraft.length) {
     notify("أضف صنفًا واحدًا على الأقل");
@@ -3349,6 +3421,8 @@ document.getElementById("commit-check-order").addEventListener("click", () => {
           (x) =>
             x.productId === draft.productId &&
             x.optionId === draft.optionId &&
+            x.name === draft.name &&
+            Number(x.unitPrice || 0) === Number(draft.unitPrice || 0) &&
             Number(x.lineDiscount || 0) === Number(draft.lineDiscount || 0),
         );
         if (existing) existing.qty += draft.qty;
