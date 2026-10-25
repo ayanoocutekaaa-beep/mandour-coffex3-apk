@@ -120,6 +120,7 @@ function loadData() {
       customBeans: Array.isArray(saved.customBeans) ? saved.customBeans : [],
       customers: Array.isArray(saved.customers) ? saved.customers : [],
       invoices: Array.isArray(saved.invoices) ? saved.invoices : [],
+      deletedInvoices: Array.isArray(saved.deletedInvoices) ? saved.deletedInvoices : [],
       checks: Array.isArray(saved.checks) ? saved.checks : [],
       paymentQrs:
         saved.paymentQrs && typeof saved.paymentQrs === "object"
@@ -137,6 +138,7 @@ function loadData() {
       customBeans: [],
       customers: [],
       invoices: [],
+      deletedInvoices: [],
       checks: [],
       paymentQrs: {},
       activityLog: [],
@@ -151,6 +153,8 @@ function loadData() {
 let lastPersistedState = JSON.stringify(data);
 let lastUndoSnapshot = null;
 let suppressUndoCapture = false;
+let changeBackupTimer = null;
+let lastChangeBackupDescription = "تعديل";
 function describeDataChange(before, after) {
   const byId = (rows) =>
     new Map(
@@ -269,6 +273,9 @@ function persist() {
   renderActivityLog();
   globalSearchRender();
   queueLocalCheckNotificationSync();
+  const changeDescription = describeDataChange(before, data) || "تعديل البيانات";
+  lastChangeBackupDescription = changeDescription;
+  scheduleChangeBackup(changeDescription);
   scheduleAutoBackupCheck();
 }
 
@@ -283,6 +290,56 @@ function backupSnapshot() {
 }
 function backupFileName() {
   return `mandour-coffee-backup-${localDateValue()}.json`;
+}
+function backupDateTimeStamp() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}-${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
+}
+function backupOperationLabel(description) {
+  const text = String(description || "");
+  if (text.includes("دفعة") || text.includes("دفع")) return "Payment";
+  if (text.includes("شيك") || text.includes("طلب")) return "Order";
+  if (text.includes("فاتورة")) return "Invoice";
+  if (text.includes("مخزون")) return "Inventory";
+  if (text.includes("عميل")) return "Customer";
+  if (text.includes("بن")) return "Products";
+  return "DataChange";
+}
+function changeBackupFileName(description = "تعديل") {
+  return `MandourCoffee-Backup-${backupDateTimeStamp()}-${backupOperationLabel(description)}.json`;
+}
+function rememberBackupFile(fileName) {
+  try {
+    const names = JSON.parse(localStorage.getItem("mandour-backup-history") || "[]");
+    names.unshift(fileName);
+    localStorage.setItem("mandour-backup-history", JSON.stringify([...new Set(names)].slice(0, 30)));
+  } catch {}
+}
+function scheduleChangeBackup(description) {
+  clearTimeout(changeBackupTimer);
+  changeBackupTimer = setTimeout(() => saveChangeBackup(description), 650);
+}
+function saveChangeBackup(description = "تعديل") {
+  const fileName = changeBackupFileName(description);
+  const json = JSON.stringify(backupSnapshot(), null, 2);
+  const bridge = window.MandourNative;
+  try {
+    if (bridge?.saveBackupToChosenFolder && bridge?.getFolderName?.("backup")) {
+      bridge.saveBackupToChosenFolder(json, fileName);
+      rememberBackupFile(fileName);
+      markBackupDone();
+      return;
+    }
+    if (bridge?.saveBackup) {
+      bridge.saveBackup(json, fileName);
+      rememberBackupFile(fileName);
+      markBackupDone();
+      return;
+    }
+  } catch (error) {
+    console.warn("Automatic backup failed", error);
+  }
 }
 function markBackupDone() {
   try {
@@ -315,6 +372,7 @@ function downloadBackup() {
   const json = JSON.stringify(backupSnapshot(), null, 2);
   if (window.MandourNative?.saveBackup) {
     window.MandourNative.saveBackup(json, backupFileName());
+    rememberBackupFile(backupFileName());
     markBackupDone();
     return;
   }
@@ -328,6 +386,7 @@ function downloadBackup() {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1500);
   markBackupDone();
+  rememberBackupFile(backupFileName());
   notify("تم تجهيز نسخة البيانات للتنزيل");
 }
 async function shareBackup() {
@@ -365,6 +424,7 @@ function normalizeImportedData(value) {
       : [],
     customers: Array.isArray(candidate.customers) ? candidate.customers : [],
     invoices: Array.isArray(candidate.invoices) ? candidate.invoices : [],
+    deletedInvoices: Array.isArray(candidate.deletedInvoices) ? candidate.deletedInvoices : [],
     checks: Array.isArray(candidate.checks) ? candidate.checks : [],
     paymentQrs:
       candidate.paymentQrs && typeof candidate.paymentQrs === "object"
@@ -756,7 +816,7 @@ function openView(name, { push = false, animate = true } = {}) {
     setCheckPanel("list");
   }
   if (name === "notifications") renderNotifications();
-  if (name === "tools") { renderInventory(); renderLoyalty(); updatePinStatus(); }
+  if (name === "tools") { renderInventory(); renderLoyalty(); renderSalesDashboard(); renderBackupHistory(); renderDeletedInvoices(); updatePinStatus(); }
   refreshHome();
   window.scrollTo(0, 0);
 }
@@ -1016,6 +1076,7 @@ document.getElementById("save-invoice").addEventListener("click", () => {
     savedAt,
   };
   data.invoices.unshift(invoice);
+  awardLoyaltyStamp(invoice.customer);
   try {
     persist();
   } catch {
@@ -1260,6 +1321,9 @@ document.getElementById("delete-final").addEventListener("click", () => {
     return;
   }
   const [removed] = data.invoices.splice(index, 1);
+  data.deletedInvoices = Array.isArray(data.deletedInvoices) ? data.deletedInvoices : [];
+  data.deletedInvoices.unshift({ ...removed, deletedAt: new Date().toISOString() });
+  data.deletedInvoices = data.deletedInvoices.slice(0, 50);
   try {
     persist();
   } catch {
@@ -1419,6 +1483,7 @@ function drawReceipt(invoice, canvas) {
   ctx.fillText(`تاريخ الشراء: ${dateText(invoiceDateKey(invoice))}`, 1010, 218);
   ctx.fillText(`العميل: ${invoice.customer || "عميل نقدي"}`, 1010, 258);
   ctx.fillText(`البلد: ${invoice.customerCountry || "—"}`, 1010, 298);
+  ctx.fillText(`العامل: ${data.staffName || data.auditActor || "مستخدم الجهاز"}`, 1010, 338);
   ctx.fillText(
     `التحضير: ${invoice.roastMode === "m7awag" ? "محوّج" : "سادة"}`,
     1010,
@@ -1771,6 +1836,17 @@ function customerInvoicesFor(name) {
         invoiceActivityTime(b) - invoiceActivityTime(a) ||
         invoiceDateKey(b).localeCompare(invoiceDateKey(a)),
     );
+}
+function awardLoyaltyStamp(customerName) {
+  const name = String(customerName || "").trim();
+  if (!name) return false;
+  const customer = findCustomerByName(name);
+  if (!customer) return false;
+  data.loyalty = data.loyalty || {};
+  const next = Number(data.loyalty[customer.id] || 0) + 1;
+  data.loyalty[customer.id] = next >= 8 ? 0 : next;
+  if (next >= 8) notify(`العميل ${customer.name} استحق مكافأة الولاء`);
+  return true;
 }
 function invoiceActivityTime(invoice) {
   const raw = invoice?.savedAt || invoice?.createdAt;
@@ -3591,6 +3667,10 @@ document.getElementById("check-list").addEventListener("click", (event) => {
       c.tipPaid = true;
       c.status = "paid";
       c.paidAt = paidAt;
+      if (!c.loyaltyAwarded) {
+        (c.guests || []).forEach((guest) => awardLoyaltyStamp(guest.name));
+        c.loyaltyAwarded = true;
+      }
       persist();
       renderChecks();
       playCheckActionSound("payment-full");
@@ -3629,6 +3709,10 @@ document.getElementById("check-list").addEventListener("click", (event) => {
       });
       c.status = checkDue(c) <= 0 ? "paid" : "partial";
       c.paidAt = c.status === "paid" ? at : null;
+      if (c.status === "paid" && !c.loyaltyAwarded) {
+        (c.guests || []).forEach((guest) => awardLoyaltyStamp(guest.name));
+        c.loyaltyAwarded = true;
+      }
       persist();
       renderChecks();
       playCheckActionSound("payment-item");
@@ -4009,6 +4093,33 @@ document.getElementById("theme-toggle-btn")?.addEventListener("click", () => {
   try { localStorage.setItem("mandour-theme", theme); } catch {}
   applyTheme(theme);
 });
+function renderSalesDashboard() {
+  const root = document.getElementById("sales-dashboard");
+  if (!root) return;
+  const today = new Date();
+  const key = (offset) => { const d = new Date(today); d.setDate(d.getDate() - offset); return d.toISOString().slice(0, 10); };
+  const todayKey = key(0), weekKey = key(6), monthKey = key(29);
+  const invoices = (data.invoices || []).filter((x) => (x.documentType || "receipt") === "receipt");
+  const checks = (data.checks || []).filter((x) => x.status === "paid");
+  const amountFor = (from) => invoices.filter((x) => invoiceDateKey(x) >= from).reduce((sum, x) => sum + Number(x.total || 0), 0) + checks.filter((x) => String(x.paidAt || x.createdAt || "").slice(0, 10) >= from).reduce((sum, x) => sum + Number(checkTotal(x) || 0), 0);
+  const countFor = (from) => invoices.filter((x) => invoiceDateKey(x) >= from).length + checks.filter((x) => String(x.paidAt || x.createdAt || "").slice(0, 10) >= from).length;
+  const methods = {};
+  invoices.filter((x) => invoiceDateKey(x) === todayKey).forEach((x) => { methods[paymentMethodLabel(x.paymentMethod)] = (methods[paymentMethodLabel(x.paymentMethod)] || 0) + Number(x.total || 0); });
+  root.innerHTML = `<div class="sales-kpi-grid"><div><small>اليوم</small><strong>${money(amountFor(todayKey))}</strong><span>${fmt.format(countFor(todayKey))} عملية</span></div><div><small>آخر ٧ أيام</small><strong>${money(amountFor(weekKey))}</strong><span>${fmt.format(countFor(weekKey))} عملية</span></div><div><small>آخر ٣٠ يومًا</small><strong>${money(amountFor(monthKey))}</strong><span>${fmt.format(countFor(monthKey))} عملية</span></div></div><div class="sales-methods"><strong>طرق الدفع اليوم</strong>${Object.keys(methods).length ? Object.entries(methods).map(([name, amount]) => `<span>${escapeHTML(name)} <b>${money(amount)}</b></span>`).join("") : '<small>لا توجد مبيعات اليوم بعد.</small>'}</div>`;
+}
+function renderBackupHistory() {
+  const root = document.getElementById("backup-history-list");
+  if (!root) return;
+  let names = [];
+  try { names = JSON.parse(localStorage.getItem("mandour-backup-history") || "[]"); } catch {}
+  root.innerHTML = names.length ? names.slice(0, 8).map((name) => `<div class="backup-history-item"><span>✓</span><code>${escapeHTML(name)}</code></div>`).join("") : '<div class="empty">لم تُحفظ نسخ تلقائية بعد.</div>';
+}
+function renderDeletedInvoices() {
+  const root = document.getElementById("deleted-invoices-list");
+  if (!root) return;
+  const items = data.deletedInvoices || [];
+  root.innerHTML = items.length ? items.slice(0, 12).map((invoice) => `<div class="backup-history-item deleted-invoice-item"><span>↺</span><div><strong>${escapeHTML(invoice.number || "فاتورة")}</strong><small>${escapeHTML(invoice.customer || "عميل نقدي")} · ${money(invoice.total || 0)}</small></div><button class="secondary" type="button" data-restore-invoice="${escapeHTML(invoice.id)}">استرجاع</button></div>`).join("") : '<div class="empty">السلة فارغة.</div>';
+}
 function renderInventory() {
   const root = document.getElementById("inventory-list");
   if (!root) return;
@@ -4073,6 +4184,20 @@ document.getElementById("pin-lock-enabled")?.addEventListener("change", (event) 
   else document.getElementById("set-pin-btn")?.click();
 });
 document.getElementById("tools-report-btn")?.addEventListener("click", () => { openDailyReport(); });
+document.getElementById("tools-save-backup")?.addEventListener("click", () => { downloadBackup(); renderBackupHistory(); });
+document.getElementById("deleted-invoices-list")?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-restore-invoice]");
+  if (!button) return;
+  const index = (data.deletedInvoices || []).findIndex((invoice) => invoice.id === button.dataset.restoreInvoice);
+  if (index < 0) return;
+  const [invoice] = data.deletedInvoices.splice(index, 1);
+  delete invoice.deletedAt;
+  data.invoices.unshift(invoice);
+  persist();
+  renderDeletedInvoices();
+  renderInvoiceHistory();
+  notify(`تم استرجاع ${invoice.number}`);
+});
 const auditActorInput = document.getElementById("audit-actor");
 if (auditActorInput)
   auditActorInput.addEventListener("change", () => {
@@ -4253,6 +4378,12 @@ const splash = document.getElementById("splash");
 let splashReady = false;
 function finishSplash() {
   if (splashReady || !splash) return;
+  const staffField = document.getElementById("splash-staff-name");
+  if (staffField?.value.trim()) {
+    data.staffName = staffField.value.trim();
+    data.auditActor = data.staffName;
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch {}
+  }
   splashReady = true;
   splash.classList.add("leaving");
   window.setTimeout(() => {
@@ -4260,6 +4391,8 @@ function finishSplash() {
     document.body.classList.add("app-ready");
   }, 700);
 }
+const splashStaffName = document.getElementById("splash-staff-name");
+if (splashStaffName) splashStaffName.value = data.staffName || data.auditActor || "";
 document.getElementById("splash-enter")?.addEventListener("click", finishSplash);
 window.setTimeout(finishSplash, 7300);
 window.setTimeout(() => {

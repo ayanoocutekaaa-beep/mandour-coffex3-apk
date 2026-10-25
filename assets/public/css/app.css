@@ -4643,6 +4643,8 @@ body:not(.invoice-active) .appbar-net-weight {
 .home-recent-item strong { font-size: 11px; }
 .home-recent-item small, .home-recent-item time { color: var(--mut); font-size: 9px; }
 .home-table-status { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 7px; margin-top: 10px; }
+.cashier-shortcuts { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 7px; margin: 10px 0; }
+.cashier-shortcuts button { min-height: 42px; padding: 7px 6px; font-size: 10px; }
 .home-table-card { display: grid; gap: 3px; min-height: 78px; padding: 9px 7px; border: 1px solid #d6c6b1; border-radius: 14px; background: #fffaf1; color: var(--ink); text-align: right; }
 .home-table-card strong { font-size: 15px; }
 .home-table-card span, .home-table-card small { color: var(--mut); font-size: 9px; }
@@ -4695,10 +4697,28 @@ body.dark-theme .home-table-card.partial { background: #3a2725; }
 .loyalty-dots i.filled { border-color: #b47b3d; background: #b47b3d; color: #fff5dc; }
 .staff-lock-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; margin-top: 9px; }
 .staff-lock-row button { min-height: 38px; }
+.sales-kpi-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 7px; margin-top: 10px; }
+.sales-kpi-grid > div { display: grid; gap: 3px; padding: 9px 7px; border: 1px solid var(--line); border-radius: 12px; background: #fffaf1; }
+.sales-kpi-grid small, .sales-kpi-grid span, .sales-methods small { color: var(--mut); font-size: 9px; }
+.sales-kpi-grid strong { color: var(--acc); font-size: 15px; }
+.sales-methods { display: grid; gap: 6px; margin-top: 9px; padding-top: 9px; border-top: 1px dashed var(--line); font-size: 10px; }
+.sales-methods span { display: flex; justify-content: space-between; padding: 6px 8px; border-radius: 9px; background: #f8efe3; color: var(--ink); }
+.sales-methods b { color: var(--acc); }
+.backup-history-list { display: grid; gap: 5px; margin-top: 9px; }
+.backup-history-item { display: flex; align-items: center; gap: 7px; min-width: 0; padding: 7px 8px; border: 1px solid var(--line); border-radius: 9px; background: #fffaf1; }
+.backup-history-item span { color: #2a9861; font-weight: 900; }
+.backup-history-item code { overflow: hidden; color: var(--mut); direction: ltr; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.deleted-invoice-item > div { display: grid; flex: 1; gap: 2px; min-width: 0; }
+.deleted-invoice-item small { color: var(--mut); font-size: 9px; }
 .pin-denied { min-height: 100vh; display: grid; place-content: center; gap: 10px; padding: 24px; background: var(--bg); color: var(--ink); text-align: center; }
 .pin-denied h2 { margin: 0; }
 .check-menu-card { position: relative; }
 .favorite-menu-btn { position: absolute; top: 7px; inset-inline-end: 7px; z-index: 2; width: 30px; height: 30px; padding: 0; border: 1px solid #ffffffaa; border-radius: 50%; background: #3b241799; color: #fff; font-size: 18px; line-height: 1; }
 .favorite-menu-btn.is-favorite { color: #ffcf75; background: #4f2f1dcc; }
+.entry-user-field { display: grid; gap: 5px; width: min(250px, 82vw); margin: 8px auto 0; color: #e8d5b7; font-size: 10px; text-align: right; }
+.entry-user-field input { min-height: 38px; width: 100%; padding: 8px 11px; border: 1px solid #c4955a99; border-radius: 12px; outline: none; background: #241710cc; color: #fff8e9; text-align: right; }
+.entry-user-field input::placeholder { color: #d7b98e99; }
 body.dark-theme .tool-badge, body.dark-theme .inventory-actions button { background: #493522; color: #f2c878; }
 body.dark-theme .inventory-item.low-stock { background: #3a2b1d; }
+body.dark-theme .sales-kpi-grid > div, body.dark-theme .sales-methods span { background: #2a211b; }
+body.dark-theme .backup-history-item { background: #2a211b; }
