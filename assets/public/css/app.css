@@ -4659,6 +4659,11 @@ body:not(.invoice-active) .appbar-net-weight {
 .notification-filters b { display: inline-block; margin-inline-start: 3px; font-size: 9px; }
 .notifications-hero { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .notification-bell { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 16px; background: #f3e2c7; color: var(--acc); font-size: 28px; }
+.check-notification-panel { display: grid; gap: 8px; margin-top: 12px; }
+.check-notification-panel h3 { margin: 3px 0; font-size: 14px; }
+.check-notification-panel p { margin: 0; color: var(--mut); font-size: 10px; line-height: 1.7; }
+.check-notification-panel .primary { min-height: 43px; }
+.check-notification-status { color: var(--mut); font-size: 9px; line-height: 1.5; }
 .notification-list { display: grid; gap: 7px; margin-top: 10px; }
 .notification-item { display: grid; grid-template-columns: 40px minmax(0,1fr); gap: 9px; align-items: center; padding: 10px; border: 1px solid #e7c788; border-radius: 13px; background: #fffaf0; }
 .notification-item.is-read { opacity: .62; border-color: var(--line); background: var(--card); }

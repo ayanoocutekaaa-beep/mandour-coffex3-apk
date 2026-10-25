@@ -4251,6 +4251,9 @@ renderActivityLog();
 scheduleAutoBackupCheck();
 
 const CHECK_NOTIFICATION_IDS = [12001, 12002];
+const CHECK_NOW_NOTIFICATION_ID = 12003;
+const CHECK_NOTIFICATION_CHANNEL_ID = "checks_reminders_v1";
+const CHECK_NOTIFICATION_SOUND = "mandour_notification.mp3";
 
 async function requestNotificationPermission() {
   if (!LocalNotifications) return "unsupported";
@@ -4283,6 +4286,36 @@ function checkReminderDetails(checks) {
     checks.length > 3 ? ` و${fmt.format(checks.length - 3)} شيكات أخرى` : "";
   return (rows.join(" | ") + extra).slice(0, 220) || "لا توجد شيكات مستحقة.";
 }
+async function ensureChecksNotificationChannel() {
+  if (!LocalNotifications?.createChannel) return false;
+
+  try {
+    await LocalNotifications.createChannel({
+      id: CHECK_NOTIFICATION_CHANNEL_ID,
+      name: "تنبيهات الشيكات",
+      description: "تنبيهات الشيكات المفتوحة والإشعار اليدوي",
+      importance: 4,
+      sound: CHECK_NOTIFICATION_SOUND,
+      vibration: true,
+    });
+    return true;
+  } catch (error) {
+    console.error("Check notification channel error:", error);
+    return false;
+  }
+}
+function checksForNotification() {
+  return (data.checks || []).filter(
+    (check) =>
+      (check.status === "open" || check.status === "partial") &&
+      checkDue(check) > 0,
+  );
+}
+function checksNotificationBody(checks) {
+  if (!checks.length) return "لا توجد شيكات مفتوحة حاليًا.";
+  const totalDue = checks.reduce((sum, check) => sum + checkDue(check), 0);
+  return `${fmt.format(checks.length)} شيكات مفتوحة · إجمالي المتبقي ${money(totalDue)}. ${checkReminderDetails(checks)}`.slice(0, 500);
+}
 async function syncLocalCheckNotifications() {
   if (!LocalNotifications) {
     updateNotifStatus(
@@ -4298,11 +4331,8 @@ async function syncLocalCheckNotifications() {
     return;
   }
 
-  const unpaidChecks = data.checks.filter(
-    (check) =>
-      (check.status === "open" || check.status === "partial") &&
-      checkDue(check) > 0,
-  );
+  const channelReady = await ensureChecksNotificationChannel();
+  const unpaidChecks = checksForNotification();
 
   await LocalNotifications.cancel({
     notifications: CHECK_NOTIFICATION_IDS.map((id) => ({ id })),
@@ -4319,6 +4349,8 @@ async function syncLocalCheckNotifications() {
         id: CHECK_NOTIFICATION_IDS[0],
         title: "مندور كوفي · مراجعة الشيكات",
         body: checkReminderDetails(unpaidChecks),
+        channelId: channelReady ? CHECK_NOTIFICATION_CHANNEL_ID : undefined,
+        sound: CHECK_NOTIFICATION_SOUND,
         schedule: {
           on: { hour: 0, minute: 0 },
           repeats: true,
@@ -4328,6 +4360,8 @@ async function syncLocalCheckNotifications() {
         id: CHECK_NOTIFICATION_IDS[1],
         title: "مندور كوفي · تذكير بالشيكات",
         body: `قبل إغلاق اليوم: ${checkReminderDetails(unpaidChecks)}`,
+        channelId: channelReady ? CHECK_NOTIFICATION_CHANNEL_ID : undefined,
+        sound: CHECK_NOTIFICATION_SOUND,
         schedule: {
           on: { hour: 1, minute: 30 },
           repeats: true,
@@ -4336,7 +4370,11 @@ async function syncLocalCheckNotifications() {
     ],
   });
 
-  updateNotifStatus("التنبيهات المحلية مفعّلة: يوميًا الساعة 12:00 و1:30.");
+  updateNotifStatus(
+    channelReady
+      ? "تنبيهات الشيكات مفعّلة يوميًا الساعة 12:00 و1:30 بنغمة الشيكات الخاصة."
+      : "تذكيرات الشيكات مفعّلة يوميًا الساعة 12:00 و1:30 بصوت النظام.",
+  );
 }
 
 function updateNotifStatus(message) {
@@ -4362,6 +4400,68 @@ document
         "الإضافة غير موجودة. أعد بناء التطبيق بعد تعديل ملف البناء.",
       );
       notify("تعذر الوصول إلى إشعارات Android");
+    }
+  });
+
+function updateChecksNotificationStatus(message) {
+  const element = document.getElementById("checks-notification-status");
+  if (element && message) element.textContent = message;
+}
+
+document
+  .getElementById("send-checks-notification-btn")
+  ?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    const originalLabel = button.textContent;
+    button.disabled = true;
+    button.textContent = "جاري الإرسال…";
+
+    try {
+      const permission = await requestNotificationPermission();
+      if (permission !== "granted") {
+        const message =
+          permission === "denied"
+            ? "إذن الإشعارات مرفوض؛ فعّله من إعدادات Android."
+            : "إشعارات Android غير متاحة في هذا الإصدار من التطبيق.";
+        updateChecksNotificationStatus(message);
+        notify(message);
+        return;
+      }
+
+      const channelReady = await ensureChecksNotificationChannel();
+      const checks = checksForNotification();
+      const body = checksNotificationBody(checks);
+
+      await LocalNotifications.cancel({
+        notifications: [{ id: CHECK_NOW_NOTIFICATION_ID }],
+      }).catch(() => {});
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            id: CHECK_NOW_NOTIFICATION_ID,
+            title: "مندور كوفي · الشيكات المفتوحة",
+            body: body.slice(0, 240),
+            largeBody: body,
+            summaryText: `${fmt.format(checks.length)} شيكات · ${money(checks.reduce((sum, check) => sum + checkDue(check), 0))} متبقي`,
+            channelId: channelReady ? CHECK_NOTIFICATION_CHANNEL_ID : undefined,
+            sound: CHECK_NOTIFICATION_SOUND,
+          },
+        ],
+      });
+
+      const message = channelReady
+        ? "تم إرسال إشعار الشيكات بالنغمة الخاصة."
+        : "تم إرسال الإشعار؛ تعذر تجهيز النغمة الخاصة وقد يستخدم صوت النظام.";
+      updateChecksNotificationStatus(message);
+      notify(message);
+    } catch (error) {
+      console.error("Send checks notification error:", error);
+      const message = "تعذر إرسال إشعار الشيكات. راجع إذن الإشعارات وحاول مجددًا.";
+      updateChecksNotificationStatus(message);
+      notify(message);
+    } finally {
+      button.disabled = false;
+      button.textContent = originalLabel;
     }
   });
 
