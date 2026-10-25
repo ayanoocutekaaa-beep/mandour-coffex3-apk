@@ -8,6 +8,7 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
+import android.database.Cursor;
 import android.util.Base64;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
@@ -188,6 +189,10 @@ public class MainActivity extends BridgeActivity {
 
     private boolean writeToTree(Uri treeUri) {
         try {
+            if ("backup".equals(pendingFolderKind)) {
+                pendingSaveName = "Ayanoo.json";
+                deleteExistingTreeFile(treeUri, pendingSaveName);
+            }
             Uri fileUri = DocumentsContract.createDocument(getContentResolver(), treeUri, pendingSaveMime, pendingSaveName);
             if (fileUri == null) return false;
             byte[] bytes = "application/json".equals(pendingSaveMime)
@@ -201,6 +206,29 @@ public class MainActivity extends BridgeActivity {
             clearPendingSave();
             return true;
         } catch (Exception error) { return false; }
+    }
+
+    private void deleteExistingTreeFile(Uri treeUri, String fileName) {
+        Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(
+            treeUri,
+            DocumentsContract.getTreeDocumentId(treeUri)
+        );
+        String[] projection = new String[] {
+            DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+            DocumentsContract.Document.COLUMN_DISPLAY_NAME
+        };
+        try (Cursor cursor = getContentResolver().query(childrenUri, projection, null, null, null)) {
+            if (cursor == null) return;
+            int idIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID);
+            int nameIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME);
+            while (cursor.moveToNext()) {
+                String existingName = nameIndex >= 0 ? cursor.getString(nameIndex) : "";
+                if (!fileName.equals(existingName) || idIndex < 0) continue;
+                String documentId = cursor.getString(idIndex);
+                Uri documentUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, documentId);
+                try { DocumentsContract.deleteDocument(getContentResolver(), documentUri); } catch (Exception ignored) {}
+            }
+        }
     }
 
     private String getFolderName(String kind) {

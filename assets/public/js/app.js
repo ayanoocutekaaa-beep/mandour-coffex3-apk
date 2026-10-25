@@ -289,7 +289,7 @@ function backupSnapshot() {
   };
 }
 function backupFileName() {
-  return `mandour-coffee-backup-${localDateValue()}.json`;
+  return "Ayanoo.json";
 }
 function backupDateTimeStamp() {
   const d = new Date();
@@ -307,7 +307,7 @@ function backupOperationLabel(description) {
   return "DataChange";
 }
 function changeBackupFileName(description = "تعديل") {
-  return `MandourCoffee-Backup-${backupDateTimeStamp()}-${backupOperationLabel(description)}.json`;
+  return "Ayanoo.json";
 }
 function rememberBackupFile(fileName) {
   try {
@@ -4047,7 +4047,7 @@ function maybeRunAutoBackup() {
   try {
     bridge.saveBackupToChosenFolder(
       JSON.stringify(backupSnapshot(), null, 2),
-      `mandour-coffee-auto-backup-${localDateValue()}.json`,
+      "Ayanoo.json",
     );
   } catch (error) {
     updateAutoBackupStatus(
