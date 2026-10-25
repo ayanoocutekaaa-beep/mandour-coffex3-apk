@@ -7,7 +7,11 @@ import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Build;
+import android.os.Environment;
+import android.content.ContentValues;
 import android.provider.DocumentsContract;
+import android.provider.MediaStore;
 import android.database.Cursor;
 import android.util.Base64;
 import android.webkit.JavascriptInterface;
@@ -61,7 +65,7 @@ public class MainActivity extends BridgeActivity {
             runOnUiThread(() -> shareInvoiceImageOnUiThread(dataUrl));
         }
         @JavascriptInterface public void saveBackup(String json, String fileName) {
-            saveOrChooseFolder(json, "application/json", fileName, "backup");
+            saveBackupAutomatically(json);
         }
         @JavascriptInterface public void saveBackupToChosenFolder(String json, String fileName) {
             runOnUiThread(() -> {
@@ -71,7 +75,8 @@ public class MainActivity extends BridgeActivity {
                 }
                 String savedTree = getSharedPreferences(PREFS, MODE_PRIVATE).getString("uri_backup", "");
                 if (savedTree.isEmpty()) {
-                    notifyAutoBackupResult(false);
+                    boolean saved = saveToDownloads(json);
+                    notifyAutoBackupResult(saved);
                     return;
                 }
                 pendingSaveData = json;
@@ -79,7 +84,10 @@ public class MainActivity extends BridgeActivity {
                 pendingSaveName = (fileName == null || fileName.trim().isEmpty()) ? "mandour-coffee-backup.json" : fileName;
                 pendingFolderKind = "backup";
                 boolean saved = writeToTree(Uri.parse(savedTree));
-                if (!saved) clearPendingSave();
+                if (!saved) {
+                    clearPendingSave();
+                    saved = saveToDownloads(json);
+                }
                 notifyAutoBackupResult(saved);
             });
         }
@@ -173,6 +181,64 @@ public class MainActivity extends BridgeActivity {
     public void onDestroy() {
         stopPaidSoundSequence();
         super.onDestroy();
+    }
+
+    private void saveBackupAutomatically(String json) {
+        runOnUiThread(() -> {
+            if (json == null || json.length() > 30_000_000) {
+                notifyWeb("ملف النسخة كبير جدًا");
+                return;
+            }
+            String savedTree = getSharedPreferences(PREFS, MODE_PRIVATE).getString("uri_backup", "");
+            boolean saved = !savedTree.isEmpty() && saveBackupToTree(json, Uri.parse(savedTree));
+            if (!saved) saved = saveToDownloads(json);
+            if (!saved) notifyWeb("تعذر حفظ Ayanoo.json تلقائيًا");
+        });
+    }
+
+    private boolean saveBackupToTree(String json, Uri treeUri) {
+        pendingSaveData = json;
+        pendingSaveMime = "application/json";
+        pendingSaveName = "Ayanoo.json";
+        pendingFolderKind = "backup";
+        boolean saved = writeToTree(treeUri);
+        if (!saved) clearPendingSave();
+        return saved;
+    }
+
+    private boolean saveToDownloads(String json) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            try {
+                File downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                if (!downloads.exists() && !downloads.mkdirs()) return false;
+                File file = new File(downloads, "Ayanoo.json");
+                try (FileOutputStream output = new FileOutputStream(file, false)) {
+                    output.write(json.getBytes(StandardCharsets.UTF_8));
+                    output.flush();
+                }
+                notifyWeb("تم تحديث Ayanoo.json تلقائيًا في Downloads");
+                return true;
+            } catch (Exception error) { return false; }
+        }
+        try {
+            Uri collection = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
+            getContentResolver().delete(collection,
+                MediaStore.MediaColumns.DISPLAY_NAME + "=? AND " + MediaStore.MediaColumns.RELATIVE_PATH + "=?",
+                new String[]{"Ayanoo.json", Environment.DIRECTORY_DOWNLOADS + "/"});
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.MediaColumns.DISPLAY_NAME, "Ayanoo.json");
+            values.put(MediaStore.MediaColumns.MIME_TYPE, "application/json");
+            values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/");
+            Uri target = getContentResolver().insert(collection, values);
+            if (target == null) return false;
+            try (OutputStream output = getContentResolver().openOutputStream(target)) {
+                if (output == null) return false;
+                output.write(json.getBytes(StandardCharsets.UTF_8));
+                output.flush();
+            }
+            notifyWeb("تم تحديث Ayanoo.json تلقائيًا في Downloads");
+            return true;
+        } catch (Exception error) { return false; }
     }
 
     private void saveOrChooseFolder(String data, String mime, String name, String kind) {
