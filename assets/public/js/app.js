@@ -127,6 +127,9 @@ function loadData() {
           : {},
       activityLog: Array.isArray(saved.activityLog) ? saved.activityLog : [],
       notifications: Array.isArray(saved.notifications) ? saved.notifications : [],
+      inventory: Array.isArray(saved.inventory) ? saved.inventory : [],
+      loyalty: saved.loyalty && typeof saved.loyalty === "object" ? saved.loyalty : {},
+      staffName: String(saved.staffName || ""),
       auditActor: String(saved.auditActor || ""),
     };
   } catch {
@@ -138,6 +141,9 @@ function loadData() {
       paymentQrs: {},
       activityLog: [],
       notifications: [],
+      inventory: [],
+      loyalty: {},
+      staffName: "",
       auditActor: "",
     };
   }
@@ -370,6 +376,9 @@ function normalizeImportedData(value) {
     notifications: Array.isArray(candidate.notifications)
       ? candidate.notifications
       : [],
+    inventory: Array.isArray(candidate.inventory) ? candidate.inventory : [],
+    loyalty: candidate.loyalty && typeof candidate.loyalty === "object" ? candidate.loyalty : {},
+    staffName: String(candidate.staffName || ""),
     auditActor: String(candidate.auditActor || ""),
   };
   if (
@@ -695,7 +704,7 @@ function refreshHome() {
   }
   updateNotificationBadge();
 }
-const views = ["home", "invoice", "blends", "checks", "notifications"];
+const views = ["home", "invoice", "blends", "checks", "notifications", "tools"];
 const titles = {
   home: "مندور كوفي",
   invoice: "إنشاء فاتورة",
@@ -703,6 +712,7 @@ const titles = {
   "add-bean": "إضافة نوع بن",
   checks: "الشيكات",
   notifications: "مركز الإشعارات",
+  tools: "المزيد والأدوات",
 };
 function openView(name, { push = false, animate = true } = {}) {
   if (!views.includes(name)) name = "home";
@@ -746,6 +756,7 @@ function openView(name, { push = false, animate = true } = {}) {
     setCheckPanel("list");
   }
   if (name === "notifications") renderNotifications();
+  if (name === "tools") { renderInventory(); renderLoyalty(); updatePinStatus(); }
   refreshHome();
   window.scrollTo(0, 0);
 }
@@ -2508,6 +2519,8 @@ function deferExpiredChecks() {
     } catch {}
   return changed;
 }
+let favoriteProductIds = new Set();
+try { favoriteProductIds = new Set(JSON.parse(localStorage.getItem("mandour-favorite-products") || "[]")); } catch {}
 function menuCards(list, buttonAttr) {
   return list
     .map((item) => {
@@ -2520,10 +2533,10 @@ function menuCards(list, buttonAttr) {
               `<button type="button" class="option-btn${o.id === defaultOptId ? " is-default" : ""}" ${buttonAttr}="${item.id}" data-option-id="${o.id}"><span class="opt-label">${escapeHTML(o.label)}</span><span class="opt-price">${money(o.price)}</span></button>`,
           )
           .join("");
-        return `<article class="check-menu-card" data-menu-card="${item.id}"><img src="${item.image}" alt="${escapeHTML(item.name)}" loading="lazy"><div class="check-menu-info"><strong>${escapeHTML(item.name)}</strong><div class="option-buttons">${buttons}</div></div></article>`;
+        return `<article class="check-menu-card" data-menu-card="${item.id}"><button type="button" class="favorite-menu-btn ${favoriteProductIds.has(item.id) ? "is-favorite" : ""}" data-favorite-product="${escapeHTML(item.id)}" aria-label="إضافة للمفضلة">${favoriteProductIds.has(item.id) ? "♥" : "♡"}</button><img src="${item.image}" alt="${escapeHTML(item.name)}" loading="lazy"><div class="check-menu-info"><strong>${escapeHTML(item.name)}</strong><div class="option-buttons">${buttons}</div></div></article>`;
       }
       const option = opts[0];
-      return `<article class="check-menu-card" data-menu-card="${item.id}"><img src="${item.image}" alt="${escapeHTML(item.name)}" loading="lazy"><div class="check-menu-info"><strong>${escapeHTML(item.name)}</strong><small class="check-menu-price">السعر: ${money(option.price)}</small><button type="button" ${buttonAttr}="${item.id}">＋ إضافة</button></div></article>`;
+      return `<article class="check-menu-card" data-menu-card="${item.id}"><button type="button" class="favorite-menu-btn ${favoriteProductIds.has(item.id) ? "is-favorite" : ""}" data-favorite-product="${escapeHTML(item.id)}" aria-label="إضافة للمفضلة">${favoriteProductIds.has(item.id) ? "♥" : "♡"}</button><img src="${item.image}" alt="${escapeHTML(item.name)}" loading="lazy"><div class="check-menu-info"><strong>${escapeHTML(item.name)}</strong><small class="check-menu-price">السعر: ${money(option.price)}</small><button type="button" ${buttonAttr}="${item.id}">＋ إضافة</button></div></article>`;
     })
     .join("");
 }
@@ -2576,6 +2589,19 @@ function renderExtraDrinks() {
   const root = document.getElementById("extra-drinks-menu");
   if (root) root.innerHTML = menuCards(EXTRA_DRINKS, "data-extra-menu-add");
 }
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-favorite-product]");
+  if (!button) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const id = button.dataset.favoriteProduct;
+  if (favoriteProductIds.has(id)) favoriteProductIds.delete(id);
+  else favoriteProductIds.add(id);
+  try { localStorage.setItem("mandour-favorite-products", JSON.stringify([...favoriteProductIds])); } catch {}
+  renderCheckMenu();
+  renderExtraDrinks();
+  notify(favoriteProductIds.has(id) ? "اتضاف للمفضلة" : "اتشال من المفضلة");
+});
 function renderCheckTargets() {
   const select = document.getElementById("check-existing");
   if (!select) return;
@@ -3826,6 +3852,13 @@ document
 document
   .querySelectorAll("[data-close-report]")
   .forEach((b) => b.addEventListener("click", closeDailyReport));
+document.getElementById("share-report-btn")?.addEventListener("click", async () => {
+  const text = `تقرير مندور كوفي\n${document.getElementById("report-date")?.textContent || ""}\n${document.getElementById("report-body")?.innerText || ""}`;
+  try {
+    if (navigator.share) await navigator.share({ title: "تقرير مندور كوفي", text });
+    else { await navigator.clipboard.writeText(text); notify("تم نسخ التقرير للمشاركة"); }
+  } catch (error) { if (error?.name !== "AbortError") notify("تعذرت مشاركة التقرير"); }
+});
 
 document
   .getElementById("move-suggestions")
@@ -3976,6 +4009,70 @@ document.getElementById("theme-toggle-btn")?.addEventListener("click", () => {
   try { localStorage.setItem("mandour-theme", theme); } catch {}
   applyTheme(theme);
 });
+function renderInventory() {
+  const root = document.getElementById("inventory-list");
+  if (!root) return;
+  const list = data.inventory || [];
+  const alerts = list.filter((item) => Number(item.qty) <= Number(item.min)).length;
+  const count = document.getElementById("inventory-alert-count");
+  if (count) count.textContent = `${fmt.format(alerts)} تنبيه`;
+  root.innerHTML = list.length ? list.map((item) => `<article class="inventory-item ${Number(item.qty) <= Number(item.min) ? "low-stock" : ""}"><div><strong>${escapeHTML(item.name)}</strong><small>التكلفة: ${money(item.cost)} · حد التنبيه: ${fmt.format(item.min)}</small></div><b>${fmt.format(item.qty)}</b><div class="inventory-actions"><button type="button" data-inventory-adjust="${escapeHTML(item.id)}" data-inventory-delta="-1">−</button><button type="button" data-inventory-adjust="${escapeHTML(item.id)}" data-inventory-delta="1">＋</button></div></article>`).join("") : '<div class="empty">لا يوجد مخزون مسجل بعد.</div>';
+}
+document.getElementById("inventory-form")?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const name = document.getElementById("inventory-name").value.trim();
+  const qty = Number(document.getElementById("inventory-qty").value);
+  const min = Number(document.getElementById("inventory-min").value);
+  const cost = Number(document.getElementById("inventory-cost").value);
+  if (!name || !Number.isFinite(qty) || !Number.isFinite(min) || !Number.isFinite(cost)) return;
+  const existing = (data.inventory || []).find((item) => item.name === name);
+  if (existing) { existing.qty = qty; existing.min = min; existing.cost = cost; }
+  else data.inventory.unshift({ id: `stock-${Date.now()}`, name, qty, min, cost });
+  persist(); renderInventory(); event.target.reset(); notify(`تم حفظ مخزون ${name}`);
+});
+document.getElementById("inventory-list")?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-inventory-adjust]");
+  if (!button) return;
+  const item = (data.inventory || []).find((x) => x.id === button.dataset.inventoryAdjust);
+  if (!item) return;
+  item.qty = Math.max(0, Number(item.qty) + Number(button.dataset.inventoryDelta));
+  persist(); renderInventory();
+  if (item.qty <= item.min) notify(`تنبيه: مخزون ${item.name} وصل لحد التنبيه`);
+});
+function renderLoyalty() {
+  const root = document.getElementById("loyalty-list");
+  if (!root) return;
+  const customers = data.customers || [];
+  root.innerHTML = customers.length ? customers.slice(0, 30).map((customer) => { const stamps = Math.max(0, Number((data.loyalty || {})[customer.id] || 0)); return `<article class="loyalty-item"><div><strong>${escapeHTML(customer.name)}</strong><small>${fmt.format(stamps)} من ٨ أختام ${stamps >= 8 ? "· يستحق مكافأة" : ""}</small><div class="loyalty-dots">${Array.from({ length: 8 }, (_, i) => `<i class="${i < stamps ? "filled" : ""}">✦</i>`).join("")}</div></div><button class="secondary" type="button" data-loyalty-add="${escapeHTML(customer.id)}">＋ ختم</button></article>`; }).join("") : '<div class="empty">أضف عملاء من شاشة العملاء أولًا.</div>';
+}
+document.getElementById("loyalty-list")?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-loyalty-add]");
+  if (!button) return;
+  const id = button.dataset.loyaltyAdd;
+  data.loyalty[id] = Number(data.loyalty[id] || 0) + 1;
+  if (data.loyalty[id] >= 8) notify("العميل استحق مكافأة الولاء"); else notify("تمت إضافة ختم ولاء");
+  persist(); renderLoyalty();
+});
+function updatePinStatus() {
+  const enabled = Boolean(localStorage.getItem("mandour-app-pin"));
+  const toggle = document.getElementById("pin-lock-enabled");
+  const status = document.getElementById("pin-status");
+  const staff = document.getElementById("staff-name-input");
+  if (toggle) toggle.checked = enabled;
+  if (staff) staff.value = data.staffName || "";
+  if (status) status.textContent = enabled ? "قفل PIN مفعّل عند فتح التطبيق." : "القفل غير مفعّل.";
+}
+document.getElementById("staff-name-input")?.addEventListener("change", (event) => { data.staffName = event.target.value.trim(); persist(); });
+document.getElementById("set-pin-btn")?.addEventListener("click", () => {
+  const pin = window.prompt("اكتب PIN من 4 أرقام");
+  if (!/^\d{4}$/.test(pin || "")) return notify("استخدم 4 أرقام بالضبط");
+  localStorage.setItem("mandour-app-pin", pin); updatePinStatus(); notify("تم تفعيل قفل التطبيق");
+});
+document.getElementById("pin-lock-enabled")?.addEventListener("change", (event) => {
+  if (!event.target.checked) { localStorage.removeItem("mandour-app-pin"); updatePinStatus(); notify("تم إيقاف قفل التطبيق"); }
+  else document.getElementById("set-pin-btn")?.click();
+});
+document.getElementById("tools-report-btn")?.addEventListener("click", () => { openDailyReport(); });
 const auditActorInput = document.getElementById("audit-actor");
 if (auditActorInput)
   auditActorInput.addEventListener("change", () => {
@@ -4164,7 +4261,14 @@ function finishSplash() {
   }, 700);
 }
 document.getElementById("splash-enter")?.addEventListener("click", finishSplash);
-window.setTimeout(finishSplash, 12000);
+window.setTimeout(finishSplash, 7300);
+window.setTimeout(() => {
+  const savedPin = localStorage.getItem("mandour-app-pin");
+  if (!savedPin) return;
+  const entered = window.prompt("التطبيق مقفول. اكتب PIN من 4 أرقام");
+  if (entered !== savedPin)
+    document.body.innerHTML = '<main class="pin-denied"><h2>التطبيق مقفول</h2><p>أعد فتح التطبيق واكتب رمز PIN الصحيح.</p></main>';
+}, 900);
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) window.setTimeout(finishSplash, 120);
 });

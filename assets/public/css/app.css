@@ -4674,3 +4674,31 @@ body.dark-theme .notification-item { border-color: #73532f; background: #2a211b;
 body.dark-theme .home-table-card { background: #2a211b; border-color: #5c4634; }
 body.dark-theme .home-table-card.open { background: #3d2f20; }
 body.dark-theme .home-table-card.partial { background: #3a2725; }
+.tool-panel { margin-top: 11px; }
+.tool-badge { display: inline-flex; align-items: center; min-height: 25px; padding: 4px 8px; border-radius: 99px; background: #f5e3c5; color: var(--acc); font-size: 9px; font-weight: 900; }
+.inventory-form { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 10px; }
+.inventory-form input { min-height: 40px; width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); font-size: 11px; }
+.inventory-form button { grid-column: 1/-1; min-height: 42px; }
+.inventory-list, .loyalty-list { display: grid; gap: 7px; margin-top: 10px; }
+.inventory-item, .loyalty-item { display: grid; grid-template-columns: minmax(0,1fr) auto auto; align-items: center; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+.inventory-item > div:first-child, .loyalty-item > div:first-child { display: grid; gap: 3px; }
+.inventory-item strong, .loyalty-item strong { font-size: 12px; }
+.inventory-item small, .loyalty-item small { color: var(--mut); font-size: 9px; }
+.inventory-item > b { color: var(--acc); font-size: 16px; }
+.inventory-item.low-stock { border-color: #e2a45b; background: #fff5e4; }
+.inventory-item.low-stock::before { content: "تنبيه"; color: #a8522e; font-size: 9px; font-weight: 900; }
+.inventory-actions { display: flex; gap: 4px; }
+.inventory-actions button { width: 28px; height: 28px; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: #f8efe2; color: var(--acc); font-weight: 900; }
+.loyalty-item { grid-template-columns: minmax(0,1fr) auto; }
+.loyalty-dots { display: flex; gap: 3px; margin-top: 4px; }
+.loyalty-dots i { display: grid; place-items: center; width: 17px; height: 17px; border: 1px solid #d6c3aa; border-radius: 50%; color: #cdbba4; font-size: 9px; font-style: normal; }
+.loyalty-dots i.filled { border-color: #b47b3d; background: #b47b3d; color: #fff5dc; }
+.staff-lock-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; margin-top: 9px; }
+.staff-lock-row button { min-height: 38px; }
+.pin-denied { min-height: 100vh; display: grid; place-content: center; gap: 10px; padding: 24px; background: var(--bg); color: var(--ink); text-align: center; }
+.pin-denied h2 { margin: 0; }
+.check-menu-card { position: relative; }
+.favorite-menu-btn { position: absolute; top: 7px; inset-inline-end: 7px; z-index: 2; width: 30px; height: 30px; padding: 0; border: 1px solid #ffffffaa; border-radius: 50%; background: #3b241799; color: #fff; font-size: 18px; line-height: 1; }
+.favorite-menu-btn.is-favorite { color: #ffcf75; background: #4f2f1dcc; }
+body.dark-theme .tool-badge, body.dark-theme .inventory-actions button { background: #493522; color: #f2c878; }
+body.dark-theme .inventory-item.low-stock { background: #3a2b1d; }
