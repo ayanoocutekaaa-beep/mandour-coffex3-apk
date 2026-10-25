@@ -3203,6 +3203,13 @@ main {
 .compact-guest-head strong {
   font-size: 11px;
 }
+.per-guest-add-order {
+  width: 100%;
+  min-height: 34px;
+  margin: 4px 0 6px;
+  padding: 5px 8px;
+  font-size: 10px;
+}
 .remove-guest {
   border: 0;
   background: transparent;

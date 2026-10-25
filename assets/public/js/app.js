@@ -3088,6 +3088,24 @@ function renderChecks() {
     (filteredList.length
       ? `<div class="check-list">${filteredList.map(card).join("")}</div>`
       : '<div class="empty">لا توجد شيكات تطابق خيارات التصفية الحالية.</div>');
+  root.querySelectorAll("[data-check-card-id]").forEach((cardElement) => {
+    const check = data.checks.find(
+      (item) => item.id === cardElement.dataset.checkCardId,
+    );
+    if (!check || check.status === "paid") return;
+    cardElement.querySelectorAll(".compact-guest").forEach((guestElement, index) => {
+      const guest = check.guests?.[index];
+      const header = guestElement.querySelector(".compact-guest-head");
+      if (!guest || !header) return;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "secondary per-guest-add-order";
+      button.dataset.addGuestOrder = check.id;
+      button.dataset.guestId = guest.id;
+      button.textContent = "＋ إضافة طلب لهذا العميل";
+      header.insertAdjacentElement("afterend", button);
+    });
+  });
   syncPaidSound();
 }
 
@@ -3133,6 +3151,7 @@ function menuAdd(itemId, optionId) {
       customerName: customer,
     });
   renderCheckDraft();
+  playCheckActionSound("menu-item");
   notify(`اتضاف ${product.name} · ${option.label}`);
 }
 
@@ -3226,6 +3245,26 @@ document.getElementById("commit-check-order").addEventListener("click", () => {
   if (!checkDraft.length) {
     notify("أضف صنفًا واحدًا على الأقل");
     return;
+  }
+  const defaultCustomerName =
+    document.getElementById("check-customer").value.trim();
+  if (defaultCustomerName) {
+    checkDraft.forEach((item) => {
+      if (!(item.customerName || "").trim())
+        item.customerName = defaultCustomerName;
+    });
+  }
+  const firstUnnamedIndex = checkDraft.findIndex(
+    (item) => !(item.customerName || "").trim(),
+  );
+  if (firstUnnamedIndex >= 0) {
+    playCheckActionSound("missing-customer");
+    if (!confirm("فيه أصناف من غير اسم عميل. تكمل تسجيلها باسم «بدون اسم»؟")) {
+      document
+        .querySelector(`[data-draft-customer="${firstUnnamedIndex}"]`)
+        ?.focus();
+      return;
+    }
   }
   const existingId = document.getElementById("check-existing").value;
   let target = availableChecks().find((c) => c.id === existingId);
@@ -3620,6 +3659,26 @@ document.getElementById("check-list").addEventListener("click", (event) => {
       renderChecks();
       notify("تم حذف العميل من الحساب");
     }
+    return;
+  }
+  const guestOrderButton = event.target.closest("[data-add-guest-order]");
+  if (guestOrderButton) {
+    const c = data.checks.find(
+      (x) => x.id === guestOrderButton.dataset.addGuestOrder,
+    );
+    const guest = c?.guests?.find(
+      (x) => x.id === guestOrderButton.dataset.guestId,
+    );
+    if (!c || !guest || c.status === "paid") return;
+    setCheckPanel("orders");
+    document.getElementById("check-existing").value = c.id;
+    document.getElementById("check-customer").value =
+      guest.name === "بدون اسم" ? "" : guest.name;
+    syncCheckTarget();
+    document
+      .getElementById("check-order-form")
+      .scrollIntoView({ behavior: "smooth", block: "start" });
+    notify(`اختار الأصناف لإضافتها تحت اسم ${guest.name}`);
     return;
   }
   const add = event.target.closest("[data-add-order]");
@@ -4252,7 +4311,7 @@ scheduleAutoBackupCheck();
 
 const CHECK_NOTIFICATION_IDS = [12001, 12002];
 const CHECK_NOW_NOTIFICATION_ID = 12003;
-const CHECK_NOTIFICATION_CHANNEL_ID = "checks_reminders_v1";
+const CHECK_NOTIFICATION_CHANNEL_ID = "checks_reminders_glass_v2";
 const CHECK_NOTIFICATION_SOUND = "mandour_notification.mp3";
 
 async function requestNotificationPermission() {

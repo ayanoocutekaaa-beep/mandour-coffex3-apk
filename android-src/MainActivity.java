@@ -113,7 +113,18 @@ public class MainActivity extends BridgeActivity {
         }
         @JavascriptInterface public void playActionSound(String key) {
             String requestKey = key == null ? "action" : key;
-            runOnUiThread(() -> startAudioSequence(requestKey, "public/assets/audio/check-action.mp3", "mandour-check-action.mp3"));
+            String assetPath = "public/assets/audio/check-action.mp3";
+            String cacheName = "mandour-check-action.mp3";
+            if (requestKey.startsWith("menu-item-")) {
+                assetPath = "public/assets/audio/order-wood.mp3";
+                cacheName = "mandour-order-wood.mp3";
+            } else if (requestKey.startsWith("missing-customer-")) {
+                assetPath = "public/assets/audio/customer-name-reminder.mp3";
+                cacheName = "mandour-customer-name-reminder.mp3";
+            }
+            final String selectedAssetPath = assetPath;
+            final String selectedCacheName = cacheName;
+            runOnUiThread(() -> startAudioSequence(requestKey, selectedAssetPath, selectedCacheName));
         }
         @JavascriptInterface public void stopPaidSound() {
             runOnUiThread(() -> stopPaidSoundSequence());

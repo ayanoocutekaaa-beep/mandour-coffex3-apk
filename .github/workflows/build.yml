@@ -31,7 +31,7 @@ jobs:
           mkdir -p android/app/src/main/java/com/mandour/coffee/v5
           cp android-src/MainActivity.java android/app/src/main/java/com/mandour/coffee/v5/MainActivity.java
           mkdir -p android/app/src/main/res/raw
-          cp assets/audio/check-action.mp3 android/app/src/main/res/raw/mandour_notification.mp3
+          cp assets/audio/notification-glass.mp3 android/app/src/main/res/raw/mandour_notification.mp3
           mkdir -p android/app/src/main/res/xml
           cp android-res/xml/file_paths.xml android/app/src/main/res/xml/file_paths.xml
           cp -R android-res/mipmap-* android/app/src/main/res/

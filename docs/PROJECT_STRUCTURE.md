@@ -6,6 +6,9 @@
 - `assets/public/css/app.css` — تنسيقات التطبيق وألوانه وتخطيط الشاشات.
 - `assets/public/js/app.js` — منطق التطبيق، التخزين المحلي، الفواتير، العملاء، الشيكات والبحث.
 - `assets/audio/Ayano.mp3` — المقطع الصوتي الموجود في ملف المستخدم: `Ayano.mp3`.
+- `assets/audio/notification-glass.mp3` — جرس الإشعارات الزجاجي، يُنسخ إلى `res/raw` لقناة Android.
+- `assets/audio/customer-name-reminder.mp3` — تنبيه الاسم عند حفظ أصناف دون اسم عميل.
+- `assets/audio/order-wood.mp3` — نغمة اختيار صنف من قائمة المشروبات.
 - `android-src/MainActivity.java` — جسر Android للنسخ الاحتياطي ومشاركة الإيصالات وتشغيل المقطع الصوتي.
 - `.github/workflows/build.yml` — إعداد بناء Android على GitHub Actions.
 
