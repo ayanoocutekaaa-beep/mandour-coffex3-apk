@@ -1,12 +1,12 @@
-# هيكل مشروع Mandour Coffee
+# هيكل مشروع مندوركوف
 
 ## الملفات التي نعدّلها
 
 - `assets/public/index.html` — هيكل الشاشة ونصوصها وربط ملفات الواجهة.
 - `assets/public/css/app.css` — تنسيقات التطبيق وألوانه وتخطيط الشاشات.
 - `assets/public/js/app.js` — منطق التطبيق، التخزين المحلي، الفواتير، العملاء، الشيكات والبحث.
-- `assets/mandour-app-icon.png` — أيقونة الويب والنسخة المربعة من شعار التطبيق.
-- `assets/mandour-app-icon-foreground.png` — مصدر شفاف لعلامة Adaptive Icon.
+- `assets/mandour-app-icon.png` — الصورة المعتمدة لأيقونة الويب وشعار التطبيق.
+- `assets/mandour-app-icon-foreground.png` — مصدر توليد طبقة Adaptive Icon من الصورة المعتمدة.
 - `android-res/mipmap-*` — أيقونات Android بأحجام كثافات الشاشة المختلفة.
 - `android-res/mipmap-anydpi-v26/` و`android-res/values/ic_launcher_background.xml` — تعريف الطبقات ولون خلفية Adaptive Icon.
 - `assets/audio/Ayano.mp3` — المقطع الصوتي الموجود في ملف المستخدم: `Ayano.mp3`.

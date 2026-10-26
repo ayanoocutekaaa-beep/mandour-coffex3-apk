@@ -400,7 +400,7 @@ async function shareBackup() {
   ) {
     try {
       await navigator.share({
-        title: "نسخة بيانات مندور كوفي",
+        title: "نسخة بيانات مندوركوف",
         text: "نسخة احتياطية كاملة لبيانات التطبيق",
         files: [file],
       });
@@ -766,7 +766,7 @@ function refreshHome() {
 }
 const views = ["home", "invoice", "blends", "checks", "notifications", "tools"];
 const titles = {
-  home: "مندور كوفي",
+  home: "مندوركوف",
   invoice: "إنشاء فاتورة",
   blends: "العملاء والتوليفات",
   "add-bean": "إضافة نوع بن",
@@ -1450,7 +1450,7 @@ function drawReceipt(invoice, canvas) {
   ctx.fillStyle = "#503827";
   ctx.textAlign = "center";
   ctx.font = "800 64px Cairo, Arial, sans-serif";
-  ctx.fillText("مندور كوفي", w / 2, 88);
+  ctx.fillText("مندوركوف", w / 2, 88);
   ctx.font = "700 32px Cairo, Arial, sans-serif";
   ctx.fillStyle = "#84674d";
   ctx.fillText(invoiceKind(invoice), w / 2, 143);
@@ -1574,7 +1574,7 @@ function drawReceipt(invoice, canvas) {
   ctx.font = "700 25px Cairo, Arial, sans-serif";
   ctx.fillStyle = "#84674d";
   ctx.textAlign = "center";
-  ctx.fillText("شكرًا لثقتكم · مندور كوفي", w / 2, afterTotalY + 60);
+  ctx.fillText("شكرًا لثقتكم · مندوركوف", w / 2, afterTotalY + 60);
   ctx.font = "700 25px Cairo, Arial, sans-serif";
   ctx.fillStyle = "#503827";
   ctx.fillText(
@@ -1732,7 +1732,7 @@ document.getElementById("receipt-share").addEventListener("click", async () => {
     if (navigator.canShare?.({ files: [file] }) && navigator.share) {
       await navigator.share({
         title: `إيصال ${activeReceipt.number}`,
-        text: "إيصال من مندور كوفي",
+        text: "إيصال من مندوركوف",
         files: [file],
       });
       return;
@@ -4081,9 +4081,9 @@ document
   .querySelectorAll("[data-close-report]")
   .forEach((b) => b.addEventListener("click", closeDailyReport));
 document.getElementById("share-report-btn")?.addEventListener("click", async () => {
-  const text = `تقرير مندور كوفي\n${document.getElementById("report-date")?.textContent || ""}\n${document.getElementById("report-body")?.innerText || ""}`;
+  const text = `تقرير مندوركوف\n${document.getElementById("report-date")?.textContent || ""}\n${document.getElementById("report-body")?.innerText || ""}`;
   try {
-    if (navigator.share) await navigator.share({ title: "تقرير مندور كوفي", text });
+    if (navigator.share) await navigator.share({ title: "تقرير مندوركوف", text });
     else { await navigator.clipboard.writeText(text); notify("تم نسخ التقرير للمشاركة"); }
   } catch (error) { if (error?.name !== "AbortError") notify("تعذرت مشاركة التقرير"); }
 });
@@ -4225,12 +4225,13 @@ if (autoBackupToggle) {
   });
 }
 function applyTheme(theme) {
+  document.documentElement.classList.toggle("dark-theme", theme === "dark");
   document.body.classList.toggle("dark-theme", theme === "dark");
   const button = document.getElementById("theme-toggle-btn");
   if (button) button.textContent = theme === "dark" ? "☀️ تفعيل الوضع الفاتح" : "🌙 تفعيل الوضع الداكن";
 }
-let savedTheme = "light";
-try { savedTheme = localStorage.getItem("mandour-theme") || "light"; } catch {}
+let savedTheme = "dark";
+try { savedTheme = localStorage.getItem("mandour-theme") || "dark"; } catch {}
 applyTheme(savedTheme);
 document.getElementById("theme-toggle-btn")?.addEventListener("click", () => {
   const theme = document.body.classList.contains("dark-theme") ? "light" : "dark";
@@ -4491,7 +4492,7 @@ async function syncLocalCheckNotifications() {
     notifications: [
       {
         id: CHECK_NOTIFICATION_IDS[0],
-        title: "مندور كوفي · مراجعة الشيكات",
+        title: "مندوركوف · مراجعة الشيكات",
         body: checkReminderDetails(unpaidChecks),
         channelId: channelReady ? CHECK_NOTIFICATION_CHANNEL_ID : undefined,
         sound: CHECK_NOTIFICATION_SOUND,
@@ -4502,7 +4503,7 @@ async function syncLocalCheckNotifications() {
       },
       {
         id: CHECK_NOTIFICATION_IDS[1],
-        title: "مندور كوفي · تذكير بالشيكات",
+        title: "مندوركوف · تذكير بالشيكات",
         body: `قبل إغلاق اليوم: ${checkReminderDetails(unpaidChecks)}`,
         channelId: channelReady ? CHECK_NOTIFICATION_CHANNEL_ID : undefined,
         sound: CHECK_NOTIFICATION_SOUND,
@@ -4583,7 +4584,7 @@ document
         notifications: [
           {
             id: CHECK_NOW_NOTIFICATION_ID,
-            title: "مندور كوفي · الشيكات المفتوحة",
+            title: "مندوركوف · الشيكات المفتوحة",
             body: body.slice(0, 240),
             largeBody: body,
             summaryText: `${fmt.format(checks.length)} شيكات · ${money(checks.reduce((sum, check) => sum + checkDue(check), 0))} متبقي`,

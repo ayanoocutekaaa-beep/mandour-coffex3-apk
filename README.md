@@ -1,14 +1,16 @@
-# مندور كوفي
+# مندوركوف
 
 تطبيق عربي لإدارة فواتير البن، العملاء والتوليفات، طلبات الكافيه والشيكات والمدفوعات. يدعم حفظ البيانات محليًا، الإشعارات، التقارير، والنسخ الاحتياطي والاستعادة.
+
+الواجهة الافتراضية بالوضع الداكن المستوحى من ألوان القهوة، مع إمكانية اختيار الوضع الفاتح من إعدادات التطبيق.
 
 ## مصادر التطبيق المعتمدة
 
 - `assets/public/index.html`: هيكل الشاشات وتسميات الأزرار والتنقل.
 - `assets/public/css/app.css`: الألوان والتخطيطات والاستجابة لأحجام الهاتف.
 - `assets/public/js/app.js`: منطق الفواتير والعملاء والشيكات والتنبيهات والتخزين المحلي.
-- `assets/mandour-app-icon.png`: شعار التطبيق وأيقونة الويب.
-- `assets/mandour-app-icon-foreground.png`: ملف الشعار الشفاف المستخدم لإعداد طبقة Adaptive Icon.
+- `assets/mandour-app-icon.png`: الصورة المعتمدة لشعار التطبيق وأيقونة الويب.
+- `assets/mandour-app-icon-foreground.png`: مصدر الصورة المعتمدة لتوليد طبقة Adaptive Icon.
 - `android-res/mipmap-*`: أيقونات Android وأحجامها المختلفة.
 - `android-res/mipmap-anydpi-v26/`: تعريف Adaptive Icon على Android الحديث.
 - `android-res/values/ic_launcher_background.xml`: لون خلفية Adaptive Icon.

@@ -397,8 +397,8 @@ public class MainActivity extends BridgeActivity {
             try (FileOutputStream output = new FileOutputStream(imageFile)) { output.write(imageBytes); }
             Uri imageUri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", imageFile);
             Intent shareIntent = new Intent(Intent.ACTION_SEND); shareIntent.setType("image/png");
-            shareIntent.putExtra(Intent.EXTRA_STREAM, imageUri); shareIntent.putExtra(Intent.EXTRA_TITLE, "إيصال من مندور كوفي"); shareIntent.putExtra(Intent.EXTRA_SUBJECT, "إيصال من مندور كوفي");
-            shareIntent.setClipData(ClipData.newRawUri("إيصال مندور كوفي", imageUri)); shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            shareIntent.putExtra(Intent.EXTRA_STREAM, imageUri); shareIntent.putExtra(Intent.EXTRA_TITLE, "إيصال من مندوركوف"); shareIntent.putExtra(Intent.EXTRA_SUBJECT, "إيصال من مندوركوف");
+            shareIntent.setClipData(ClipData.newRawUri("إيصال مندوركوف", imageUri)); shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             Intent chooser = Intent.createChooser(shareIntent, "مشاركة الإيصال"); chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION); startActivity(chooser);
         } catch (Exception error) { notifyWeb("تعذرت مشاركة الإيصال؛ جرّب حفظه في مكان تختاره"); }
     }
