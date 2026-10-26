@@ -5124,6 +5124,14 @@ body.dark-theme .backup-history-item { background: #2a211b; }
   padding-top: 8px;
   border-top: 1px dashed #eadcc9;
 }
+.draft-order-commit {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 2px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 900;
+}
 .draft-line-discount {
   display: grid;
   gap: 4px;

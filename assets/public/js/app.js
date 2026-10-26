@@ -2770,7 +2770,7 @@ function renderCheckDraft() {
     ? `<div class="check-draft-list">${checkDraft.map((item, index) => {
         const lineTotal = Math.max(0, Number(item.unitPrice || 0) * Number(item.qty || 0) - Number(item.lineDiscount || 0));
         const itemLabel = checkItemLabel(item);
-        return `<article class="check-draft-line"><div class="draft-item-header"><span class="draft-item-index">${fmt.format(index + 1)}</span><div class="draft-item-copy"><strong>${escapeHTML(itemLabel)}</strong><small class="line-qty-label">${lineLabel(item)}</small></div><strong class="draft-line-total" data-draft-line-total>${money(lineTotal)}</strong></div><label class="draft-customer-field"><span>اسم العميل</span><input type="text" class="draft-customer-input" placeholder="اسم العميل لهذا الصنف" value="${escapeHTML(item.customerName || "")}" data-draft-customer="${index}" maxlength="60" aria-label="اسم عميل ${escapeHTML(itemLabel)}"></label><div class="draft-item-controls"><label class="discount-field draft-line-discount"><span>خصم (جنيه)</span><input type="number" min="0" max="${Number(item.unitPrice || 0) * Number(item.qty || 1)}" step="1" value="${item.lineDiscount || ""}" placeholder="٠" data-draft-discount="${index}"></label><div class="draft-quantity-field"><small>الكمية</small><span class="qty-controls"><button type="button" data-draft-dec="${index}" aria-label="تقليل الكمية">−</button><strong>${fmt.format(item.qty)}</strong><button type="button" data-draft-inc="${index}" aria-label="زيادة الكمية">＋</button><button type="button" class="draft-remove-btn" data-draft-remove="${index}" aria-label="حذف الصنف">حذف</button></span></div></div></article>`;
+        return `<article class="check-draft-line"><div class="draft-item-header"><span class="draft-item-index">${fmt.format(index + 1)}</span><div class="draft-item-copy"><strong>${escapeHTML(itemLabel)}</strong><small class="line-qty-label">${lineLabel(item)}</small></div><strong class="draft-line-total" data-draft-line-total>${money(lineTotal)}</strong></div><label class="draft-customer-field"><span>اسم العميل</span><input type="text" class="draft-customer-input" placeholder="اسم العميل لهذا الصنف" value="${escapeHTML(item.customerName || "")}" data-draft-customer="${index}" maxlength="60" aria-label="اسم عميل ${escapeHTML(itemLabel)}"></label><div class="draft-item-controls"><label class="discount-field draft-line-discount"><span>خصم (جنيه)</span><input type="number" min="0" max="${Number(item.unitPrice || 0) * Number(item.qty || 1)}" step="1" value="${item.lineDiscount || ""}" placeholder="٠" data-draft-discount="${index}"></label><div class="draft-quantity-field"><small>الكمية</small><span class="qty-controls"><button type="button" data-draft-dec="${index}" aria-label="تقليل الكمية">−</button><strong>${fmt.format(item.qty)}</strong><button type="button" data-draft-inc="${index}" aria-label="زيادة الكمية">＋</button><button type="button" class="draft-remove-btn" data-draft-remove="${index}" aria-label="حذف الصنف">حذف</button></span></div></div><button type="button" class="primary draft-order-commit" data-draft-commit="${index}">تأكيد الطلب وإضافته للحساب</button></article>`;
       }).join("")}</div>`
     : '<div class="draft-empty-state"><strong>الطلب فارغ حتى الآن</strong><small>اختار مشروبًا من القائمة وسيظهر هنا للمراجعة.</small></div>';
   syncCheckOrderDock();
@@ -3313,27 +3313,32 @@ checkOrderFormElement?.addEventListener("focusin", syncCheckOrderDock);
 checkOrderFormElement?.addEventListener("focusout", () => setTimeout(syncCheckOrderDock, 120));
 window.visualViewport?.addEventListener("resize", syncCheckOrderDock);
 window.addEventListener("resize", syncCheckOrderDock);
-document.getElementById("commit-check-order").addEventListener("click", () => {
-  if (!checkDraft.length) {
+function commitCheckOrder(selectedIndex = null) {
+  const draftItems = selectedIndex === null
+    ? checkDraft.slice()
+    : checkDraft[selectedIndex]
+      ? [checkDraft[selectedIndex]]
+      : [];
+  if (!draftItems.length) {
     notify("أضف صنفًا واحدًا على الأقل");
     return;
   }
   const defaultCustomerName =
     document.getElementById("check-customer").value.trim();
   if (defaultCustomerName) {
-    checkDraft.forEach((item) => {
+    draftItems.forEach((item) => {
       if (!(item.customerName || "").trim())
         item.customerName = defaultCustomerName;
     });
   }
-  const firstUnnamedIndex = checkDraft.findIndex(
+  const firstUnnamedIndex = draftItems.findIndex(
     (item) => !(item.customerName || "").trim(),
   );
   if (firstUnnamedIndex >= 0) {
     playCheckActionSound("missing-customer");
     if (!confirm("فيه أصناف من غير اسم عميل. تكمل تسجيلها باسم «بدون اسم»؟")) {
       document
-        .querySelector(`[data-draft-customer="${firstUnnamedIndex}"]`)
+        .querySelector(`[data-draft-customer="${selectedIndex === null ? firstUnnamedIndex : selectedIndex}"]`)
         ?.focus();
       return;
     }
@@ -3369,7 +3374,7 @@ document.getElementById("commit-check-order").addEventListener("click", () => {
       target.lastOrderAt = orderNow;
       if (target.status === "closed") target.status = "open";
     }
-    const orderSnapshot = checkDraft.map((d) => ({
+    const orderSnapshot = draftItems.map((d) => ({
       name: d.name,
       optionLabel: d.optionLabel || "",
       customerName: d.customerName || "بدون اسم",
@@ -3398,7 +3403,7 @@ document.getElementById("commit-check-order").addEventListener("click", () => {
         }),
       );
     const groups = {};
-    checkDraft.forEach((draft) => {
+    draftItems.forEach((draft) => {
       const key = (draft.customerName || "").trim();
       if (!groups[key]) groups[key] = [];
       groups[key].push(draft);
@@ -3458,7 +3463,7 @@ document.getElementById("commit-check-order").addEventListener("click", () => {
     notify("تعذر حفظ الحساب");
     return;
   }
-  checkDraft = [];
+  checkDraft = selectedIndex === null ? [] : checkDraft.filter((_, index) => index !== selectedIndex);
   renderCheckMenu();
   renderExtraDrinks();
   document.getElementById("check-existing").value = target.id;
@@ -3467,6 +3472,12 @@ document.getElementById("commit-check-order").addEventListener("click", () => {
   renderChecks();
   playCheckActionSound("new-order");
   notify("اتضاف الطلب للحساب بنجاح");
+}
+
+document.getElementById("commit-check-order").addEventListener("click", () => commitCheckOrder());
+document.getElementById("check-draft-lines").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-draft-commit]");
+  if (button) commitCheckOrder(Number(button.dataset.draftCommit));
 });
 
 document.getElementById("check-list").addEventListener("toggle", (event) => {
