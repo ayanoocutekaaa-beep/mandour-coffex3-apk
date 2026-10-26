@@ -1,0 +1,15 @@
+:root {
+  color-scheme: light;
+  --bg: #faf3e8;
+  --card: #fff;
+  --ink: #3b2417;
+  --mut: #8a6f5d;
+  --acc: #6f4e37;
+  --acc2: #c8913f;
+  --ok: #2e7d4f;
+  --line: #e8d9c4;
+  --shadow: 0 8px 24px #3b24170d;
+  --accent-soft: #f4e8d5;
+  --surface-elevated: #fffaf3;
+  --focus-ring: #c8913f66;
+}

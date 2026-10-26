@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Build;
 import android.os.Environment;
 import android.content.ContentValues;
+import android.content.ContentUris;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.database.Cursor;
@@ -69,18 +70,18 @@ public class MainActivity extends BridgeActivity {
             runOnUiThread(() -> shareInvoiceImageOnUiThread(dataUrl));
         }
         @JavascriptInterface public void saveBackup(String json, String fileName) {
-            backupExecutor.execute(() -> saveBackupAutomatically(json));
+            backupExecutor.execute(() -> notifyAutoBackupResult(saveBackupAutomatically(json), fileName));
         }
         @JavascriptInterface public void saveBackupToChosenFolder(String json, String fileName) {
             backupExecutor.execute(() -> {
                 if (json == null || json.length() > 30_000_000) {
-                    notifyAutoBackupResult(false);
+                    notifyAutoBackupResult(false, fileName);
                     return;
                 }
                 String savedTree = getSharedPreferences(PREFS, MODE_PRIVATE).getString("uri_backup", "");
                 if (savedTree.isEmpty()) {
                     boolean saved = saveToDownloads(json);
-                    notifyAutoBackupResult(saved);
+                    notifyAutoBackupResult(saved, fileName);
                     return;
                 }
                 pendingSaveData = json;
@@ -92,7 +93,7 @@ public class MainActivity extends BridgeActivity {
                     clearPendingSave();
                     saved = saveToDownloads(json);
                 }
-                notifyAutoBackupResult(saved);
+                notifyAutoBackupResult(saved, fileName);
             });
         }
         @JavascriptInterface public void saveReceipt(String dataUrl, String fileName) {
@@ -199,15 +200,14 @@ public class MainActivity extends BridgeActivity {
         super.onDestroy();
     }
 
-    private void saveBackupAutomatically(String json) {
+    private boolean saveBackupAutomatically(String json) {
         if (json == null || json.length() > 30_000_000) {
-            notifyWeb("ملف النسخة كبير جدًا");
-            return;
+            return false;
         }
         String savedTree = getSharedPreferences(PREFS, MODE_PRIVATE).getString("uri_backup", "");
         boolean saved = !savedTree.isEmpty() && saveBackupToTree(json, Uri.parse(savedTree));
         if (!saved) saved = saveToDownloads(json);
-        if (!saved) notifyWeb("تعذر حفظ Ayanoo.json تلقائيًا");
+        return saved;
     }
 
     private boolean saveBackupToTree(String json, Uri treeUri) {
@@ -221,37 +221,112 @@ public class MainActivity extends BridgeActivity {
     }
 
     private boolean saveToDownloads(String json) {
+        byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            File temporary = null;
+            File previous = null;
+            File target = null;
             try {
                 File downloads = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "test");
                 if (!downloads.exists() && !downloads.mkdirs()) return false;
-                File file = new File(downloads, "Ayanoo.json");
-                try (FileOutputStream output = new FileOutputStream(file, false)) {
-                    output.write(json.getBytes(StandardCharsets.UTF_8));
+                String suffix = Long.toString(System.currentTimeMillis());
+                target = new File(downloads, "Ayanoo.json");
+                temporary = new File(downloads, "Ayanoo.json.pending-" + suffix);
+                previous = new File(downloads, "Ayanoo.json.previous-" + suffix);
+                try (FileOutputStream output = new FileOutputStream(temporary, false)) {
+                    output.write(bytes);
                     output.flush();
+                    output.getFD().sync();
                 }
+                boolean hadPrevious = target.exists();
+                if (hadPrevious && !target.renameTo(previous)) return false;
+                if (!temporary.renameTo(target)) {
+                    if (hadPrevious) previous.renameTo(target);
+                    return false;
+                }
+                if (hadPrevious) previous.delete();
                 notifyWeb("تم تحديث Ayanoo.json تلقائيًا في Downloads/test");
                 return true;
-            } catch (Exception error) { return false; }
+            } catch (Exception error) {
+                if (previous != null && previous.exists() && target != null && !target.exists()) previous.renameTo(target);
+                return false;
+            } finally {
+                if (temporary != null && temporary.exists()) temporary.delete();
+            }
         }
+        Uri collection = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
+        String suffix = Long.toString(System.currentTimeMillis());
+        String temporaryName = "Ayanoo.json.pending-" + suffix;
+        String previousName = "Ayanoo.json.previous-" + suffix;
+        Uri temporary = null;
+        Uri previous = null;
+        boolean previousRenamed = false;
+        boolean temporaryPromoted = false;
         try {
-            Uri collection = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
-            getContentResolver().delete(collection,
-                MediaStore.MediaColumns.DISPLAY_NAME + "=? AND " + MediaStore.MediaColumns.RELATIVE_PATH + "=?",
-                new String[]{"Ayanoo.json", BACKUP_RELATIVE_PATH});
             ContentValues values = new ContentValues();
-            values.put(MediaStore.MediaColumns.DISPLAY_NAME, "Ayanoo.json");
+            values.put(MediaStore.MediaColumns.DISPLAY_NAME, temporaryName);
             values.put(MediaStore.MediaColumns.MIME_TYPE, "application/json");
             values.put(MediaStore.MediaColumns.RELATIVE_PATH, BACKUP_RELATIVE_PATH);
-            Uri target = getContentResolver().insert(collection, values);
-            if (target == null) return false;
-            try (OutputStream output = getContentResolver().openOutputStream(target)) {
+            values.put(MediaStore.MediaColumns.IS_PENDING, 1);
+            temporary = getContentResolver().insert(collection, values);
+            if (temporary == null) return false;
+            try (OutputStream output = getContentResolver().openOutputStream(temporary, "w")) {
                 if (output == null) return false;
-                output.write(json.getBytes(StandardCharsets.UTF_8));
+                output.write(bytes);
                 output.flush();
+            }
+            ContentValues publish = new ContentValues();
+            publish.put(MediaStore.MediaColumns.IS_PENDING, 0);
+            if (getContentResolver().update(temporary, publish, null, null) <= 0) return false;
+
+            Uri current = findDownloadFile(collection, "Ayanoo.json");
+            if (current != null) {
+                ContentValues renameOld = new ContentValues();
+                renameOld.put(MediaStore.MediaColumns.DISPLAY_NAME, previousName);
+                if (getContentResolver().update(current, renameOld, null, null) <= 0) return false;
+                previous = current;
+                previousRenamed = true;
+            }
+            ContentValues renameNew = new ContentValues();
+            renameNew.put(MediaStore.MediaColumns.DISPLAY_NAME, "Ayanoo.json");
+            if (getContentResolver().update(temporary, renameNew, null, null) <= 0) {
+                if (previousRenamed) renameDownloadFile(previous, "Ayanoo.json");
+                return false;
+            }
+            temporaryPromoted = true;
+            if (previousRenamed) {
+                try { getContentResolver().delete(previous, null, null); } catch (Exception ignored) {}
             }
             notifyWeb("تم تحديث Ayanoo.json تلقائيًا في Downloads/test");
             return true;
+        } catch (Exception error) {
+            if (previousRenamed && previous != null) renameDownloadFile(previous, "Ayanoo.json");
+            return false;
+        } finally {
+            if (!temporaryPromoted && temporary != null) {
+                try { getContentResolver().delete(temporary, null, null); } catch (Exception ignored) {}
+            }
+        }
+    }
+
+    private Uri findDownloadFile(Uri collection, String displayName) throws Exception {
+        String[] projection = new String[] { "_id" };
+        String selection = MediaStore.MediaColumns.DISPLAY_NAME + "=? AND " + MediaStore.MediaColumns.RELATIVE_PATH + "=?";
+        try (Cursor cursor = getContentResolver().query(collection, projection, selection,
+            new String[] { displayName, BACKUP_RELATIVE_PATH }, null)) {
+            if (cursor == null) throw new IllegalStateException("Downloads query unavailable");
+            if (!cursor.moveToFirst()) return null;
+            int idIndex = cursor.getColumnIndex("_id");
+            if (idIndex < 0) throw new IllegalStateException("Downloads row has no id");
+            return ContentUris.withAppendedId(collection, cursor.getLong(idIndex));
+        }
+    }
+
+    private boolean renameDownloadFile(Uri uri, String displayName) {
+        try {
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.MediaColumns.DISPLAY_NAME, displayName);
+            return getContentResolver().update(uri, values, null, null) > 0;
         } catch (Exception error) { return false; }
     }
 
@@ -268,11 +343,9 @@ public class MainActivity extends BridgeActivity {
     }
 
     private boolean writeToTree(Uri treeUri) {
+        if ("backup".equals(pendingFolderKind))
+            return writeBackupToTreeAtomically(treeUri, pendingSaveData);
         try {
-            if ("backup".equals(pendingFolderKind)) {
-                pendingSaveName = "Ayanoo.json";
-                deleteExistingTreeFile(treeUri, pendingSaveName);
-            }
             Uri fileUri = DocumentsContract.createDocument(getContentResolver(), treeUri, pendingSaveMime, pendingSaveName);
             if (fileUri == null) return false;
             byte[] bytes = "application/json".equals(pendingSaveMime)
@@ -288,7 +361,60 @@ public class MainActivity extends BridgeActivity {
         } catch (Exception error) { return false; }
     }
 
-    private void deleteExistingTreeFile(Uri treeUri, String fileName) {
+    private boolean writeBackupToTreeAtomically(Uri treeUri, String json) {
+        Uri temporary = null;
+        Uri previous = null;
+        boolean previousRenamed = false;
+        boolean temporaryPromoted = false;
+        String nonce = Long.toString(System.currentTimeMillis()) + "-" + Long.toString(System.nanoTime());
+        String temporaryName = "Ayanoo.json.pending-" + nonce;
+        String previousName = "Ayanoo.json.previous-" + nonce;
+        try {
+            if (json == null || json.length() > 30_000_000) return false;
+            byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
+            temporary = DocumentsContract.createDocument(getContentResolver(), treeUri, "application/json", temporaryName);
+            if (temporary == null) return false;
+            try (OutputStream output = getContentResolver().openOutputStream(temporary, "w")) {
+                if (output == null) throw new IllegalStateException("تعذر فتح ملف النسخة المؤقت");
+                output.write(bytes);
+                output.flush();
+            }
+            if (!documentHasExpectedLength(temporary, bytes.length)) {
+                try { DocumentsContract.deleteDocument(getContentResolver(), temporary); } catch (Exception ignored) {}
+                return false;
+            }
+            Uri current = findTreeFile(treeUri, "Ayanoo.json");
+            if (current != null) {
+                previous = DocumentsContract.renameDocument(getContentResolver(), current, previousName);
+                if (previous == null) return false;
+                previousRenamed = true;
+            }
+            Uri replacement = DocumentsContract.renameDocument(getContentResolver(), temporary, "Ayanoo.json");
+            if (replacement == null) {
+                if (previousRenamed && previous != null)
+                    DocumentsContract.renameDocument(getContentResolver(), previous, "Ayanoo.json");
+                return false;
+            }
+            temporaryPromoted = true;
+            if (previousRenamed && previous != null) {
+                try { DocumentsContract.deleteDocument(getContentResolver(), previous); } catch (Exception ignored) {}
+            }
+            notifyWeb("تم تحديث Ayanoo.json تلقائيًا في المجلد المختار");
+            clearPendingSave();
+            return true;
+        } catch (Exception error) {
+            if (previousRenamed && previous != null) {
+                try { DocumentsContract.renameDocument(getContentResolver(), previous, "Ayanoo.json"); } catch (Exception ignored) {}
+            }
+            return false;
+        } finally {
+            if (!temporaryPromoted && temporary != null) {
+                try { DocumentsContract.deleteDocument(getContentResolver(), temporary); } catch (Exception ignored) {}
+            }
+        }
+    }
+
+    private Uri findTreeFile(Uri treeUri, String fileName) throws Exception {
         Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(
             treeUri,
             DocumentsContract.getTreeDocumentId(treeUri)
@@ -298,17 +424,29 @@ public class MainActivity extends BridgeActivity {
             DocumentsContract.Document.COLUMN_DISPLAY_NAME
         };
         try (Cursor cursor = getContentResolver().query(childrenUri, projection, null, null, null)) {
-            if (cursor == null) return;
+            if (cursor == null) throw new IllegalStateException("تعذر فحص المجلد المختار");
             int idIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID);
             int nameIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME);
+            if (idIndex < 0 || nameIndex < 0) throw new IllegalStateException("معلومات ملف النسخة غير متاحة");
             while (cursor.moveToNext()) {
-                String existingName = nameIndex >= 0 ? cursor.getString(nameIndex) : "";
-                if (!fileName.equals(existingName) || idIndex < 0) continue;
-                String documentId = cursor.getString(idIndex);
-                Uri documentUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, documentId);
-                try { DocumentsContract.deleteDocument(getContentResolver(), documentUri); } catch (Exception ignored) {}
+                if (fileName.equals(cursor.getString(nameIndex))) {
+                    String documentId = cursor.getString(idIndex);
+                    return DocumentsContract.buildDocumentUriUsingTree(treeUri, documentId);
+                }
             }
+            return null;
         }
+    }
+
+    private boolean documentHasExpectedLength(Uri uri, long expectedLength) {
+        try (InputStream input = getContentResolver().openInputStream(uri)) {
+            if (input == null) return false;
+            long length = 0;
+            byte[] buffer = new byte[8192];
+            int count;
+            while ((count = input.read(buffer)) != -1) length += count;
+            return length == expectedLength;
+        } catch (Exception error) { return false; }
     }
 
     private String getFolderName(String kind) {
@@ -374,11 +512,12 @@ public class MainActivity extends BridgeActivity {
         });
     }
 
-    private void notifyAutoBackupResult(boolean success) {
+    private void notifyAutoBackupResult(boolean success, String fileName) {
         runOnUiThread(() -> {
             if (getBridge() == null || getBridge().getWebView() == null) return;
+            String safeName = (fileName == null ? "" : fileName).replace("\\", "\\\\").replace("'", "\\'");
             getBridge().getWebView().evaluateJavascript(
-                "if (window.mandourAutoBackupResult) window.mandourAutoBackupResult(" + success + ", '" + (success ? "" : "تعذر الحفظ التلقائي؛ سيُجرّب Downloads/test.") + "');",
+                "if (window.mandourAutoBackupResult) window.mandourAutoBackupResult(" + success + ", '" + (success ? "" : "تعذر حفظ النسخة؛ لم يتم تغيير النسخة السابقة.") + "', '" + safeName + "');",
                 null
             );
         });
