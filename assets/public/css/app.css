@@ -5450,3 +5450,48 @@ body.check-dock-open main {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+
+/* Final mobile polish: make the home purpose and touch targets clear. */
+.dashboard-copy p {
+  max-width: 28ch;
+  text-wrap: pretty;
+}
+.home-quick-actions button {
+  min-height: 46px;
+  border-radius: 13px;
+  font-weight: 800;
+}
+.cashier-shortcuts button {
+  min-height: 46px;
+  border-radius: 12px;
+  line-height: 1.35;
+}
+@media (max-width: 390px) {
+  .dashboard-hero {
+    min-height: 166px;
+    padding: 16px 14px;
+  }
+  .dashboard-copy {
+    max-width: 68%;
+  }
+  .dashboard-copy strong {
+    font-size: 18px;
+    line-height: 1.45;
+  }
+  .dashboard-copy p {
+    font-size: 10px;
+    line-height: 1.55;
+  }
+  .dashboard-art {
+    width: 45%;
+    height: 158px;
+  }
+  .home-quick-actions {
+    gap: 8px;
+  }
+  .home-quick-actions button {
+    padding-inline: 7px;
+    font-size: 10px;
+  }
+}
