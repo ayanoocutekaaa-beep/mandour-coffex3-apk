@@ -5276,6 +5276,7 @@ body.dark-theme .backup-history-item { background: #2a211b; }
 }
 .check-order-dock .check-commit {
   flex: 0 0 auto;
+  transform: translateY(5px);
   width: auto;
   min-width: 150px;
   min-height: 48px;
