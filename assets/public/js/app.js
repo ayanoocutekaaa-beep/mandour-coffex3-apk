@@ -57,6 +57,43 @@ const BASE_BEANS = [
   },
 ];
 const STORE_KEY = "mandour-coffee-manager-v3";
+const TABLE_NUMBERS = ["1", "2", "3", "4", "5"];
+function emptyPendingOrder() {
+  return { items: [], context: null, customerName: "" };
+}
+function normalizePendingOrder(value) {
+  if (!value || typeof value !== "object") return emptyPendingOrder();
+  const items = (Array.isArray(value.items) ? value.items : [])
+    .filter((item) => item && typeof item === "object" && !Array.isArray(item))
+    .slice(0, 100)
+    .map((item) => {
+      const qty = Math.max(1, Math.min(999, Math.round(Number(item.qty) || 1)));
+      const unitPrice = Math.max(0, Number(item.unitPrice) || 0);
+      return {
+        productId: String(item.productId || ""),
+        name: String(item.name || "صنف").slice(0, 100),
+        optionId: String(item.optionId || ""),
+        optionLabel: String(item.optionLabel || "").slice(0, 60),
+        unitPrice,
+        lineDiscount: Math.max(0, Math.min(unitPrice * qty, Number(item.lineDiscount) || 0)),
+        qty,
+        customerName: String(item.customerName || "").slice(0, 60),
+      };
+    });
+  const rawContext = value.context && typeof value.context === "object" ? value.context : null;
+  const context = rawContext
+    ? {
+        checkId: String(rawContext.checkId || ""),
+        mode: rawContext.mode === "takeaway" ? "takeaway" : "inside",
+        tableName: String(rawContext.tableName || "").trim().slice(0, 24),
+      }
+    : null;
+  return {
+    items,
+    context,
+    customerName: String(value.customerName || "").slice(0, 60),
+  };
+}
 const LocalNotifications =
   window.Capacitor?.Plugins?.LocalNotifications ||
   window.Capacitor?.registerPlugin?.("LocalNotifications") ||
@@ -132,22 +169,26 @@ function loadData() {
       loyalty: saved.loyalty && typeof saved.loyalty === "object" ? saved.loyalty : {},
       staffName: String(saved.staffName || ""),
       auditActor: String(saved.auditActor || ""),
-    };
-  } catch {
-    return {
-      customBeans: [],
-      customers: [],
-      invoices: [],
-      deletedInvoices: [],
-      checks: [],
-      paymentQrs: {},
-      activityLog: [],
-      notifications: [],
-      inventory: [],
-      loyalty: {},
-      staffName: "",
-      auditActor: "",
-    };
+          pendingOrder: normalizePendingOrder(saved.pendingOrder),
+    favoriteCustomers: Array.isArray(saved.favoriteCustomers) ? saved.favoriteCustomers : [],
+  };
+} catch {
+  return {
+    customBeans: [],
+    customers: [],
+    invoices: [],
+    deletedInvoices: [],
+    checks: [],
+    paymentQrs: {},
+    activityLog: [],
+    notifications: [],
+    inventory: [],
+    loyalty: {},
+    staffName: "",
+    auditActor: "",
+    pendingOrder: emptyPendingOrder(),
+    favoriteCustomers: [],
+  };
   }
 }
 let lastPersistedState = JSON.stringify(data);
@@ -327,14 +368,10 @@ function saveChangeBackup(description = "تعديل") {
   try {
     if (bridge?.saveBackupToChosenFolder && bridge?.getFolderName?.("backup")) {
       bridge.saveBackupToChosenFolder(json, fileName);
-      rememberBackupFile(fileName);
-      markBackupDone();
       return;
     }
     if (bridge?.saveBackup) {
       bridge.saveBackup(json, fileName);
-      rememberBackupFile(fileName);
-      markBackupDone();
       return;
     }
   } catch (error) {
@@ -372,8 +409,6 @@ function downloadBackup() {
   const json = JSON.stringify(backupSnapshot(), null, 2);
   if (window.MandourNative?.saveBackup) {
     window.MandourNative.saveBackup(json, backupFileName());
-    rememberBackupFile(backupFileName());
-    markBackupDone();
     return;
   }
   const blob = new Blob([json], { type: "application/json;charset=utf-8" });
@@ -400,7 +435,7 @@ async function shareBackup() {
   ) {
     try {
       await navigator.share({
-        title: "نسخة بيانات مندور كوفي",
+        title: "Mandour version",
         text: "نسخة احتياطية كاملة لبيانات التطبيق",
         files: [file],
       });
@@ -440,13 +475,24 @@ function normalizeImportedData(value) {
     loyalty: candidate.loyalty && typeof candidate.loyalty === "object" ? candidate.loyalty : {},
     staffName: String(candidate.staffName || ""),
     auditActor: String(candidate.auditActor || ""),
-  };
+      pendingOrder: normalizePendingOrder(candidate.pendingOrder),
+  favoriteCustomers: Array.isArray(candidate.favoriteCustomers) ? candidate.favoriteCustomers : [],
+};
   if (
     !result.customBeans.length &&
     !result.customers.length &&
     !result.invoices.length &&
+    !result.deletedInvoices.length &&
     !result.checks.length &&
-    !Object.keys(result.paymentQrs).length
+    !result.notifications.length &&
+    !result.inventory.length &&
+    !Object.keys(result.loyalty).length &&
+    !result.pendingOrder.items.length &&
+    !result.pendingOrder.context &&
+    !result.pendingOrder.customerName &&
+    !Object.keys(result.paymentQrs).length &&
+    !result.staffName &&
+    !result.auditActor
   )
     throw new Error("النسخة لا تحتوي على بيانات محفوظة");
   return result;
@@ -492,7 +538,17 @@ function mergeBackupRecords(current, incoming) {
 function mergeImportedData(imported) {
   const next = { ...data };
   const added = {};
-  for (const key of ["customers", "customBeans", "invoices", "checks"]) {
+  const recordKeys = [
+  "customers",
+  "customBeans",
+  "invoices",
+  "deletedInvoices",
+  "checks",
+  "notifications",
+  "inventory",
+  "favoriteCustomers",
+];
+  for (const key of recordKeys) {
     const result = mergeBackupRecords(
       Array.isArray(data[key]) ? data[key] : [],
       Array.isArray(imported[key]) ? imported[key] : [],
@@ -502,15 +558,45 @@ function mergeImportedData(imported) {
   }
   next.activityLog = [...(data.activityLog || [])];
   const logIds = new Set(next.activityLog.map((x) => x.id));
+  let activityAdded = 0;
   for (const entry of imported.activityLog || [])
     if (entry?.id && !logIds.has(entry.id)) {
       next.activityLog.push(entry);
       logIds.add(entry.id);
+      activityAdded++;
     }
   next.activityLog = next.activityLog
     .sort((a, b) => String(b.at || "").localeCompare(String(a.at || "")))
     .slice(0, 300);
+  added.activityLog = activityAdded;
   next.auditActor = data.auditActor || imported.auditActor || "";
+  next.staffName = data.staffName || imported.staffName || "";
+  const currentLoyalty = data.loyalty || {};
+  const importedLoyalty = imported.loyalty || {};
+  next.loyalty = { ...importedLoyalty, ...currentLoyalty };
+  for (const key of Object.keys(importedLoyalty)) {
+    if (!(key in currentLoyalty)) added.loyalty = (added.loyalty || 0) + 1;
+    else next.loyalty[key] = Math.max(
+      Number(currentLoyalty[key]) || 0,
+      Number(importedLoyalty[key]) || 0,
+    );
+  }
+  const currentPending = normalizePendingOrder(data.pendingOrder);
+  const importedPending = normalizePendingOrder(imported.pendingOrder);
+  const hasCurrentPendingItems = currentPending.items.length > 0;
+  const hasImportedPendingItems = importedPending.items.length > 0;
+  const hasCurrentPendingMetadata = !!currentPending.context || !!currentPending.customerName;
+  const hasImportedPendingMetadata = !!importedPending.context || !!importedPending.customerName;
+  next.pendingOrder = hasCurrentPendingItems
+    ? currentPending
+    : hasImportedPendingItems
+      ? importedPending
+      : hasCurrentPendingMetadata
+        ? currentPending
+        : importedPending;
+  added.pendingOrder = !hasCurrentPendingItems && hasImportedPendingItems
+    ? 1
+    : !hasCurrentPendingMetadata && hasImportedPendingMetadata ? 1 : 0;
   next.paymentQrs = {
     ...(imported.paymentQrs || {}),
     ...(data.paymentQrs || {}),
@@ -523,25 +609,31 @@ function mergeImportedData(imported) {
 function importBackupFile(file) {
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = () => {
+  reader.onload = async () => {
     try {
       const imported = normalizeImportedData(JSON.parse(reader.result));
       const total = [
         imported.invoices.length,
+        imported.deletedInvoices.length,
         imported.checks.length,
         imported.customers.length,
         imported.customBeans.length,
+        imported.notifications.length,
+        imported.inventory.length,
+        Object.keys(imported.loyalty || {}).length,
+        imported.activityLog.length,
+        imported.pendingOrder.items.length || imported.pendingOrder.context || imported.pendingOrder.customerName ? 1 : 0,
       ].reduce((a, b) => a + b, 0);
-      if (!total && !Object.keys(imported.paymentQrs).length)
+      if (!total && !Object.keys(imported.paymentQrs).length && !imported.staffName && !imported.auditActor)
         throw new Error("الملف لا تحتوي على بيانات محفوظة");
-      const result = mergeImportedData(imported);
-      const newTotal = Object.values(result.added).reduce((a, b) => a + b, 0);
-      if (
-        !confirm(
-          `سيتم دمج بيانات النسخة مع بيانات التطبيق الحالية. سيُضاف ${fmt.format(newTotal)} سجل جديد، وستبقى البيانات الموجودة كما هي. العناصر المكررة لن تُضاف مرة أخرى. هل تريد المتابعة؟`,
-        )
-      )
-        return;
+const result = mergeImportedData(imported);
+const newTotal = Object.values(result.added).reduce((a, b) => a + b, 0);
+const okImport = await appConfirm({
+  title: "دمج النسخة الاحتياطية",
+  message: `هيتم دمج بيانات النسخة مع البيانات الحالية. سيُضاف ${fmt.format(newTotal)} سجل جديد، والبيانات الحالية مش هتتغير. العناصر المكررة مش هتتضاف تاني.`,
+  confirmText: "ابدأ الدمج",
+});
+if (!okImport) return;
       const previous = data;
       data = result.data;
       try {
@@ -552,7 +644,7 @@ function importBackupFile(file) {
           "مساحة حفظ التطبيق غير كافية لإتمام الدمج؛ لم يتم تغيير البيانات",
         );
       }
-      const summary = `عملاء ${result.added.customers}، توليفات ${result.added.customBeans}، فواتير ${result.added.invoices}، شيكات ${result.added.checks}`;
+      const summary = `عملاء ${result.added.customers}، توليفات ${result.added.customBeans}، فواتير ${result.added.invoices}، شيكات ${result.added.checks}، محذوفات ${result.added.deletedInvoices}، مخزون ${result.added.inventory}، إشعارات ${result.added.notifications}، ولاء ${result.added.loyalty || 0}`;
       notify(
         newTotal
           ? `تم الدمج بنجاح: ${summary}`
@@ -753,7 +845,7 @@ function refreshHome() {
   const tableRoot = document.getElementById("home-table-status");
   if (tableRoot) {
     const activeTables = data.checks.filter((c) => c.status === "open" || c.status === "partial" || c.status === "deferred").slice(0, 10);
-    tableRoot.innerHTML = activeTables.length ? activeTables.map((c) => `<button type="button" class="home-table-card ${c.status}" data-view="checks"><strong>${c.mode === "inside" ? escapeHTML(c.tableName || "—") : "خارجية"}</strong><span>${c.status === "partial" ? "مدفوع جزئيًا" : c.status === "deferred" ? "مؤجل" : "مفتوحة"}</span><small>${money(checkDue(c))} متبقي</small></button>`).join("") : '<div class="empty">لا توجد طاولات نشطة.</div>';
+    tableRoot.innerHTML = activeTables.length ? activeTables.map((c) => `<button type="button" class="home-table-card ${c.status}" data-open-check="${escapeHTML(c.id)}"><strong>${c.mode === "inside" ? escapeHTML(c.tableName || "—") : "خارجية"}</strong><span>${c.status === "partial" ? "مدفوع جزئيًا" : c.status === "deferred" ? "مؤجل" : "مفتوحة"}</span><small>${money(checkDue(c))} متبقي</small></button>`).join("") : '<div class="empty">لا توجد طاولات نشطة.</div>';
   }
   if (recentRoot) {
     const recent = [
@@ -764,20 +856,18 @@ function refreshHome() {
   }
   updateNotificationBadge();
 }
-const viewTitles = Object.freeze({
-  home: "مندور كوفي",
+const views = ["home", "invoice", "blends", "checks", "notifications", "tools"];
+const titles = {
+  home: "MANDOURCOFFEE ",
   invoice: "إنشاء فاتورة",
   blends: "العملاء والتوليفات",
+  "add-bean": "إضافة نوع بن",
   checks: "الشيكات",
   notifications: "مركز الإشعارات",
   tools: "المزيد والأدوات",
-});
-const views = Object.freeze(Object.keys(viewTitles));
-function viewFromHash(hash = window.location.hash) {
-  const candidate = decodeURIComponent(String(hash).replace(/^#/, "").split("?")[0]).trim();
-  return views.includes(candidate) ? candidate : "home";
-}
+};
 function openView(name, { push = false, animate = true } = {}) {
+  const previousView = currentView;
   if (!views.includes(name)) name = "home";
   if (push && name !== currentView)
     history.pushState(
@@ -794,8 +884,19 @@ function openView(name, { push = false, animate = true } = {}) {
   });
   const next = document.getElementById(`${name}-view`);
   if (!next) return;
+  const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  if (animate && previousView !== name && !reduceMotion && typeof next.animate === "function") {
+    const direction = document.documentElement.dir === "rtl" ? 1 : -1;
+    next.animate(
+      [
+        { opacity: 0.72, transform: `translateX(${direction * 8}px)` },
+        { opacity: 1, transform: "translateX(0)" },
+      ],
+      { duration: 170, easing: "cubic-bezier(.2,.75,.25,1)" },
+    );
+  }
   document.getElementById("back-button").hidden = name === "home";
-  document.getElementById("bar-title").textContent = viewTitles[name];
+  document.getElementById("bar-title").textContent = titles[name];
   currentView = name;
   syncPaidSound();
   document.body.classList.toggle("invoice-active", name === "invoice");
@@ -815,30 +916,56 @@ function openView(name, { push = false, animate = true } = {}) {
     renderCheckMenu();
     renderExtraDrinks();
     renderChecks();
+    renderCheckTargets();
+    restorePendingOrderContext();
     renderCheckDraft();
     syncCheckTarget();
-    setCheckPanel("list");
+    setCheckPanel(checkDraft.length ? "orders" : "list");
   }
   if (name === "notifications") renderNotifications();
-  if (name === "tools") { renderInventory(); renderLoyalty(); renderSalesDashboard(); renderBackupHistory(); renderDeletedInvoices(); updatePinStatus(); }
+  if (name === "tools") { renderInventory(); renderLoyalty(); renderSalesDashboard(); renderBackupHistory(); renderDeletedInvoices(); updatePinStatus(); renderFavCustomers(); }
   refreshHome();
   window.scrollTo(0, 0);
 }
 document.getElementById("back-button").addEventListener("click", () => {
   if (currentView !== "home" && history.state?.mandourView) history.back();
-  else openView("home", { animate: false });
+  else openView("home");
 });
 document.addEventListener("click", (event) => {
+  const openCheckButton = event.target.closest("[data-open-check]");
+  if (openCheckButton) {
+    const checkId = openCheckButton.dataset.openCheck;
+    openView("checks", { push: true });
+    checkFilter = "unpaid";
+    checkModeFilter = "all";
+    setCheckPanel("list");
+    renderChecks();
+    const card = [...document.querySelectorAll("[data-check-card-id]")].find(
+      (element) => element.dataset.checkCardId === checkId,
+    );
+    if (card) {
+      expandedCheckIds.add(checkId);
+      const accordion = card.querySelector(".check-accordion");
+      if (accordion) accordion.open = true;
+      requestAnimationFrame(() => card.scrollIntoView({ behavior: "smooth", block: "center" }));
+    }
+    return;
+  }
   const button = event.target.closest("[data-view]");
-  if (button) openView(button.dataset.view, { push: true, animate: false });
+  if (button) openView(button.dataset.view, { push: true });
 });
 window.addEventListener("popstate", (event) =>
-  openView(event.state?.mandourView || viewFromHash(), { push: false, animate: false }),
-);
-window.addEventListener("hashchange", () =>
-  openView(viewFromHash(), { push: false, animate: false }),
+  openView(event.state?.mandourView || "home"),
 );
 window.mandourAndroidBack = function () {
+  if (!document.getElementById("app-confirm-modal").hidden) {
+    closeAppConfirm(false);
+    return true;
+  }
+  if (!document.getElementById("app-prompt-modal").hidden) {
+    closeAppPrompt(null);
+    return true;
+  }
   if (!document.getElementById("receipt-modal").hidden) {
     closeReceipt();
     return true;
@@ -857,6 +984,16 @@ window.mandourAndroidBack = function () {
   return true;
 };
 document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !document.getElementById("app-confirm-modal").hidden) {
+    closeAppConfirm(false);
+    event.preventDefault();
+    return;
+  }
+  if (event.key === "Escape" && !document.getElementById("app-prompt-modal").hidden) {
+    closeAppPrompt(null);
+    event.preventDefault();
+    return;
+  }
   if (
     event.key === "Escape" &&
     !document.getElementById("receipt-modal").hidden
@@ -1082,13 +1219,16 @@ document.getElementById("save-invoice").addEventListener("click", () => {
     createdAt: savedAt,
     savedAt,
   };
+  const beforeInvoiceSave = JSON.stringify(data);
   data.invoices.unshift(invoice);
   awardLoyaltyStamp(invoice.customer);
   try {
     persist();
   } catch {
-    data.invoices.shift();
-    notify("مساحة التخزين ممتلئة؛ احذف صورًا كبيرة أو فواتير قديمة");
+    data = JSON.parse(beforeInvoiceSave);
+    renderCustomers();
+    refreshHome();
+    notify("تعذر حفظ الفاتورة؛ لم تُسجّل الفاتورة أو ختم الولاء");
     return;
   }
   invoiceGrams = {};
@@ -1307,6 +1447,7 @@ function beginDeleteInvoice(id) {
   document.getElementById("delete-step-one").hidden = false;
   document.getElementById("delete-step-two").hidden = true;
   document.getElementById("delete-modal").hidden = false;
+document.body.classList.add("modal-open");
 }
 document.getElementById("delete-next").addEventListener("click", () => {
   if (!pendingDeleteInvoiceId) return;
@@ -1349,6 +1490,7 @@ document.getElementById("delete-final").addEventListener("click", () => {
 function closeDeleteDialog() {
   pendingDeleteInvoiceId = null;
   document.getElementById("delete-modal").hidden = true;
+document.body.classList.remove("modal-open");
 }
 document
   .querySelectorAll("[data-close-delete]")
@@ -1432,7 +1574,7 @@ function drawReceipt(invoice, canvas) {
   const items = invoice.items || [];
   const w = 1080;
   const rowHeight = 92;
-  const headerHeight = 590;
+  const headerHeight = 630;
   const footerHeight = 420;
   const hasSeasoning = Number(invoice.seasoningFee || 0) > 0;
   const h =
@@ -1456,7 +1598,7 @@ function drawReceipt(invoice, canvas) {
   ctx.fillStyle = "#503827";
   ctx.textAlign = "center";
   ctx.font = "800 64px Cairo, Arial, sans-serif";
-  ctx.fillText("مندور كوفي", w / 2, 88);
+  ctx.fillText("MANDOURCOFFEE ", w / 2, 88);
   ctx.font = "700 32px Cairo, Arial, sans-serif";
   ctx.fillStyle = "#84674d";
   ctx.fillText(invoiceKind(invoice), w / 2, 143);
@@ -1491,44 +1633,43 @@ function drawReceipt(invoice, canvas) {
   ctx.fillText(`العميل: ${invoice.customer || "عميل نقدي"}`, 1010, 258);
   ctx.fillText(`البلد: ${invoice.customerCountry || "—"}`, 1010, 298);
   ctx.fillText(`العامل: ${data.staffName || data.auditActor || "مستخدم الجهاز"}`, 1010, 338);
-  ctx.fillText(
-    `التحضير: ${invoice.roastMode === "m7awag" ? "محوّج" : "سادة"}`,
-    1010,
-    338,
-  );
-
-  ctx.fillText(
-    `الوزن الإجمالي: ${fmt.format(items.reduce((sum, item) => sum + Number(item.grams || 0), 0))} جم`,
-    1010,
-    378,
-  );
-  ctx.fillText(
-    `الصلاحية حتى: ${invoice.expiryDate ? dateText(invoice.expiryDate) : "غير محدد"}`,
-    1010,
-    418,
-  );
-  ctx.fillText(
-    `طريقة الدفع: ${paymentMethodLabel(invoice.paymentMethod)}${invoice.paymentMethod === "vodafone" || invoice.paymentMethod === "instapay" ? " · رقم الاستقبال: 01097110611" : ""}`,
-    1010,
-    458,
-    790,
-  );
-  ctx.fillText(
-    invoice.branchType
-      ? `${branchTypeLabel(invoice.branchType)}${invoice.parentInvoiceNumber ? ` من ${invoice.parentInvoiceNumber} · ${dateText(invoice.parentInvoiceDate)}` : ""}`
-      : "مستند جديد",
-    1010,
-    498,
-  );
-  ctx.fillText(
-    `حذف تلقائي في: ${invoice.autoDeleteAt ? dateText(invoice.autoDeleteAt) : "غير محدد"}`,
-    1010,
-    538,
-  );
+ctx.fillText(
+  `التحضير: ${invoice.roastMode === "m7awag" ? "محوّج" : "سادة"}`,
+  1010,
+  378,
+);
+ctx.fillText(
+  `الوزن الإجمالي: ${fmt.format(items.reduce((sum, item) => sum + Number(item.grams || 0), 0))} جم`,
+  1010,
+  418,
+);
+ctx.fillText(
+  `الصلاحية حتى: ${invoice.expiryDate ? dateText(invoice.expiryDate) : "غير محدد"}`,
+  1010,
+  458,
+);
+ctx.fillText(
+  `طريقة الدفع: ${paymentMethodLabel(invoice.paymentMethod)}${invoice.paymentMethod === "vodafone" || invoice.paymentMethod === "instapay" ? " · رقم الاستقبال: 01097110611" : ""}`,
+  1010,
+  498,
+  790,
+);
+ctx.fillText(
+  invoice.branchType
+    ? `${branchTypeLabel(invoice.branchType)}${invoice.parentInvoiceNumber ? ` من ${invoice.parentInvoiceNumber} · ${dateText(invoice.parentInvoiceDate)}` : ""}`
+    : "مستند جديد",
+  1010,
+  538,
+);
+ctx.fillText(
+  `حذف تلقائي في: ${invoice.autoDeleteAt ? dateText(invoice.autoDeleteAt) : "غير محدد"}`,
+  1010,
+  578,
+);
   drawMapLocationQr(ctx, invoice, canvas);
   drawPaymentLogo(invoice.paymentMethod, 62, 432, 110, 54, invoice, canvas);
   drawProviderPaymentQr(ctx, invoice, canvas);
-  const tableY = 570;
+  const tableY = 610;
   ctx.fillStyle = "#ede2d2";
   ctx.fillRect(62, tableY, w - 124, 64);
   ctx.fillStyle = "#503827";
@@ -1580,7 +1721,7 @@ function drawReceipt(invoice, canvas) {
   ctx.font = "700 25px Cairo, Arial, sans-serif";
   ctx.fillStyle = "#84674d";
   ctx.textAlign = "center";
-  ctx.fillText("شكرًا لثقتكم · مندور كوفي", w / 2, afterTotalY + 60);
+  ctx.fillText("شكرًا لثقتكم · MANDOURCOFFEE ", w / 2, afterTotalY + 60);
   ctx.font = "700 25px Cairo, Arial, sans-serif";
   ctx.fillStyle = "#503827";
   ctx.fillText(
@@ -1738,7 +1879,7 @@ document.getElementById("receipt-share").addEventListener("click", async () => {
     if (navigator.canShare?.({ files: [file] }) && navigator.share) {
       await navigator.share({
         title: `إيصال ${activeReceipt.number}`,
-        text: "إيصال من مندور كوفي",
+        text: "إيصال من MANDOURCOFFEE ",
         files: [file],
       });
       return;
@@ -2420,11 +2561,153 @@ const CHECK_MENU = [
     options: [{ id: "regular", label: "كوب", price: 30 }],
   },
 ];
-let checkDraft = [];
+let checkDraft = Array.isArray(data.pendingOrder?.items) ? data.pendingOrder.items : [];
+let checkDraftContext = data.pendingOrder?.context || null;
+let checkDraftUnresolved = false;
 let checkFilter = "unpaid";
 let checkModeFilter = "all";
 let checkPanel = "list";
 let moveState = null;
+let pendingDraftSaveWarning = false;
+function normalizeTableName(value) {
+  let normalized = String(value || "").trim().replace(/[٠-٩۰-۹]/g, (digit) => {
+    const code = digit.charCodeAt(0);
+    return String(code >= 0x06f0 ? code - 0x06f0 : code - 0x0660);
+  });
+  if (/^\d+$/.test(normalized)) {
+    const number = Number(normalized);
+    if (number >= 1 && number <= 5) normalized = String(number);
+  }
+  return normalized.slice(0, 24);
+}
+function currentOrderContext() {
+  const selectedId = document.getElementById("check-existing")?.value || "";
+  const existing = availableChecks().find((check) => check.id === selectedId);
+  const mode = existing?.mode || document.getElementById("check-service-mode")?.value || "inside";
+  const rawTable = existing?.tableName || document.getElementById("check-table-name")?.value || "";
+  return {
+    checkId: existing?.id || "",
+    mode: mode === "takeaway" ? "takeaway" : "inside",
+    tableName: mode === "inside" ? normalizeTableName(rawTable) : "",
+  };
+}
+function sameOrderContext(a, b) {
+  if (!a || !b) return false;
+  if (a.checkId || b.checkId) return a.checkId === b.checkId;
+  return a.mode === b.mode && normalizeTableName(a.tableName) === normalizeTableName(b.tableName);
+}
+function orderContextLabel(context) {
+  if (!context) return "وجهة غير محددة";
+  const table = context.mode === "inside"
+    ? `طاولة ${escapeHTML(context.tableName || "غير محددة")}`
+    : "تيك أواي";
+  return context.checkId ? `الحساب المفتوح · ${table}` : `حساب جديد · ${table}`;
+}
+function savePendingOrderDraft() {
+  const customerName = document.getElementById("check-customer")?.value || data.pendingOrder?.customerName || "";
+  data.pendingOrder = normalizePendingOrder({
+    items: checkDraft,
+    context: checkDraftContext,
+    customerName,
+  });
+  try {
+    const serialized = JSON.stringify(data);
+    localStorage.setItem(STORE_KEY, serialized);
+    lastPersistedState = serialized;
+    pendingDraftSaveWarning = false;
+    scheduleChangeBackup("مسودة الطلب");
+    scheduleAutoBackupCheck();
+    return true;
+  } catch (error) {
+    if (!pendingDraftSaveWarning) notify("تعذر حفظ المسودة على الجهاز؛ أبقِ التطبيق مفتوحًا وحاول مرة أخرى");
+    pendingDraftSaveWarning = true;
+    return false;
+  }
+}
+function restoreOrderContextToForm(context = checkDraftContext) {
+  const existingSelect = document.getElementById("check-existing");
+  const modeSelect = document.getElementById("check-service-mode");
+  const tableInput = document.getElementById("check-table-name");
+  const matchingCheck = context?.checkId
+    ? availableChecks().find((check) => check.id === context.checkId)
+    : null;
+  if (existingSelect) existingSelect.value = matchingCheck?.id || "";
+  if (modeSelect) modeSelect.value = matchingCheck?.mode || context?.mode || "inside";
+  if (tableInput) tableInput.value = matchingCheck?.tableName || context?.tableName || "";
+  checkDraftUnresolved = Boolean(checkDraft.length && context?.checkId && !matchingCheck);
+  return matchingCheck;
+}
+function restorePendingOrderContext() {
+  const saved = normalizePendingOrder(data.pendingOrder);
+  checkDraft = saved.items;
+  checkDraftContext = saved.context;
+  const customerInput = document.getElementById("check-customer");
+  if (customerInput) customerInput.value = saved.customerName;
+  restoreOrderContextToForm(checkDraftContext);
+  // استعادة العميل الحالي من المسودة
+  const keys = getCustomerKeysFromDraft();
+  currentCustomerKey = keys[0] || "";
+}
+async function acceptOrderContextChange(nextContext) {
+  if (!checkDraft.length || !checkDraftContext || sameOrderContext(checkDraftContext, nextContext)) {
+    checkDraftContext = nextContext;
+    checkDraftUnresolved = false;
+    savePendingOrderDraft();
+    return true;
+  }
+  const move = await appConfirm({
+    title: "نقل المسودة",
+    message: `المسودة الحالية مرتبطة بـ${orderContextLabel(checkDraftContext)}. هل تحب ننقل كل الأصناف من غير حذف إلى ${orderContextLabel(nextContext)}؟`,
+    confirmText: "انقل الأصناف",
+    cancelText: "سيبها زي ما هي",
+  });
+  if (!move) {
+    restoreOrderContextToForm(checkDraftContext);
+    syncCheckTarget();
+    notify("لم تتغير وجهة الطلب، وما زالت الأصناف محفوظة في المسودة");
+    return false;
+  }
+  checkDraftContext = nextContext;
+  checkDraftUnresolved = false;
+  savePendingOrderDraft();
+  return true;
+}
+function renderTableNumberSelector() {
+  const root = document.getElementById("table-number-selector");
+  if (!root) return;
+  const mode = document.getElementById("check-service-mode")?.value || "inside";
+  root.hidden = mode !== "inside";
+  const tableInput = document.getElementById("check-table-name");
+  const existingId = document.getElementById("check-existing")?.value || "";
+  const selectedCheck = availableChecks().find((check) => check.id === existingId);
+  const selectedTable = normalizeTableName(tableInput?.value || "");
+  const selectedNumber = TABLE_NUMBERS.includes(selectedTable) ? selectedTable : "";
+  const activeForTable = (number) => activeChecks().filter(
+    (check) => check.mode === "inside" && normalizeTableName(check.tableName) === number,
+  );
+  const selectedBusy = selectedNumber ? activeForTable(selectedNumber) : [];
+  let status = "اختار رقم الطاولة قبل إضافة المشروبات.";
+  if (selectedCheck) {
+    status = `الأصناف ستُضاف إلى الحساب المفتوح على ${selectedCheck.mode === "inside" ? `طاولة ${escapeHTML(selectedCheck.tableName || "—")}` : "تيك أواي"}.`;
+  } else if (selectedNumber && selectedBusy.length === 1) {
+    const occupied = selectedBusy[0];
+    status = `للطاولة حساب نشط · المتبقي ${money(checkDue(occupied))}.` +
+      `<button type="button" class="table-use-open-check" data-table-use-check="${escapeHTML(occupied.id)}">إضافة إلى الحساب المفتوح</button>`;
+  } else if (selectedNumber && selectedBusy.length > 1) {
+    status = `يوجد ${fmt.format(selectedBusy.length)} حسابات نشطة على الطاولة. اختر الحساب المناسب من قائمة الحسابات المفتوحة.`;
+  } else if (selectedNumber) {
+    status = "الطاولة متاحة. حفظ الطلب سينشئ حسابًا جديدًا، ويمكنك اختيار حساب قائم من القائمة إذا كان الطلب تابعًا له.";
+  }
+  if (checkDraftUnresolved) {
+    status = "الحساب الذي كانت المسودة مرتبطة به لم يعد مفتوحًا. اختر وجهة جديدة؛ سيُطلب تأكيد نقل الأصناف قبل تغييرها.";
+  }
+  const locked = Boolean(selectedCheck);
+  root.innerHTML = `<div class="table-number-grid" role="group" aria-label="أرقام الطاولات من ١ إلى ٥">${TABLE_NUMBERS.map((number) => {
+    const busy = activeForTable(number).length > 0;
+    const label = fmt.format(Number(number));
+    return `<button type="button" class="table-number-button${busy ? " is-occupied" : ""}" data-table-select="${number}" aria-pressed="${selectedNumber === number}" aria-label="طاولة ${label}، ${busy ? "مشغولة" : "متاحة"}" ${locked ? "disabled" : ""}><strong>${label}</strong><small>${busy ? "مشغولة" : "متاحة"}</small></button>`;
+  }).join("")}</div><div class="table-number-stepper"><button type="button" data-table-step="-1" aria-label="تقليل رقم الطاولة" ${locked || !selectedNumber || selectedNumber === "1" ? "disabled" : ""}>−</button><output>${selectedNumber ? `طاولة ${fmt.format(Number(selectedNumber))}` : selectedTable ? `طاولة ${escapeHTML(selectedTable)}` : "اختر الطاولة"}</output><button type="button" data-table-step="1" aria-label="زيادة رقم الطاولة" ${locked || !selectedNumber || selectedNumber === "5" ? "disabled" : ""}>＋</button></div><div class="table-selection-status" role="status" aria-live="polite">${status}</div>`;
+}
 const EXTRA_DRINKS = [
   {
     id: "rani",
@@ -2717,6 +3000,11 @@ function syncCheckTarget() {
   }
   tableField.hidden = mode.value !== "inside";
   table.required = mode.value === "inside" && !check;
+  if (!check && mode.value === "inside" && table.value) {
+    const normalizedTable = normalizeTableName(table.value);
+    if (normalizedTable !== table.value) table.value = normalizedTable;
+  }
+  renderTableNumberSelector();
 
   const customerName = document.getElementById("check-customer")?.value.trim() || "";
   const draftCustomerNames = [...new Set(checkDraft.map((item) => (item.customerName || customerName).trim()).filter(Boolean))];
@@ -2726,7 +3014,11 @@ function syncCheckTarget() {
     : customerName || "بدون اسم";
   const customerSummaryLabel = checkDraft.length ? "الأسماء على الطلب" : "الاسم الافتراضي";
   const serviceLabel = mode.value === "inside" ? "داخل الكافيه" : "تيك أواي";
-  const tableLabel = mode.value === "inside" ? (table.value.trim() || "اختر الطاولة") : "لا تحتاج طاولة";
+  const displayTable = (value) => {
+    const normalized = normalizeTableName(value);
+    return TABLE_NUMBERS.includes(normalized) ? fmt.format(Number(normalized)) : normalized;
+  };
+  const tableLabel = mode.value === "inside" ? (table.value.trim() ? `طاولة ${displayTable(table.value)}` : "اختر الطاولة") : "لا تحتاج طاولة";
   const accountGuests = (check?.guests || []).map((guest) => guest.name).filter(Boolean).join(" · ");
   const accountLabel = check
     ? `${check.mode === "inside" ? `طاولة ${check.tableName || "—"}` : "حساب تيك أواي"}${accountGuests ? ` · ${accountGuests}` : ""}`
@@ -2740,6 +3032,8 @@ function syncCheckTarget() {
     : `${draftCustomerSummary} · ${serviceLabel}${mode.value === "inside" ? ` · طاولة ${table.value.trim() || "—"}` : ""}`;
   const destinationNode = document.getElementById("check-commit-destination");
   if (destinationNode) destinationNode.textContent = `سيُضاف إلى: ${destination}`;
+  const commitButton = document.getElementById("commit-check-order");
+  if (commitButton) commitButton.disabled = !checkDraft.length || checkDraftUnresolved;
   syncCheckOrderDock();
 }
 function syncCheckOrderDock() {
@@ -2756,13 +3050,14 @@ function syncCheckOrderDock() {
 function renderCheckDraft() {
   const root = document.getElementById("check-draft-lines");
   if (!root) return;
-  const total = checkDraft.reduce(
+  const visibleDraft = checkDraft.filter((i) => i.productId !== "__placeholder__");
+  const total = visibleDraft.reduce(
     (sum, item) => sum + netUnitPrice(item) * item.qty,
     0,
   );
-  const units = checkDraft.reduce((sum, item) => sum + Number(item.qty || 0), 0);
-  const countText = checkDraft.length
-    ? `${fmt.format(checkDraft.length)} صنف · ${fmt.format(units)} قطعة`
+  const units = visibleDraft.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+  const countText = visibleDraft.length
+    ? `${fmt.format(visibleDraft.length)} صنف · ${fmt.format(units)} قطعة`
     : "لم تضف مشروبات بعد";
   const countNode = document.getElementById("check-draft-count");
   const dockCount = document.getElementById("check-dock-count");
@@ -2771,15 +3066,17 @@ function renderCheckDraft() {
   if (countNode) countNode.textContent = countText;
   if (dockCount) dockCount.textContent = countText;
   if (totalNode) totalNode.textContent = money(total);
-  if (confirmButton) confirmButton.disabled = !checkDraft.length;
-  root.innerHTML = checkDraft.length
-    ? `<div class="check-draft-list">${checkDraft.map((item, index) => {
+  if (confirmButton) confirmButton.disabled = !visibleDraft.length || checkDraftUnresolved;
+  root.innerHTML = visibleDraft.length
+    ? `<div class="check-draft-list">${visibleDraft.map((item, index) => {
+        const realIndex = checkDraft.indexOf(item);
         const lineTotal = Math.max(0, Number(item.unitPrice || 0) * Number(item.qty || 0) - Number(item.lineDiscount || 0));
         const itemLabel = checkItemLabel(item);
-        return `<article class="check-draft-line"><div class="draft-item-header"><span class="draft-item-index">${fmt.format(index + 1)}</span><div class="draft-item-copy"><strong>${escapeHTML(itemLabel)}</strong><small class="line-qty-label">${lineLabel(item)}</small></div><strong class="draft-line-total" data-draft-line-total>${money(lineTotal)}</strong></div><label class="draft-customer-field"><span>اسم العميل</span><input type="text" class="draft-customer-input" placeholder="اسم العميل لهذا الصنف" value="${escapeHTML(item.customerName || "")}" data-draft-customer="${index}" maxlength="60" aria-label="اسم عميل ${escapeHTML(itemLabel)}"></label><div class="draft-item-controls"><label class="discount-field draft-line-discount"><span>خصم (جنيه)</span><input type="number" min="0" max="${Number(item.unitPrice || 0) * Number(item.qty || 1)}" step="1" value="${item.lineDiscount || ""}" placeholder="٠" data-draft-discount="${index}"></label><div class="draft-quantity-field"><small>الكمية</small><span class="qty-controls"><button type="button" data-draft-dec="${index}" aria-label="تقليل الكمية">−</button><strong>${fmt.format(item.qty)}</strong><button type="button" data-draft-inc="${index}" aria-label="زيادة الكمية">＋</button><button type="button" class="draft-remove-btn" data-draft-remove="${index}" aria-label="حذف الصنف">حذف</button></span></div></div></article>`;
+        return `<article class="check-draft-line"><div class="draft-item-header"><span class="draft-item-index">${fmt.format(index + 1)}</span><div class="draft-item-copy"><strong>${escapeHTML(itemLabel)}</strong><small class="line-qty-label">${lineLabel(item)}</small></div><strong class="draft-line-total" data-draft-line-total>${money(lineTotal)}</strong></div><label class="draft-customer-field"><span>اسم العميل</span><input type="text" class="draft-customer-input" placeholder="اسم العميل لهذا الصنف" value="${escapeHTML(item.customerName || "")}" data-draft-customer="${realIndex}" maxlength="60" aria-label="اسم عميل ${escapeHTML(itemLabel)}"></label><div class="draft-item-controls"><label class="discount-field draft-line-discount"><span>خصم (جنيه)</span><input type="number" min="0" max="${Number(item.unitPrice || 0) * Number(item.qty || 1)}" step="1" value="${item.lineDiscount || ""}" placeholder="٠" data-draft-discount="${realIndex}"></label><div class="draft-quantity-field"><small>الكمية</small><span class="qty-controls"><button type="button" data-draft-dec="${realIndex}" aria-label="تقليل الكمية">−</button><strong>${fmt.format(item.qty)}</strong><button type="button" data-draft-inc="${realIndex}" aria-label="زيادة الكمية">＋</button><button type="button" class="draft-remove-btn" data-draft-remove="${realIndex}" aria-label="حذف الصنف">حذف</button></span></div></div><button type="button" class="primary draft-order-commit" data-draft-commit="${realIndex}">تأكيد الطلب وإضافته للحساب</button></article>`;
       }).join("")}</div>`
     : '<div class="draft-empty-state"><strong>الطلب فارغ حتى الآن</strong><small>اختار مشروبًا من القائمة وسيظهر هنا للمراجعة.</small></div>';
   syncCheckOrderDock();
+  if (typeof refreshCustomerPanels === "function") refreshCustomerPanels();
 }
 
 function setCheckPanel(mode = "list") {
@@ -3068,10 +3365,11 @@ function renderChecks() {
               ? "مدفوع جزئيًا"
               : "مفتوح";
     const quickPay =
-      c.status !== "paid" && c.status !== "closed"
-        ? `<button type="button" class="primary quick-pay" data-pay-check="${escapeHTML(c.id)}">دفع المتبقي <strong>${money(due)}</strong></button>`
-        : `<span class="paid-stamp">✓ ${status}</span>`;
-    const guests = (c.guests || [])
+  c.status !== "paid" && c.status !== "closed"
+    ? `<button type="button" class="primary quick-pay" data-pay-check="${escapeHTML(c.id)}">دفع المتبقي <strong>${money(due)}</strong></button>`
+    : `<span class="paid-stamp">✓ ${status}</span>`;
+const copyBtn = `<button type="button" class="secondary quick-copy" data-copy-check="${escapeHTML(c.id)}" title="نسخ أصناف الشيك ده لمسودة جديدة">📋 نسخ</button>`;
+const guests = (c.guests || [])
       .map(
         (g) =>
           `<div class="compact-guest"><div class="compact-guest-head"><strong>${escapeHTML(g.name)} <button type="button" class="edit-guest" data-edit-guest="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}" aria-label="تعديل اسم العميل" title="تعديل اسم العميل">✎</button></strong><button type="button" class="remove-guest" data-remove-guest="${escapeHTML(c.id)}" data-guest-id="${escapeHTML(g.id)}">حذف</button></div><div class="compact-items">${(
@@ -3098,7 +3396,7 @@ function renderChecks() {
     const serviceLabel = c.mode === "inside" ? "داخل الكافيه" : "تيك أواي";
     const locationTitle = c.mode === "inside" ? `طاولة ${c.tableName || "—"}` : "طلب تيك أواي";
     const statusClass = c.status === "deferred" ? "deferred" : c.status === "paid" ? "paid" : c.status === "closed" ? "closed" : due < total ? "partial" : "open";
-    return `<article data-check-card-id="${escapeHTML(c.id)}" class="check-card redesigned-check-card ${c.status === "deferred" ? "deferred-card" : ""}"><div class="check-card-priority"><div class="check-card-summary-top"><div class="check-card-label-row"><span class="check-kind">${escapeHTML(serviceLabel)}</span><span class="check-state ${statusClass}">${status}</span></div><h4>${escapeHTML(locationTitle)}</h4><div class="check-card-info-grid"><div class="check-card-info-cell"><small>العميل</small><strong class="compact-customer">${escapeHTML(guestNames)}</strong></div><div class="check-card-info-cell check-card-drink-cell"><small>المشروبات</small><strong class="check-card-drinks">${escapeHTML(drinkNames + extraItemCount)}</strong></div></div></div><div class="check-card-metrics"><span><small>الإجمالي</small><strong>${money(total)}</strong></span><span><small>المدفوع</small><strong>${money(paid)}</strong></span><span class="remaining"><small>المتبقي</small><strong>${money(due)}</strong></span></div><div class="check-card-quick-actions">${quickPay}<button type="button" class="secondary quick-add-order" data-add-order="${escapeHTML(c.id)}">＋ إضافة طلب</button></div></div><details class="check-accordion" ${expandedCheckIds.has(c.id) ? "open" : ""}><summary class="check-details-toggle"><span>عرض تفاصيل الطلب والأصناف</span><span class="accordion-chevron" aria-hidden="true">⌄</span></summary><div class="check-accordion-body"><div class="compact-guest-list">${guests || '<div class="empty">لا توجد أصناف</div>'}</div><div class="check-note-grid"><label>موعد السداد<input type="date" value="${escapeHTML(c.dueDate || "")}" data-check-due-date="${escapeHTML(c.id)}"></label><label>ملاحظات الشيك<textarea rows="2" maxlength="500" data-check-note="${escapeHTML(c.id)}" placeholder="ملاحظة أو تفضيل الطلب">${escapeHTML(c.notes || "")}</textarea></label></div>${renderCheckTimeline(c)}${detailActions}</div></details></article>`;
+    return `<article data-check-card-id="${escapeHTML(c.id)}" class="check-card redesigned-check-card ${c.status === "deferred" ? "deferred-card" : ""}"><div class="check-card-priority"><div class="check-card-summary-top"><div class="check-card-label-row"><span class="check-kind">${escapeHTML(serviceLabel)}</span><span class="check-state ${statusClass}">${status}</span></div><h4>${escapeHTML(locationTitle)}</h4><div class="check-card-info-grid"><div class="check-card-info-cell"><small>العميل</small><strong class="compact-customer">${escapeHTML(guestNames)}</strong></div><div class="check-card-info-cell check-card-drink-cell"><small>المشروبات</small><strong class="check-card-drinks">${escapeHTML(drinkNames + extraItemCount)}</strong></div></div></div><div class="check-card-metrics"><span><small>الإجمالي</small><strong>${money(total)}</strong></span><span><small>المدفوع</small><strong>${money(paid)}</strong></span><span class="remaining"><small>المتبقي</small><strong>${money(due)}</strong></span></div><div class="check-card-quick-actions">${quickPay}${copyBtn}<button type="button" class="secondary quick-add-order" data-add-order="${escapeHTML(c.id)}">＋ إضافة طلب</button></div></div><details class="check-accordion" ${expandedCheckIds.has(c.id) ? "open" : ""}><summary class="check-details-toggle"><span>عرض تفاصيل الطلب والأصناف</span><span class="accordion-chevron" aria-hidden="true">⌄</span></summary><div class="check-accordion-body"><div class="compact-guest-list">${guests || '<div class="empty">لا توجد أصناف</div>'}</div><div class="check-note-grid"><label>موعد السداد<input type="date" value="${escapeHTML(c.dueDate || "")}" data-check-due-date="${escapeHTML(c.id)}"></label><label>ملاحظات الشيك<textarea rows="2" maxlength="500" data-check-note="${escapeHTML(c.id)}" placeholder="ملاحظة أو تفضيل الطلب">${escapeHTML(c.notes || "")}</textarea></label></div>${renderCheckTimeline(c)}${detailActions}</div></details></article>`;
   }
   const modeFilter = checkModeFilter || "all";
   const filteredList = list.filter((c) => {
@@ -3173,19 +3471,34 @@ function renderChecks() {
 }
 
 function menuAdd(itemId, optionId) {
-  const customer = document.getElementById("check-customer").value.trim();
+  const customer =
+    currentCustomerKey ||
+    document.getElementById("check-customer").value.trim();
   const existingId = document.getElementById("check-existing").value;
   const check = availableChecks().find((c) => c.id === existingId);
   const mode =
     check?.mode || document.getElementById("check-service-mode").value;
-  const tableName =
-    check?.tableName ||
-    document.getElementById("check-table-name").value.trim();
+  const tableName = normalizeTableName(
+    check?.tableName || document.getElementById("check-table-name").value,
+  );
   if (mode === "inside" && !tableName) {
-    document.getElementById("check-table-name").focus();
-    notify("اكتب رقم أو اسم الطاولة");
+    document.querySelector("[data-table-select]")?.focus();
+    notify("اختار رقم الطاولة من ١ إلى ٥");
     return;
   }
+  if (mode === "inside" && !check && !TABLE_NUMBERS.includes(tableName)) {
+    document.querySelector("[data-table-select]")?.focus();
+    notify("رقم الطاولة يجب أن يكون من ١ إلى ٥");
+    return;
+  }
+  const orderContext = currentOrderContext();
+  if (checkDraft.length && checkDraftContext && !sameOrderContext(checkDraftContext, orderContext)) {
+    notify("وجهة المسودة تغيرت؛ أعد اختيارها وأكّد نقل الأصناف قبل الإضافة");
+    restoreOrderContextToForm(checkDraftContext);
+    syncCheckTarget();
+    return;
+  }
+  if (!checkDraft.length) checkDraftContext = orderContext;
   const product = allCheckProducts().find((x) => x.id === itemId);
   if (!product) return;
   const opts = product.options || [];
@@ -3215,8 +3528,13 @@ function menuAdd(itemId, optionId) {
       qty: 1,
       customerName: customer,
     });
+  if (!checkDraft.length && !checkDraftContext) checkDraftContext = currentOrderContext();
+  // لو العميل الحالي موجود، نخليه currentCustomerKey
+  if (!currentCustomerKey && customer) currentCustomerKey = customer;
   renderCheckDraft();
+  savePendingOrderDraft();
   playCheckActionSound("menu-item");
+  refreshCustomerPanels();
   notify(`اتضاف ${product.name} · ${option.label}`);
 }
 
@@ -3253,6 +3571,7 @@ document
       const i = Number(custInput.dataset.draftCustomer);
       if (checkDraft[i]) checkDraft[i].customerName = custInput.value.trim();
       syncCheckTarget();
+      savePendingOrderDraft();
       return;
     }
     const input = event.target.closest("[data-draft-discount]");
@@ -3279,6 +3598,7 @@ document
         if (lineTotalEl)
           lineTotalEl.textContent = money(Math.max(0, Number(item.unitPrice || 0) * Number(item.qty || 0) - Number(item.lineDiscount || 0)));
       }
+      savePendingOrderDraft();
     }
   });
 
@@ -3300,60 +3620,119 @@ document
       if (item.qty <= 0) checkDraft.splice(i, 1);
       else item.lineDiscount = Math.max(0, Math.min(Number(item.lineDiscount || 0), Number(item.unitPrice || 0) * item.qty));
     }
+    if (!checkDraft.length) checkDraftContext = currentOrderContext();
     renderCheckDraft();
+    savePendingOrderDraft();
   });
+async function onOrderDestinationChange() {
+  const nextContext = currentOrderContext();
+  if (!(await acceptOrderContextChange(nextContext))) return;
+  syncCheckTarget();
+}
 document
   .getElementById("check-existing")
-  .addEventListener("change", syncCheckTarget);
+  .addEventListener("change", onOrderDestinationChange);
 document
   .getElementById("check-service-mode")
-  .addEventListener("change", syncCheckTarget);
+  .addEventListener("change", onOrderDestinationChange);
 document
   .getElementById("check-customer")
-  .addEventListener("input", syncCheckTarget);
+  .addEventListener("input", () => {
+    syncCheckTarget();
+    savePendingOrderDraft();
+  });
 document
   .getElementById("check-table-name")
-  .addEventListener("input", syncCheckTarget);
+  .addEventListener("change", onOrderDestinationChange);
+document.getElementById("table-number-selector")?.addEventListener("click", async (event) => {
+  const tableButton = event.target.closest("[data-table-select]");
+  const stepButton = event.target.closest("[data-table-step]");
+  const useCheckButton = event.target.closest("[data-table-use-check]");
+  if (!tableButton && !stepButton && !useCheckButton) return;
+  if (tableButton || stepButton) {
+    const input = document.getElementById("check-table-name");
+    const current = normalizeTableName(input.value);
+    let number = tableButton?.dataset.tableSelect || current;
+    if (stepButton) {
+      const currentIndex = TABLE_NUMBERS.indexOf(current);
+      if (currentIndex < 0) return;
+      const nextIndex = currentIndex + Number(stepButton.dataset.tableStep);
+      if (nextIndex < 0 || nextIndex >= TABLE_NUMBERS.length) return;
+      number = TABLE_NUMBERS[nextIndex];
+    }
+    if (!TABLE_NUMBERS.includes(number)) return;
+    input.value = number;
+    document.getElementById("check-existing").value = "";
+  } else {
+    document.getElementById("check-existing").value = useCheckButton.dataset.tableUseCheck;
+  }
+  await onOrderDestinationChange();
+});
 const checkOrderFormElement = document.getElementById("check-order-form");
 checkOrderFormElement?.addEventListener("focusin", syncCheckOrderDock);
 checkOrderFormElement?.addEventListener("focusout", () => setTimeout(syncCheckOrderDock, 120));
 window.visualViewport?.addEventListener("resize", syncCheckOrderDock);
 window.addEventListener("resize", syncCheckOrderDock);
-document.getElementById("commit-check-order").addEventListener("click", () => {
-  if (!checkDraft.length) {
+async function commitCheckOrder(selectedIndex = null) {
+  const targetItem = selectedIndex !== null ? checkDraft[selectedIndex] : null;
+  if (selectedIndex !== null && (!targetItem || targetItem.productId === "__placeholder__")) {
+    notify("اختر صنف حقيقي");
+    return;
+  }
+  const draftItems = (selectedIndex === null ? checkDraft.slice() : [targetItem])
+    .filter((item) => item.productId !== "__placeholder__");
+  if (!draftItems.length) {
     notify("أضف صنفًا واحدًا على الأقل");
     return;
   }
   const defaultCustomerName =
     document.getElementById("check-customer").value.trim();
   if (defaultCustomerName) {
-    checkDraft.forEach((item) => {
+    draftItems.forEach((item) => {
       if (!(item.customerName || "").trim())
         item.customerName = defaultCustomerName;
     });
   }
-  const firstUnnamedIndex = checkDraft.findIndex(
+  const firstUnnamedIndex = draftItems.findIndex(
     (item) => !(item.customerName || "").trim(),
   );
-  if (firstUnnamedIndex >= 0) {
-    playCheckActionSound("missing-customer");
-    if (!confirm("فيه أصناف من غير اسم عميل. تكمل تسجيلها باسم «بدون اسم»؟")) {
-      document
-        .querySelector(`[data-draft-customer="${firstUnnamedIndex}"]`)
-        ?.focus();
-      return;
-    }
+if (firstUnnamedIndex >= 0) {
+  playCheckActionSound("missing-customer");
+  const okUnnamed = await appConfirm({
+    title: "أصناف بدون اسم",
+    message: "فيه أصناف من غير اسم عميل. تحب نكمل ونحفظهم باسم «بدون اسم»؟",
+    confirmText: "أكمل",
+  });
+  if (!okUnnamed) {
+    document
+      .querySelector(`[data-draft-customer="${selectedIndex === null ? firstUnnamedIndex : selectedIndex}"]`)
+      ?.focus();
+    return;
   }
+}
   const existingId = document.getElementById("check-existing").value;
   let target = availableChecks().find((c) => c.id === existingId);
   const mode =
     target?.mode || document.getElementById("check-service-mode").value;
-  const tableName =
+  const tableName = normalizeTableName(
     target?.tableName ||
-    document.getElementById("check-table-name").value.trim();
+    document.getElementById("check-table-name").value,
+  );
   if (mode === "inside" && !tableName) {
-    document.getElementById("check-table-name").focus();
-    notify("اكتب رقم أو اسم الطاولة");
+    document.querySelector("[data-table-select]")?.focus();
+    notify("اختار رقم الطاولة من ١ إلى ٥");
+    return;
+  }
+  if (mode === "inside" && !target && !TABLE_NUMBERS.includes(tableName)) {
+    document.querySelector("[data-table-select]")?.focus();
+    notify("رقم الطاولة يجب أن يكون من ١ إلى ٥");
+    return;
+  }
+  const currentContext = currentOrderContext();
+  if (checkDraftContext && !sameOrderContext(checkDraftContext, currentContext)) {
+    notify("لا يمكن تسجيل الطلب في وجهة مختلفة عن المسودة المحفوظة");
+    restoreOrderContextToForm(checkDraftContext);
+    syncCheckTarget();
     return;
   }
   const before = JSON.stringify(data.checks);
@@ -3373,9 +3752,12 @@ document.getElementById("commit-check-order").addEventListener("click", () => {
       data.checks.unshift(target);
     } else {
       target.lastOrderAt = orderNow;
-      if (target.status === "closed") target.status = "open";
+      if (target.status === "closed" || target.status === "deferred") {
+        target.status = "open";
+        delete target.deferredAt;
+      }
     }
-    const orderSnapshot = checkDraft.map((d) => ({
+    const orderSnapshot = draftItems.map((d) => ({
       name: d.name,
       optionLabel: d.optionLabel || "",
       customerName: d.customerName || "بدون اسم",
@@ -3404,16 +3786,18 @@ document.getElementById("commit-check-order").addEventListener("click", () => {
         }),
       );
     const groups = {};
-    checkDraft.forEach((draft) => {
+    draftItems.forEach((draft) => {
       const key = (draft.customerName || "").trim();
       if (!groups[key]) groups[key] = [];
       groups[key].push(draft);
     });
     for (const [rawName, items] of Object.entries(groups)) {
-      const guestName = rawName || "بدون اسم";
-      let guest = target.guests.find(
-        (g) => customerKey(g.name) === customerKey(guestName),
-      );
+  const guestName = rawName || "بدون اسم";
+  // ✅ إنشاء العميل تلقائيًا لو جديد
+  if (guestName !== "بدون اسم") ensureCustomerExists(guestName);
+  let guest = target.guests.find(
+    (g) => customerKey(g.name) === customerKey(guestName),
+  );
       if (!guest) {
         guest = {
           id: `guest-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
@@ -3458,13 +3842,39 @@ document.getElementById("commit-check-order").addEventListener("click", () => {
           });
       });
     }
-    persist();
-  } catch {
-    data.checks = JSON.parse(before);
-    notify("تعذر حفظ الحساب");
+    const remainingDraft = selectedIndex === null
+  ? []
+  : checkDraft.filter((item) => item !== targetItem);
+    const nextDraftContext = {
+      checkId: target.id,
+      mode: target.mode === "takeaway" ? "takeaway" : "inside",
+      tableName: String(target.tableName || ""),
+    };
+    data.pendingOrder = normalizePendingOrder({
+      items: remainingDraft,
+      context: nextDraftContext,
+      customerName: document.getElementById("check-customer").value || "",
+    });
+      persist();
+  if (typeof syncFavCustomerFromCheck === "function") {
+    syncFavCustomerFromCheck(target);
+  }
+} catch {
+  data.checks = JSON.parse(before);
+    savePendingOrderDraft();
+    notify("تعذر حفظ الحساب؛ بقي الطلب محفوظًا كمسودة");
     return;
   }
-  checkDraft = [];
+  checkDraft = selectedIndex === null
+  ? []
+  : checkDraft.filter((item) => item !== targetItem);
+  checkDraftContext = {
+    checkId: target.id,
+    mode: target.mode === "takeaway" ? "takeaway" : "inside",
+    tableName: String(target.tableName || ""),
+  };
+  checkDraftUnresolved = false;
+  currentCustomerKey = "";
   renderCheckMenu();
   renderExtraDrinks();
   document.getElementById("check-existing").value = target.id;
@@ -3473,6 +3883,12 @@ document.getElementById("commit-check-order").addEventListener("click", () => {
   renderChecks();
   playCheckActionSound("new-order");
   notify("اتضاف الطلب للحساب بنجاح");
+}
+
+document.getElementById("commit-check-order").addEventListener("click", () => commitCheckOrder());
+document.getElementById("check-draft-lines").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-draft-commit]");
+  if (button) commitCheckOrder(Number(button.dataset.draftCommit));
 });
 
 document.getElementById("check-list").addEventListener("toggle", (event) => {
@@ -3582,7 +3998,7 @@ document.getElementById("check-list").addEventListener("input", (event) => {
   }
 });
 
-document.getElementById("check-list").addEventListener("click", (event) => {
+document.getElementById("check-list").addEventListener("click", async (event) => {
   const detailsSummary = event.target.closest(".check-details-toggle");
   if (detailsSummary) {
     const details = detailsSummary.closest(".check-accordion");
@@ -3600,11 +4016,14 @@ document.getElementById("check-list").addEventListener("click", (event) => {
     const g = c?.guests?.find((x) => x.id === editGuestBtn.dataset.guestId);
     if (!c || !g) return;
     const current = g.name === "بدون اسم" ? "" : g.name;
-    const rawName = prompt(
-      "اكتب اسم العميل (اتركه فاضي ليعود «بدون اسم»):",
-      current,
-    );
-    if (rawName === null) return;
+const rawName = await appPrompt({
+  title: "تعديل اسم العميل",
+  message: "اتركه فاضي عشان يرجع «بدون اسم»",
+  defaultValue: current,
+  placeholder: "اسم العميل",
+  confirmText: "حفظ",
+});
+if (rawName === null) return;
     const trimmed = rawName.trim();
     if (!trimmed) {
       if (g.name === "بدون اسم") {
@@ -3615,8 +4034,12 @@ document.getElementById("check-list").addEventListener("click", (event) => {
         (x) => x.id !== g.id && x.name === "بدون اسم",
       );
       if (clash) {
-        if (!confirm("يوجد عميل «بدون اسم» بالفعل. هل تريد دمج الأصناف معه؟"))
-          return;
+  const okMergeEmpty = await appConfirm({
+    title: "دمج مع «بدون اسم»",
+    message: "يوجد عميل «بدون اسم» بالفعل في نفس الشيك. تحب ندمج الأصناف معه؟",
+    confirmText: "ادمج",
+  });
+  if (!okMergeEmpty) return;
         g.items.forEach((item) => {
           const found = clash.items.find(
             (x) =>
@@ -3647,12 +4070,12 @@ document.getElementById("check-list").addEventListener("click", (event) => {
       (x) => x.id !== g.id && customerKey(x.name) === customerKey(trimmed),
     );
     if (existing) {
-      if (
-        !confirm(
-          `يوجد عميل بنفس الاسم «${trimmed}» في هذا الشيك. هل تريد دمج أصناف العميلين؟`,
-        )
-      )
-        return;
+  const okMerge = await appConfirm({
+    title: "دمج عميلين",
+    message: `فيه عميل بنفس الاسم «${trimmed}» في نفس الشيك. تحب ندمج أصناف العميلين؟`,
+    confirmText: "ادمج",
+  });
+  if (!okMerge) return;
       g.items.forEach((item) => {
         const found = existing.items.find(
           (x) =>
@@ -3679,8 +4102,13 @@ document.getElementById("check-list").addEventListener("click", (event) => {
   if (addGuestBtn) {
     const c = data.checks.find((x) => x.id === addGuestBtn.dataset.addGuest);
     if (!c) return;
-    const rawName = prompt("اكتب اسم العميل الجديد:", "");
-    if (rawName === null) return;
+    const rawName = await appPrompt({
+  title: "إضافة عميل جديد",
+  message: "اكتب اسم العميل الجديد",
+  placeholder: "اسم العميل",
+  confirmText: "أضف",
+});
+if (rawName === null) return;
     const trimmed = rawName.trim();
     if (!trimmed) {
       notify("الاسم مطلوب");
@@ -3730,7 +4158,13 @@ document.getElementById("check-list").addEventListener("click", (event) => {
       (g) => g.id === removeGuestBtn.dataset.guestId,
     );
     if (c && guest) {
-      if (!confirm(`حذف العميل «${guest.name}» وكل أصنافه من الشيك؟`)) return;
+  const okRemoveGuest = await appConfirm({
+    title: "حذف عميل",
+    message: `هيتم حذف العميل «${guest.name}» وكل أصنافه من الشيك. العملية مش هتتراجع.`,
+    confirmText: "احذف",
+    danger: true,
+  });
+  if (!okRemoveGuest) return;
       c.guests = c.guests.filter(
         (g) => g.id !== removeGuestBtn.dataset.guestId,
       );
@@ -3749,12 +4183,17 @@ document.getElementById("check-list").addEventListener("click", (event) => {
     const guest = c?.guests?.find(
       (x) => x.id === guestOrderButton.dataset.guestId,
     );
-    if (!c || !guest || c.status === "paid") return;
-    setCheckPanel("orders");
+    if (!c || !guest || !availableChecks().some((item) => item.id === c.id)) {
+      notify("لا يمكن الإضافة إلى حساب مدفوع بالكامل");
+      return;
+    }
     document.getElementById("check-existing").value = c.id;
+if (!(await acceptOrderContextChange(currentOrderContext()))) return;
     document.getElementById("check-customer").value =
       guest.name === "بدون اسم" ? "" : guest.name;
     syncCheckTarget();
+    savePendingOrderDraft();
+    setCheckPanel("orders");
     document
       .getElementById("check-order-form")
       .scrollIntoView({ behavior: "smooth", block: "start" });
@@ -3763,12 +4202,19 @@ document.getElementById("check-list").addEventListener("click", (event) => {
   }
   const add = event.target.closest("[data-add-order]");
   if (add) {
-    setCheckPanel("orders");
     const c = data.checks.find((x) => x.id === add.dataset.addOrder),
       g = c?.guests?.[0];
-    document.getElementById("check-existing").value = c?.id || "";
-    document.getElementById("check-customer").value = g?.name || "";
+    if (!c || !availableChecks().some((item) => item.id === c.id)) {
+      notify("لا يمكن الإضافة إلى حساب مدفوع بالكامل");
+      return;
+    }
+    document.getElementById("check-existing").value = c.id;
+if (!(await acceptOrderContextChange(currentOrderContext()))) return;
+    document.getElementById("check-customer").value =
+      g?.name === "بدون اسم" ? "" : g?.name || "";
     syncCheckTarget();
+    savePendingOrderDraft();
+    setCheckPanel("orders");
     document
       .getElementById("check-order-form")
       .scrollIntoView({ behavior: "smooth", block: "start" });
@@ -3776,10 +4222,15 @@ document.getElementById("check-list").addEventListener("click", (event) => {
     return;
   }
   const pay = event.target.closest("[data-pay-check]");
-  if (pay) {
-    const c = data.checks.find((x) => x.id === pay.dataset.payCheck);
-    if (c) {
-      if (!confirm(`تأكيد تسجيل دفع كامل بقيمة ${money(checkDue(c))}؟`)) return;
+if (pay) {
+  const c = data.checks.find((x) => x.id === pay.dataset.payCheck);
+  if (c) {
+    const okPayFull = await appConfirm({
+      title: "تسجيل دفع كامل",
+      message: `هيتم تسجيل دفع كامل بقيمة ${money(checkDue(c))} للشيك ده.`,
+      confirmText: `ادفع ${money(checkDue(c))}`,
+    });
+    if (!okPayFull) return;
       const paidAt = new Date().toISOString(),
         paidAmount = checkDue(c);
       (c.guests || []).forEach((g) =>
@@ -3823,8 +4274,16 @@ document.getElementById("check-list").addEventListener("click", (event) => {
       g = c?.guests.find((x) => x.id === payItem.dataset.guestId),
       item = g?.items[Number(payItem.dataset.itemIndex)];
     if (item) {
-      if (!confirm(`تأكيد تغيير حالة الدفع للصنف «${checkItemLabel(item)}»؟`))
-        return;
+  const isPaidNow = Number(item.paidQty || 0) >= Number(item.qty || 0);
+  const okPayItem = await appConfirm({
+    title: isPaidNow ? "إلغاء دفع الصنف" : "تسجيل دفع الصنف",
+    message: isPaidNow
+      ? `هيتم إلغاء دفع الصنف «${checkItemLabel(item)}» ورجوعه غير مدفوع.`
+      : `هيتم تسجيل الصنف «${checkItemLabel(item)}» كمدفوع.`,
+    confirmText: isPaidNow ? "ألغِ الدفع" : "سجّل الدفع",
+    danger: isPaidNow,
+  });
+  if (!okPayItem) return;
       const at = new Date().toISOString();
       item.paidQty =
         Math.min(Number(item.qty || 0), Number(item.paidQty || 0)) >=
@@ -3875,18 +4334,30 @@ document.getElementById("check-list").addEventListener("click", (event) => {
   }
   const del = event.target.closest("[data-delete-check]");
   if (del) {
-    if (!confirm("حذف الحساب وكل طلبات العملاء فيه؟")) return;
+    const okDelCheck = await appConfirm({
+      title: "حذف الشيك",
+      message: "هيتم حذف الحساب وكل طلبات العملاء اللي جواه. العملية مش هتتراجع.",
+      confirmText: "احذف الشيك",
+      danger: true,
+    });
+    if (!okDelCheck) return;
     data.checks = data.checks.filter((c) => c.id !== del.dataset.deleteCheck);
     persist();
     renderChecks();
     notify("تم حذف الحساب");
     return;
   }
+
   const close = event.target.closest("[data-close-check]");
   if (close) {
     const c = data.checks.find((x) => x.id === close.dataset.closeCheck);
     if (c) {
-      if (!confirm(`تأكيد إنهاء الحساب؟ المتبقي ${money(checkDue(c))}`)) return;
+      const okCloseCheck = await appConfirm({
+        title: "إنهاء الشيك",
+        message: `هيتم قفل الحساب. المتبقي ${money(checkDue(c))} هيتسجل كدين.`,
+        confirmText: "أنهِ الحساب",
+      });
+      if (!okCloseCheck) return;
       c.status = checkDue(c) <= 0 ? "paid" : "closed";
       c.closedAt = new Date().toISOString();
       persist();
@@ -3895,6 +4366,7 @@ document.getElementById("check-list").addEventListener("click", (event) => {
     }
     return;
   }
+
   const reopen = event.target.closest("[data-reopen-check]");
   if (reopen) {
     const c = data.checks.find((x) => x.id === reopen.dataset.reopenCheck);
@@ -3906,6 +4378,14 @@ document.getElementById("check-list").addEventListener("click", (event) => {
       renderChecks();
       notify("تمت إعادة الحساب إلى المفتوحة");
     }
+  }
+});
+document.getElementById("check-list").addEventListener("click", (event) => {
+  const copyBtn = event.target.closest("[data-copy-check]");
+  if (copyBtn) {
+    copyCheckToDraft(copyBtn.dataset.copyCheck);
+    setCheckPanel("orders");
+    document.getElementById("check-order-form").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 });
 renderExtraDrinks();
@@ -4076,9 +4556,9 @@ document
   .querySelectorAll("[data-close-report]")
   .forEach((b) => b.addEventListener("click", closeDailyReport));
 document.getElementById("share-report-btn")?.addEventListener("click", async () => {
-  const text = `تقرير مندور كوفي\n${document.getElementById("report-date")?.textContent || ""}\n${document.getElementById("report-body")?.innerText || ""}`;
+  const text = `تقرير MANDOURCOFFEE \n${document.getElementById("report-date")?.textContent || ""}\n${document.getElementById("report-body")?.innerText || ""}`;
   try {
-    if (navigator.share) await navigator.share({ title: "تقرير مندور كوفي", text });
+    if (navigator.share) await navigator.share({ title: "تقرير MANDOURCOFFEE ", text });
     else { await navigator.clipboard.writeText(text); notify("تم نسخ التقرير للمشاركة"); }
   } catch (error) { if (error?.name !== "AbortError") notify("تعذرت مشاركة التقرير"); }
 });
@@ -4194,17 +4674,20 @@ function maybeRunAutoBackup() {
     );
   }
 }
-window.mandourAutoBackupResult = (success, message) => {
+window.mandourAutoBackupResult = (success, message, fileName = "Ayanoo.json") => {
   if (success) {
+    rememberBackupFile(fileName || "Ayanoo.json");
     try {
       localStorage.setItem("mandour-auto-backup-at", String(Date.now()));
     } catch {}
     markBackupDone();
-    updateAutoBackupStatus("تم حفظ نسخة احتياطية يومية في المجلد المختار.");
-  } else
+    updateAutoBackupStatus("تم حفظ النسخة الاحتياطية بنجاح.");
+  } else {
+    updateBackupBanner();
     updateAutoBackupStatus(
       message || "تعذر حفظ النسخة الاحتياطية؛ اختر المجلد مرة أخرى.",
     );
+  }
 };
 const autoBackupToggle = document.getElementById("auto-backup-enabled");
 if (autoBackupToggle) {
@@ -4220,12 +4703,13 @@ if (autoBackupToggle) {
   });
 }
 function applyTheme(theme) {
+  document.documentElement.classList.toggle("dark-theme", theme === "dark");
   document.body.classList.toggle("dark-theme", theme === "dark");
   const button = document.getElementById("theme-toggle-btn");
   if (button) button.textContent = theme === "dark" ? "☀️ تفعيل الوضع الفاتح" : "🌙 تفعيل الوضع الداكن";
 }
-let savedTheme = "light";
-try { savedTheme = localStorage.getItem("mandour-theme") || "light"; } catch {}
+let savedTheme = "dark";
+try { savedTheme = localStorage.getItem("mandour-theme") || "dark"; } catch {}
 applyTheme(savedTheme);
 document.getElementById("theme-toggle-btn")?.addEventListener("click", () => {
   const theme = document.body.classList.contains("dark-theme") ? "light" : "dark";
@@ -4313,10 +4797,20 @@ function updatePinStatus() {
   if (status) status.textContent = enabled ? "قفل PIN مفعّل عند فتح التطبيق." : "القفل غير مفعّل.";
 }
 document.getElementById("staff-name-input")?.addEventListener("change", (event) => { data.staffName = event.target.value.trim(); persist(); });
-document.getElementById("set-pin-btn")?.addEventListener("click", () => {
-  const pin = window.prompt("اكتب PIN من 4 أرقام");
+document.getElementById("set-pin-btn")?.addEventListener("click", async () => {
+  const pin = await appPrompt({
+    title: "تعيين PIN",
+    message: "اكتب 4 أرقام لحماية التطبيق",
+    placeholder: "••••",
+    maxLength: 4,
+    numeric: true,
+    confirmText: "حفظ PIN",
+  });
+  if (pin === null) return;
   if (!/^\d{4}$/.test(pin || "")) return notify("استخدم 4 أرقام بالضبط");
-  localStorage.setItem("mandour-app-pin", pin); updatePinStatus(); notify("تم تفعيل قفل التطبيق");
+  localStorage.setItem("mandour-app-pin", pin);
+  updatePinStatus();
+  notify("تم تفعيل قفل التطبيق");
 });
 document.getElementById("pin-lock-enabled")?.addEventListener("change", (event) => {
   if (!event.target.checked) { localStorage.removeItem("mandour-app-pin"); updatePinStatus(); notify("تم إيقاف قفل التطبيق"); }
@@ -4350,14 +4844,18 @@ if (auditActorInput)
   });
 document
   .getElementById("undo-last-operation")
-  ?.addEventListener("click", () => {
+  ?.addEventListener("click", async () => {
     if (!lastUndoSnapshot) return;
-    if (
-      !confirm("استعادة البيانات كما كانت قبل آخر حفظ؟ سيُلغى آخر تعديل محفوظ.")
-    )
-      return;
+    const okUndo = await appConfirm({
+      title: "تراجع عن آخر حفظ",
+      message: "البيانات هترجع زي ما كانت قبل آخر حفظ. آخر تعديل محفوظ هيتلغى.",
+      confirmText: "تراجع",
+      danger: true,
+    });
+    if (!okUndo) return;
     try {
       const restored = JSON.parse(lastUndoSnapshot);
+      restored.pendingOrder = normalizePendingOrder(data.pendingOrder);
       const audit = [...(data.activityLog || [])];
       restored.activityLog = [
         {
@@ -4486,7 +4984,7 @@ async function syncLocalCheckNotifications() {
     notifications: [
       {
         id: CHECK_NOTIFICATION_IDS[0],
-        title: "مندور كوفي · مراجعة الشيكات",
+        title: "MANDOURCOFFEE  · مراجعة الشيكات",
         body: checkReminderDetails(unpaidChecks),
         channelId: channelReady ? CHECK_NOTIFICATION_CHANNEL_ID : undefined,
         sound: CHECK_NOTIFICATION_SOUND,
@@ -4497,7 +4995,7 @@ async function syncLocalCheckNotifications() {
       },
       {
         id: CHECK_NOTIFICATION_IDS[1],
-        title: "مندور كوفي · تذكير بالشيكات",
+        title: "MANDOURCOFFEE  · تذكير بالشيكات",
         body: `قبل إغلاق اليوم: ${checkReminderDetails(unpaidChecks)}`,
         channelId: channelReady ? CHECK_NOTIFICATION_CHANNEL_ID : undefined,
         sound: CHECK_NOTIFICATION_SOUND,
@@ -4578,7 +5076,7 @@ document
         notifications: [
           {
             id: CHECK_NOW_NOTIFICATION_ID,
-            title: "مندور كوفي · الشيكات المفتوحة",
+            title: "MANDOURCOFFEE  · Bills💵",
             body: body.slice(0, 240),
             largeBody: body,
             summaryText: `${fmt.format(checks.length)} شيكات · ${money(checks.reduce((sum, check) => sum + checkDue(check), 0))} متبقي`,
@@ -4633,25 +5131,927 @@ function finishSplash() {
 const splashStaffName = document.getElementById("splash-staff-name");
 if (splashStaffName) splashStaffName.value = data.staffName || data.auditActor || "";
 document.getElementById("splash-enter")?.addEventListener("click", finishSplash);
-window.setTimeout(finishSplash, 7300);
+window.setTimeout(finishSplash, 2200);
 window.setTimeout(() => {
   const savedPin = localStorage.getItem("mandour-app-pin");
   if (!savedPin) return;
-  const entered = window.prompt("التطبيق مقفول. اكتب PIN من 4 أرقام");
-  if (entered !== savedPin)
-    document.body.innerHTML = '<main class="pin-denied"><h2>التطبيق مقفول</h2><p>أعد فتح التطبيق واكتب رمز PIN الصحيح.</p></main>';
+
+  const overlay = document.createElement("div");
+  overlay.className = "app-pin-overlay";
+  overlay.innerHTML = `
+    <div class="app-pin-card">
+      <div class="app-pin-icon">🔒</div>
+      <h2>التطبيق مقفول</h2>
+      <p>أدخل رمز PIN المكون من 4 أرقام لفتح التطبيق</p>
+      <div class="app-pin-dots" id="pin-dots">
+        <span></span><span></span><span></span><span></span>
+      </div>
+      <div class="app-pin-pad">
+        <button type="button" data-pin-num="1">1</button>
+        <button type="button" data-pin-num="2">2</button>
+        <button type="button" data-pin-num="3">3</button>
+        <button type="button" data-pin-num="4">4</button>
+        <button type="button" data-pin-num="5">5</button>
+        <button type="button" data-pin-num="6">6</button>
+        <button type="button" data-pin-num="7">7</button>
+        <button type="button" data-pin-num="8">8</button>
+        <button type="button" data-pin-num="9">9</button>
+        <button type="button" data-pin-clear class="pin-action-btn">مسح</button>
+        <button type="button" data-pin-num="0">0</button>
+        <button type="button" data-pin-back class="pin-action-btn">←</button>
+      </div>
+      <div class="app-pin-error" id="pin-error" style="color: #ff6b6b; margin-top: 10px; font-size: 14px; min-height: 20px;"></div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  let enteredPin = "";
+  const dots = overlay.querySelectorAll("#pin-dots span");
+  const errorEl = overlay.querySelector("#pin-error");
+
+  function updateDots() {
+    dots.forEach((dot, index) => {
+      dot.classList.toggle("active", index < enteredPin.length);
+    });
+  }
+
+  overlay.querySelector(".app-pin-pad").addEventListener("click", (e) => {
+    const numBtn = e.target.closest("[data-pin-num]");
+    const clearBtn = e.target.closest("[data-pin-clear]");
+    const backBtn = e.target.closest("[data-pin-back]");
+
+    if (numBtn && enteredPin.length < 4) {
+      enteredPin += numBtn.dataset.pinNum;
+      updateDots();
+      errorEl.textContent = "";
+
+      if (enteredPin.length === 4) {
+        if (enteredPin === savedPin) {
+          overlay.remove();
+        } else {
+          errorEl.textContent = "رمز PIN غير صحيح، حاول مرة أخرى";
+          enteredPin = "";
+          updateDots();
+        }
+      }
+    } else if (clearBtn) {
+      enteredPin = "";
+      updateDots();
+      errorEl.textContent = "";
+    } else if (backBtn) {
+      enteredPin = enteredPin.slice(0, -1);
+      updateDots();
+      errorEl.textContent = "";
+    }
+  });
 }, 900);
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) window.setTimeout(finishSplash, 120);
 });
-const initialView = viewFromHash();
+/* ============================
+   مودالات عامة للتأكيد والإدخال
+   بديلة عن confirm() و prompt()
+   ============================ */
+let appConfirmResolve = null;
+let appPromptResolve = null;
+
+function appConfirm({ title = "تأكيد", message = "", confirmText = "تأكيد", cancelText = "إلغاء", danger = false } = {}) {
+  return new Promise((resolve) => {
+    // لو فيه مودال مفتوح بالفعل، اقفله بـ false أول
+    if (appConfirmResolve) {
+      const old = appConfirmResolve;
+      appConfirmResolve = null;
+      old(false);
+    }
+    appConfirmResolve = resolve;
+    const modal = document.getElementById("app-confirm-modal");
+    document.getElementById("app-confirm-title").textContent = title;
+    document.getElementById("app-confirm-message").textContent = message;
+    const okBtn = document.getElementById("app-confirm-ok-btn");
+    okBtn.textContent = confirmText;
+    okBtn.className = danger ? "danger" : "primary";
+    document.getElementById("app-confirm-cancel-btn").textContent = cancelText;
+    modal.hidden = false;
+    document.body.classList.add("modal-open");
+    setTimeout(() => okBtn.focus({ preventScroll: true }), 60);
+  });
+}
+
+function closeAppConfirm(result) {
+  const modal = document.getElementById("app-confirm-modal");
+  if (!modal || modal.hidden) return;
+  modal.hidden = true;
+  if (!document.getElementById("app-prompt-modal") || document.getElementById("app-prompt-modal").hidden) {
+    document.body.classList.remove("modal-open");
+  }
+  if (appConfirmResolve) {
+    const resolve = appConfirmResolve;
+    appConfirmResolve = null;
+    resolve(result);
+  }
+}
+
+function appPrompt({ title = "إدخال", message = "", defaultValue = "", placeholder = "", maxLength = 60, confirmText = "تأكيد", numeric = false } = {}) {
+  return new Promise((resolve) => {
+    if (appPromptResolve) {
+      const old = appPromptResolve;
+      appPromptResolve = null;
+      old(null);
+    }
+    appPromptResolve = resolve;
+    const modal = document.getElementById("app-prompt-modal");
+    document.getElementById("app-prompt-title").textContent = title;
+    document.getElementById("app-prompt-message").textContent = message;
+    const input = document.getElementById("app-prompt-input");
+    input.value = defaultValue;
+    input.placeholder = placeholder;
+    input.maxLength = maxLength;
+    input.inputMode = numeric ? "numeric" : "text";
+    if (numeric) input.setAttribute("pattern", "[0-9]*");
+    else input.removeAttribute("pattern");
+    modal.hidden = false;
+    document.body.classList.add("modal-open");
+    setTimeout(() => {
+      input.focus({ preventScroll: true });
+      if (defaultValue) input.select();
+    }, 60);
+  });
+}
+
+function closeAppPrompt(result) {
+  const modal = document.getElementById("app-prompt-modal");
+  if (!modal || modal.hidden) return;
+  modal.hidden = true;
+  if (!document.getElementById("app-confirm-modal") || document.getElementById("app-confirm-modal").hidden) {
+    document.body.classList.remove("modal-open");
+  }
+  if (appPromptResolve) {
+    const resolve = appPromptResolve;
+    appPromptResolve = null;
+    resolve(result);
+  }
+}
+
+document.addEventListener("click", (event) => {
+  if (event.target.closest("[data-confirm-cancel]")) closeAppConfirm(false);
+  if (event.target.closest("[data-confirm-ok]")) closeAppConfirm(true);
+  if (event.target.closest("[data-prompt-cancel]")) closeAppPrompt(null);
+  if (event.target.closest("[data-prompt-ok]")) {
+    const value = document.getElementById("app-prompt-input")?.value ?? "";
+    closeAppPrompt(value);
+  }
+});
+
+document.getElementById("app-prompt-input")?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    closeAppPrompt(event.currentTarget.value);
+  }
+});
+/* ============================================
+   تحسينات الكاشير: ملخص + عملاء + إضافة سريعة
+   ============================================ */
+
+let currentCustomerKey = "";
+
+function getCustomerKeysFromDraft() {
+  const keys = new Set();
+  checkDraft.forEach((item) => {
+    const name = (item.customerName || "").trim() || "بدون اسم";
+    keys.add(name);
+  });
+  return [...keys];
+}
+
+function draftTotalFor(customerName) {
+  const key = (customerName || "").trim() || "بدون اسم";
+  return checkDraft
+    .filter((item) => ((item.customerName || "").trim() || "بدون اسم") === key)
+    .reduce((sum, item) => sum + netUnitPrice(item) * item.qty, 0);
+}
+
+function draftItemsFor(customerName) {
+  const key = (customerName || "").trim() || "بدون اسم";
+  return checkDraft.filter(
+    (item) => ((item.customerName || "").trim() || "بدون اسم") === key,
+  );
+}
+
+function renderDraftSummary() {
+  const panel = document.getElementById("draft-summary-panel");
+  const table = document.getElementById("draft-summary-table");
+  const totalNode = document.getElementById("draft-summary-total");
+  if (!panel || !table) return;
+
+  const realItems = checkDraft.filter((i) => i.productId !== "__placeholder__");
+  if (!realItems.length) {
+    panel.hidden = true;
+    return;
+  }
+  panel.hidden = false;
+
+  const keys = getCustomerKeysFromDraft();
+  const grandTotal = realItems.reduce(
+    (sum, item) => sum + netUnitPrice(item) * item.qty,
+    0,
+  );
+  if (totalNode) totalNode.textContent = `الإجمالي: ${money(grandTotal)}`;
+
+  let html = "";
+  keys.forEach((key) => {
+    const items = draftItemsFor(key).filter((i) => i.productId !== "__placeholder__");
+    const total = items.reduce(
+      (sum, item) => sum + netUnitPrice(item) * item.qty,
+      0,
+    );
+    const qty = items.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+    html += `<div class="draft-summary-row">
+      <strong>${escapeHTML(key)}</strong>
+      <span>${fmt.format(qty)} صنف</span>
+      <span class="col-paid">—</span>
+      <span>${money(total)}</span>
+    </div>`;
+  });
+  const totalQty = realItems.reduce((s, i) => s + Number(i.qty || 0), 0);
+  html += `<div class="draft-summary-row is-total">
+    <strong>الإجمالي</strong>
+    <span>${fmt.format(totalQty)} صنف</span>
+    <span class="col-paid">—</span>
+    <span>${money(grandTotal)}</span>
+  </div>`;
+  table.innerHTML = html;
+}
+
+function renderCustomerChips() {
+  const panel = document.getElementById("customer-chips-panel");
+  const row = document.getElementById("customer-chips-row");
+  if (!panel || !row) return;
+
+  const keys = getCustomerKeysFromDraft();
+  if (!keys.length) {
+    panel.hidden = true;
+    return;
+  }
+  panel.hidden = false;
+
+  // لو مفيش عميل حالي، اختار الأول
+  if (!currentCustomerKey || !keys.includes(currentCustomerKey)) {
+    currentCustomerKey = keys[0];
+  }
+
+  row.innerHTML = keys
+    .map((key) => {
+      const total = draftTotalFor(key);
+      const isActive = key === currentCustomerKey;
+      return `<button type="button" class="customer-chip${isActive ? " is-active" : ""}" data-chip-customer="${escapeHTML(key)}">
+        <span class="chip-name">${escapeHTML(key)}</span>
+        <span class="chip-total">${money(total)}</span>
+        <button type="button" class="chip-remove" data-chip-remove="${escapeHTML(key)}" aria-label="حذف ${escapeHTML(key)}">×</button>
+      </button>`;
+    })
+    .join("");
+}
+
+function renderCurrentCustomerItems() {
+  const panel = document.getElementById("current-customer-panel");
+  const nameNode = document.getElementById("current-customer-name");
+  const totalNode = document.getElementById("current-customer-total");
+  const itemsNode = document.getElementById("current-customer-items");
+  if (!panel || !itemsNode) return;
+
+  if (!currentCustomerKey || !checkDraft.length) {
+    panel.hidden = true;
+    return;
+  }
+  const items = draftItemsFor(currentCustomerKey).filter((i) => !i.__placeholder);
+  if (!items.length) {
+    panel.hidden = true;
+    return;
+  }
+  panel.hidden = false;
+
+  const total = items.reduce(
+    (sum, item) => sum + netUnitPrice(item) * item.qty,
+    0,
+  );
+  if (nameNode) nameNode.textContent = `👤 ${currentCustomerKey}`;
+  if (totalNode) totalNode.textContent = money(total);
+
+  // نبني خريطة لربط العنصر بالـ index الأصلي في checkDraft
+  itemsNode.innerHTML = items
+    .map((item) => {
+      const realIndex = checkDraft.indexOf(item);
+      const product = allCheckProducts().find((p) => p.id === item.productId);
+      const img = product?.image || "assets/mandour-welcome-poster.png";
+      const label = checkItemLabel(item);
+      const lineTotal = netUnitPrice(item) * item.qty;
+      return `<div class="current-customer-item">
+        <img src="${escapeHTML(img)}" alt="" loading="lazy">
+        <div class="item-info">
+          <strong>${escapeHTML(label)}</strong>
+          <small>${fmt.format(item.qty)} × ${money(netUnitPrice(item))} = ${money(lineTotal)}</small>
+        </div>
+        <div class="item-controls">
+          <button type="button" data-cust-dec="${realIndex}" aria-label="تقليل">−</button>
+          <span class="qty-val">${fmt.format(item.qty)}</span>
+          <button type="button" data-cust-inc="${realIndex}" aria-label="زيادة">＋</button>
+          <button type="button" class="btn-remove" data-cust-remove="${realIndex}" aria-label="حذف">×</button>
+        </div>
+      </div>`;
+    })
+    .join("");
+}
+
+function refreshCustomerPanels() {
+  renderDraftSummary();
+  renderCustomerChips();
+  renderCurrentCustomerItems();
+}
+
+function setCurrentCustomer(name) {
+  currentCustomerKey = String(name || "").trim();
+  refreshCustomerPanels();
+}
+
+function removeCustomerFromDraft(name) {
+  const key = String(name || "").trim();
+  checkDraft = checkDraft.filter(
+    (item) => ((item.customerName || "").trim() || "بدون اسم") !== key,
+  );
+  if (currentCustomerKey === key) {
+    const remaining = getCustomerKeysFromDraft();
+    currentCustomerKey = remaining[0] || "";
+  }
+  renderCheckDraft();
+  savePendingOrderDraft();
+  refreshCustomerPanels();
+}
+
+// أحداث شريط العملاء
+document.addEventListener("click", (event) => {
+  const chip = event.target.closest("[data-chip-customer]");
+  if (chip) {
+    if (event.target.closest("[data-chip-remove]")) return; // هيتعامل معه تحت
+    setCurrentCustomer(chip.dataset.chipCustomer);
+    return;
+  }
+  const removeBtn = event.target.closest("[data-chip-remove]");
+  if (removeBtn) {
+    event.stopPropagation();
+    const key = removeBtn.dataset.chipRemove;
+    removeCustomerFromDraft(key);
+    notify(`اتشالت أصناف «${key}»`);
+    return;
+  }
+  const addBtn = event.target.closest("#add-customer-chip");
+  if (addBtn) {
+    addNewCustomerToDraft();
+    return;
+  }
+});
+
+async function addNewCustomerToDraft() {
+  const existing = getCustomerKeysFromDraft().filter((k) => k !== "بدون اسم");
+  const suggestion = existing.length
+    ? "اكتب اسم العميل الجديد (مثال: " + existing.slice(0, 2).join(" أو ") + ")"
+    : "اكتب اسم العميل الجديد";
+  const name = await appPrompt({
+    title: "إضافة عميل للشيك",
+    message: "اكتب اسم العميل الجديد",
+    placeholder: "مثال: أحمد",
+    confirmText: "أضف",
+  });
+  if (name === null) return;
+  const trimmed = String(name || "").trim();
+  if (!trimmed) {
+    notify("الاسم مطلوب");
+    return;
+  }
+  if (existing.includes(trimmed) || trimmed === "بدون اسم") {
+    notify("العميل موجود بالفعل");
+    return;
+  }
+  // نضيف صنف وهمي عشان يظهر في الشريط
+  // أو ببساطة نخليها مجرد "اسم مسجل" بدون صنف
+  // الحل: نعمل عنصر placeholder ثم نشيله أول ما يضيف صنف
+  // لكن أسهل: نخلي currentCustomerKey = trimmed ونضيف علامة في الـ checkDraft
+  // بس عشان ميبقاش empty، نضيف عنصر placeholder
+  checkDraft.push({
+    productId: "__placeholder__",
+    name: "لم يطلب بعد",
+    optionId: "—",
+    optionLabel: "",
+    unitPrice: 0,
+    lineDiscount: 0,
+    qty: 1,
+    customerName: trimmed,
+    __placeholder: true,
+  });
+  setCurrentCustomer(trimmed);
+  savePendingOrderDraft();
+  notify(`تمت إضافة العميل «${trimmed}» — اختار أصنافه الآن`);
+}
+
+// أحداث أصناف العميل الحالي
+document.addEventListener("click", (event) => {
+  const inc = event.target.closest("[data-cust-inc]");
+  const dec = event.target.closest("[data-cust-dec]");
+  const rem = event.target.closest("[data-cust-remove]");
+  if (!inc && !dec && !rem) return;
+  const idx = Number(
+    inc?.dataset.custInc ?? dec?.dataset.custDec ?? rem?.dataset.custRemove,
+  );
+  const item = checkDraft[idx];
+  if (!item) return;
+  if (rem) {
+    checkDraft.splice(idx, 1);
+  } else if (inc) {
+    item.qty += 1;
+  } else if (dec) {
+    item.qty -= 1;
+    if (item.qty <= 0) checkDraft.splice(idx, 1);
+  }
+  renderCheckDraft();
+  savePendingOrderDraft();
+  refreshCustomerPanels();
+});
+
+// زر نسخ شيك
+function copyCheckToDraft(checkId) {
+  const check = data.checks.find((c) => c.id === checkId);
+  if (!check) return;
+  if (!checkDraft.length && !check.guests?.length) return;
+  if (
+    checkDraft.length &&
+    !window.__skipCopyConfirm
+  ) {
+    appConfirm({
+      title: "نسخ شيك",
+      message: "المسودة الحالية فيها أصناف. هل تحب نضيف أصناف الشيك ده فوقها؟",
+      confirmText: "أضف فوقها",
+      cancelText: "إلغاء",
+    }).then((ok) => {
+      if (ok) {
+        window.__skipCopyConfirm = true;
+        copyCheckToDraft(checkId);
+        window.__skipCopyConfirm = false;
+      }
+    });
+    return;
+  }
+
+  // نجمع الأصناف مع الاسم
+  const cloneItems = [];
+  (check.guests || []).forEach((guest) => {
+    (guest.items || []).forEach((item) => {
+      cloneItems.push({
+        productId: item.productId,
+        name: item.name,
+        optionId: item.optionId,
+        optionLabel: item.optionLabel,
+        unitPrice: item.unitPrice,
+        lineDiscount: 0, // الخصم مش هيتنسخ
+        qty: item.qty,
+        customerName: guest.name === "بدون اسم" ? "" : guest.name,
+        __fromCopy: true,
+      });
+    });
+  });
+
+  if (!cloneItems.length) {
+    notify("الشيك ده مفيهوش أصناف");
+    return;
+  }
+
+  // ندمج مع المسودة الحالية أو نضيف
+  cloneItems.forEach((newItem) => {
+    const existing = checkDraft.find(
+      (x) =>
+        x.productId === newItem.productId &&
+        x.optionId === newItem.optionId &&
+        (x.customerName || "") === (newItem.customerName || ""),
+    );
+    if (existing) existing.qty += newItem.qty;
+    else checkDraft.push(newItem);
+  });
+
+  const firstCustomer = cloneItems.find((i) => i.customerName)?.customerName;
+  if (firstCustomer) currentCustomerKey = firstCustomer;
+
+  renderCheckDraft();
+  savePendingOrderDraft();
+  refreshCustomerPanels();
+  notify(`تم نسخ شيك «${check.mode === "inside" ? "طاولة " + (check.tableName || "—") : "تيك أواي"}» — راجع الأصناف`);
+}
+/* ============================================
+   قسم العملاء المفضلين
+   ============================================ */
+
+let favCustomerDraftItems = [];
+
+function getFavCustomers() {
+  if (!Array.isArray(data.favoriteCustomers)) data.favoriteCustomers = [];
+  return data.favoriteCustomers;
+}
+
+function lastCafeItemsForCustomer(customerName) {
+  const key = customerKey(customerName);
+  if (!key) return [];
+  const allChecks = [...data.checks].sort((a, b) =>
+    String(b.createdAt || "").localeCompare(String(a.createdAt || "")),
+  );
+  for (const check of allChecks) {
+    const guest = (check.guests || []).find(
+      (g) => customerKey(g.name) === key && (g.items || []).length > 0,
+    );
+    if (guest) {
+      return (guest.items || []).map((item) => ({
+        productId: item.productId,
+        name: item.name,
+        optionId: item.optionId,
+        optionLabel: item.optionLabel,
+        unitPrice: item.unitPrice,
+        lineDiscount: 0,
+        qty: item.qty,
+        customerName: customerName,
+      }));
+    }
+  }
+  return [];
+}
+
+function renderFavCustomers() {
+  const root = document.getElementById("fav-customers-list");
+  if (!root) return;
+  const list = getFavCustomers();
+  if (!list.length) {
+    root.innerHTML =
+      '<div class="empty">لسه مفيش عملاء مسجلين. اضغط "＋ عميل جديد" لإضافة أول عميل.</div>';
+    return;
+  }
+  root.innerHTML = list
+    .map((c) => {
+      const itemsCount = (c.items || []).length;
+      const itemsText = (c.items || [])
+        .slice(0, 4)
+        .map((i) => `${i.name} × ${i.qty}`)
+        .join(" · ");
+      const extra = itemsCount > 4 ? ` · +${itemsCount - 4}` : "";
+      const notes = String(c.notes || "").trim();
+      return `<article class="fav-customer-card" data-fav-id="${escapeHTML(c.id)}">
+        <div class="fav-customer-head">
+          <strong>👤 ${escapeHTML(c.name)}</strong>
+        </div>
+        ${
+          itemsCount
+            ? `<div class="fav-customer-items-preview">🍵 ${escapeHTML(itemsText + extra)}</div>`
+            : `<div class="fav-customer-items-preview">مفيش أصناف مفضلة لسه</div>`
+        }
+        ${notes ? `<div class="fav-customer-notes">📝 ${escapeHTML(notes)}</div>` : ""}
+        <div class="fav-customer-actions">
+          <button type="button" class="primary" data-fav-start="${escapeHTML(c.id)}">☕ ابدأ شيك</button>
+          <button type="button" class="secondary" data-fav-edit="${escapeHTML(c.id)}">✎ تعديل</button>
+          <button type="button" class="danger" data-fav-delete="${escapeHTML(c.id)}">حذف</button>
+        </div>
+      </article>`;
+    })
+    .join("");
+}
+
+function openFavCustomerModal(customerId = "") {
+  const modal = document.getElementById("fav-customer-modal");
+  if (!modal) return;
+  const list = getFavCustomers();
+  const customer = customerId ? list.find((c) => c.id === customerId) : null;
+  document.getElementById("fav-customer-id").value = customerId || "";
+  document.getElementById("fav-customer-name").value = customer ? customer.name : "";
+  document.getElementById("fav-customer-notes").value = customer ? customer.notes || "" : "";
+  document.getElementById("fav-customer-title").textContent = customer
+    ? `تعديل: ${customer.name}`
+    : "عميل جديد";
+  favCustomerDraftItems = customer
+    ? JSON.parse(JSON.stringify(customer.items || []))
+    : [];
+  renderFavItemsGrid();
+  renderFavItemsSelected();
+  modal.hidden = false;
+  document.body.classList.add("modal-open");
+  setTimeout(() => {
+    document.getElementById("fav-customer-name").focus({ preventScroll: true });
+  }, 80);
+}
+
+function closeFavCustomerModal() {
+  const modal = document.getElementById("fav-customer-modal");
+  if (!modal) return;
+  modal.hidden = true;
+  favCustomerDraftItems = [];
+  document.body.classList.remove("modal-open");
+}
+
+function renderFavItemsGrid() {
+  const grid = document.getElementById("fav-customer-items-grid");
+  if (!grid) return;
+  const products = allCheckProducts();
+  grid.innerHTML = products
+    .map((p) => {
+      const opt = p.defaultOption
+        ? p.options.find((o) => o.id === p.defaultOption)
+        : p.options[0];
+      const label = opt?.label || "";
+      const price = opt?.price || 0;
+      return `<button type="button" class="fav-item-btn" data-fav-add="${escapeHTML(p.id)}" data-fav-opt="${escapeHTML(opt?.id || "")}">
+        <strong>${escapeHTML(p.name)}</strong>
+        ${label && label !== "عادية" && label !== "كوب" ? `<small>${escapeHTML(label)}</small>` : ""}
+        <small>${money(price)}</small>
+      </button>`;
+    })
+    .join("");
+}
+
+function renderFavItemsSelected() {
+  const wrap = document.getElementById("fav-customer-items-selected");
+  if (!wrap) return;
+  if (!favCustomerDraftItems.length) {
+    wrap.innerHTML =
+      '<div class="empty" style="padding:10px;font-size:11px">مفيش أصناف مختارة. اضغط على أي صنف فوق.</div>';
+    return;
+  }
+  wrap.innerHTML = favCustomerDraftItems
+    .map((item, idx) => {
+      const label = checkItemLabel(item);
+      return `<div class="fav-item-selected">
+        <strong>${escapeHTML(label)}</strong>
+        <div class="qty-controls">
+          <button type="button" data-fav-dec="${idx}">−</button>
+          <strong>${fmt.format(item.qty)}</strong>
+          <button type="button" data-fav-inc="${idx}">＋</button>
+        </div>
+        <button type="button" class="remove" data-fav-remove="${idx}">×</button>
+      </div>`;
+    })
+    .join("");
+}
+
+function saveFavCustomer() {
+  const id = document.getElementById("fav-customer-id").value;
+  const name = document.getElementById("fav-customer-name").value.trim();
+  const notes = document.getElementById("fav-customer-notes").value.trim();
+  if (!name) {
+    notify("اسم العميل مطلوب");
+    return;
+  }
+  if (!favCustomerDraftItems.length) {
+    notify("ضيف صنف مفضل واحد على الأقل");
+    return;
+  }
+  const list = getFavCustomers();
+  const existing = id ? list.find((c) => c.id === id) : null;
+  if (existing) {
+    existing.name = name;
+    existing.notes = notes;
+    existing.items = JSON.parse(JSON.stringify(favCustomerDraftItems));
+    existing.updatedAt = new Date().toISOString();
+  } else {
+    list.unshift({
+      id: `fav-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      name,
+      notes,
+      items: JSON.parse(JSON.stringify(favCustomerDraftItems)),
+      createdAt: new Date().toISOString(),
+    });
+  }
+  try {
+    persist();
+    closeFavCustomerModal();
+    renderFavCustomers();
+    notify(existing ? "تم تعديل العميل" : "تم حفظ العميل");
+  } catch {
+    notify("تعذر الحفظ");
+  }
+}
+
+async function startCheckFromFavCustomer(customerId) {
+  const list = getFavCustomers();
+  const customer = list.find((c) => c.id === customerId);
+  if (!customer) return;
+  const items = customer.items || [];
+  if (!items.length) {
+    notify("العميل ده مفيش عنده أصناف مفضلة");
+    return;
+  }
+  openView("checks", { push: true, animate: true });
+  setCheckPanel("orders");
+  setTimeout(() => {
+    const input = document.getElementById("check-customer");
+    if (input) input.value = customer.name;
+    currentCustomerKey = customer.name;
+    items.forEach((newItem) => {
+      const item = { ...newItem, customerName: customer.name };
+      const existing = checkDraft.find(
+        (x) =>
+          x.productId === item.productId &&
+          x.optionId === item.optionId &&
+          (x.customerName || "") === customer.name,
+      );
+      if (existing) existing.qty += item.qty;
+      else checkDraft.push(item);
+    });
+    renderCheckDraft();
+    savePendingOrderDraft();
+    refreshCustomerPanels();
+    syncCheckTarget();
+    notify(`تم تحميل طلب ${customer.name}`);
+  }, 220);
+}
+
+async function deleteFavCustomer(customerId) {
+  const list = getFavCustomers();
+  const customer = list.find((c) => c.id === customerId);
+  if (!customer) return;
+  const ok = await appConfirm({
+    title: `حذف ${customer.name}؟`,
+    message: "هيتم حذف العميل من القائمة. الأصناف المفضلة هتتشال.",
+    confirmText: "احذف",
+    danger: true,
+  });
+  if (!ok) return;
+  data.favoriteCustomers = list.filter((c) => c.id !== customerId);
+  try {
+    persist();
+    renderFavCustomers();
+    notify("تم حذف العميل");
+  } catch {
+    notify("تعذر الحذف");
+  }
+}
+
+function openPickCustomerModal() {
+  const modal = document.getElementById("pick-customer-modal");
+  if (!modal) return;
+  document.getElementById("pick-customer-search").value = "";
+  renderPickCustomerList("");
+  modal.hidden = false;
+  document.body.classList.add("modal-open");
+}
+
+function closePickCustomerModal() {
+  const modal = document.getElementById("pick-customer-modal");
+  if (!modal) return;
+  modal.hidden = true;
+  document.body.classList.remove("modal-open");
+}
+
+function renderPickCustomerList(query) {
+  const wrap = document.getElementById("pick-customer-list");
+  if (!wrap) return;
+  const q = customerKey(query);
+  const all = getFavCustomers();
+  const filtered = q ? all.filter((c) => customerKey(c.name).includes(q)) : all;
+  if (!filtered.length) {
+    wrap.innerHTML =
+      '<div class="empty">مفيش عملاء مسجلين. ضيفهم من "المزيد → عملائي المفضلين".</div>';
+    return;
+  }
+  wrap.innerHTML = filtered
+    .map((c) => {
+      const itemsText = (c.items || [])
+        .slice(0, 3)
+        .map((i) => `${i.name} × ${i.qty}`)
+        .join(" · ");
+      return `<button type="button" class="pick-customer-item" data-pick-id="${escapeHTML(c.id)}">
+        <strong>👤 ${escapeHTML(c.name)}</strong>
+        <span class="pick-count">${fmt.format((c.items || []).length)}</span>
+        <small>${escapeHTML(itemsText || "مفيش أصناف")}</small>
+      </button>`;
+    })
+    .join("");
+}
+
+function syncFavCustomerFromCheck(check) {
+  if (!check || !check.guests) return;
+  const favList = getFavCustomers();
+  if (!favList.length) return;
+  let changed = false;
+  check.guests.forEach((guest) => {
+    const key = customerKey(guest.name);
+    if (!key || guest.name === "بدون اسم") return;
+    const fav = favList.find((c) => customerKey(c.name) === key);
+    if (!fav) return;
+    if (!guest.items || !guest.items.length) return;
+    fav.items = guest.items.map((i) => ({
+      productId: i.productId,
+      name: i.name,
+      optionId: i.optionId,
+      optionLabel: i.optionLabel,
+      unitPrice: i.unitPrice,
+      lineDiscount: 0,
+      qty: i.qty,
+      customerName: fav.name,
+    }));
+    fav.lastSyncedAt = new Date().toISOString();
+    changed = true;
+  });
+  if (changed) {
+    try {
+      persist();
+      renderFavCustomers();
+    } catch {}
+  }
+}
+
+document.getElementById("add-fav-customer-btn")?.addEventListener("click", () => {
+  openFavCustomerModal();
+});
+
+document.getElementById("fav-customers-list")?.addEventListener("click", (event) => {
+  const start = event.target.closest("[data-fav-start]");
+  if (start) {
+    startCheckFromFavCustomer(start.dataset.favStart);
+    return;
+  }
+  const edit = event.target.closest("[data-fav-edit]");
+  if (edit) {
+    openFavCustomerModal(edit.dataset.favEdit);
+    return;
+  }
+  const del = event.target.closest("[data-fav-delete]");
+  if (del) {
+    deleteFavCustomer(del.dataset.favDelete);
+  }
+});
+
+document.getElementById("fav-customer-save")?.addEventListener("click", saveFavCustomer);
+
+document.querySelectorAll("[data-close-fav-customer]").forEach((b) =>
+  b.addEventListener("click", closeFavCustomerModal),
+);
+
+document.getElementById("fav-customer-items-grid")?.addEventListener("click", (event) => {
+  const btn = event.target.closest("[data-fav-add]");
+  if (!btn) return;
+  const productId = btn.dataset.favAdd;
+  const optionId = btn.dataset.favOpt;
+  const product = allCheckProducts().find((p) => p.id === productId);
+  if (!product) return;
+  const option = product.options.find((o) => o.id === optionId) || product.options[0];
+  const existing = favCustomerDraftItems.find(
+    (x) => x.productId === productId && x.optionId === option.id,
+  );
+  if (existing) existing.qty += 1;
+  else
+    favCustomerDraftItems.push({
+      productId,
+      name: product.name,
+      optionId: option.id,
+      optionLabel: option.label,
+      unitPrice: option.price,
+      lineDiscount: 0,
+      qty: 1,
+      customerName: "",
+    });
+  renderFavItemsSelected();
+});
+
+document.getElementById("fav-customer-items-selected")?.addEventListener("click", (event) => {
+  const inc = event.target.closest("[data-fav-inc]");
+  const dec = event.target.closest("[data-fav-dec]");
+  const rem = event.target.closest("[data-fav-remove]");
+  const idx = Number(inc?.dataset.favInc ?? dec?.dataset.favDec ?? rem?.dataset.favRemove);
+  if (isNaN(idx) || !favCustomerDraftItems[idx]) return;
+  if (rem) favCustomerDraftItems.splice(idx, 1);
+  else if (inc) favCustomerDraftItems[idx].qty += 1;
+  else if (dec) {
+    favCustomerDraftItems[idx].qty -= 1;
+    if (favCustomerDraftItems[idx].qty <= 0) favCustomerDraftItems.splice(idx, 1);
+  }
+  renderFavItemsSelected();
+});
+
+document.getElementById("pick-customer-btn")?.addEventListener("click", openPickCustomerModal);
+
+document.getElementById("pick-customer-search")?.addEventListener("input", (e) => {
+  renderPickCustomerList(e.target.value);
+});
+
+document.querySelectorAll("[data-close-pick-customer]").forEach((b) =>
+  b.addEventListener("click", closePickCustomerModal),
+);
+
+document.getElementById("pick-customer-list")?.addEventListener("click", (event) => {
+  const btn = event.target.closest("[data-pick-id]");
+  if (!btn) return;
+  const id = btn.dataset.pickId;
+  closePickCustomerModal();
+  startCheckFromFavCustomer(id);
+});
 history.replaceState(
-  { mandourView: initialView },
+  { mandourView: "home" },
   "",
-  `${location.pathname}${location.search}#${initialView}`,
+  `${location.pathname}${location.search}#home`,
 );
 refreshHome();
-openView(initialView, { push: false, animate: false });
+openView("home", { push: false, animate: false });
 if (expiredInvoicesRemovedAtStartup)
   setTimeout(
     () =>
@@ -4660,3 +6060,212 @@ if (expiredInvoicesRemovedAtStartup)
       ),
     3650,
   );
+/* ============================================
+   اقتراحات العملاء + تحميل الطلب المفضل — للشيكات بس
+   ============================================ */
+
+function lastCafeItemsFor(customerName) {
+  const key = customerKey(customerName);
+  if (!key) return [];
+  const allChecks = [...data.checks].sort((a, b) =>
+    String(b.createdAt || "").localeCompare(String(a.createdAt || "")),
+  );
+  for (const check of allChecks) {
+    const guest = (check.guests || []).find(
+      (g) => customerKey(g.name) === key && (g.items || []).length > 0,
+    );
+    if (guest) {
+      return (guest.items || []).map((item) => ({
+        productId: item.productId,
+        name: item.name,
+        optionId: item.optionId,
+        optionLabel: item.optionLabel,
+        unitPrice: item.unitPrice,
+        lineDiscount: 0,
+        qty: item.qty,
+        customerName: customerName,
+      }));
+    }
+  }
+  return [];
+}
+
+function customerSummaryLine(customer) {
+  const items = lastCafeItemsFor(customer.name);
+  if (items.length) {
+    return items
+      .slice(0, 4)
+      .map((i) => `${i.name} × ${i.qty}`)
+      .join(" · ");
+  }
+  if (customer.notes) return `📝 ${customer.notes.slice(0, 50)}`;
+  return "عميل جديد — مفيش طلبات سابقة";
+}
+
+function renderCustomerSuggestions(query) {
+  const input = document.getElementById("check-customer");
+  const list = document.getElementById("customer-autocomplete-list");
+  if (!input || !list) return;
+
+  const q = String(query || "").trim();
+  if (!q) {
+    list.hidden = true;
+    list.innerHTML = "";
+    return;
+  }
+  const qKey = customerKey(q);
+  const matches = (data.customers || [])
+    .filter((c) => customerKey(c.name).includes(qKey))
+    .slice(0, 8);
+
+  if (!matches.length) {
+    list.hidden = false;
+    list.innerHTML = `<div class="customer-autocomplete-empty">لا يوجد عميل بالاسم ده — هيتم إنشاؤه عند حفظ الشيك</div>`;
+    return;
+  }
+
+  list.hidden = false;
+  list.innerHTML = matches
+    .map((c) => {
+      const checksCount = (data.checks || []).filter((check) =>
+        (check.guests || []).some(
+          (g) => customerKey(g.name) === customerKey(c.name),
+        ),
+      ).length;
+      const meta = customerSummaryLine(c);
+      return `<button type="button" class="customer-autocomplete-item" data-customer-pick="${escapeHTML(c.id)}">
+        <span class="customer-autocomplete-name">👤 ${escapeHTML(c.name)}</span>
+        ${checksCount ? `<span class="customer-autocomplete-count">${fmt.format(checksCount)}</span>` : ""}
+        <small class="customer-autocomplete-meta">${escapeHTML(meta)}</small>
+      </button>`;
+    })
+    .join("");
+
+  list.querySelectorAll("[data-customer-pick]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const c = data.customers.find((x) => x.id === btn.dataset.customerPick);
+      if (c) {
+        input.value = c.name;
+        list.hidden = true;
+        loadCustomerFavoriteOrder(c);
+      }
+    });
+  });
+}
+
+function showCustomerInfoBanner(customer) {
+  const banner = document.getElementById("customer-info-banner");
+  if (!banner) return;
+  const items = lastCafeItemsFor(customer.name);
+  const notes = String(customer.notes || "").trim();
+  const lines = [];
+  if (items.length) {
+    lines.push(
+      `<div class="info-row"><span class="info-label">آخر طلب</span><span class="info-value">${escapeHTML(items.slice(0, 5).map((i) => `${i.name} × ${i.qty}`).join(" · "))}</span></div>`,
+    );
+  }
+  if (notes) {
+    lines.push(
+      `<div class="info-row"><span class="info-label">ملاحظة</span><span class="info-value">${escapeHTML(notes.slice(0, 200))}</span></div>`,
+    );
+  }
+  if (!lines.length) {
+    banner.hidden = true;
+    return;
+  }
+  banner.hidden = false;
+  banner.innerHTML =
+    `<strong>👤 ${escapeHTML(customer.name)}</strong>` + lines.join("");
+}
+
+function hideCustomerInfoBanner() {
+  const banner = document.getElementById("customer-info-banner");
+  if (banner) banner.hidden = true;
+}
+
+async function loadCustomerFavoriteOrder(customer) {
+  const items = lastCafeItemsFor(customer.name);
+  currentCustomerKey = customer.name;
+  showCustomerInfoBanner(customer);
+  syncCheckTarget();
+  refreshCustomerPanels();
+
+  if (!items.length) {
+    notify(`أهلاً ${customer.name} — مفيش طلبات سابقة، ضيف طلبه`);
+    return;
+  }
+
+  const realDraftCount = checkDraft.filter(
+    (i) => i.productId !== "__placeholder__",
+  ).length;
+  if (realDraftCount > 0) {
+    const ok = await appConfirm({
+      title: `إضافة طلب ${customer.name}`,
+      message: `آخر طلب: ${items.map((i) => `${i.name} × ${i.qty}`).join(" · ")}. تحب نضيفه فوق المسودة الحالية؟`,
+      confirmText: "أضف طلبه",
+    });
+    if (!ok) return;
+  }
+
+  items.forEach((newItem) => {
+    const existing = checkDraft.find(
+      (x) =>
+        x.productId === newItem.productId &&
+        x.optionId === newItem.optionId &&
+        (x.customerName || "") === newItem.customerName,
+    );
+    if (existing) existing.qty += newItem.qty;
+    else checkDraft.push(newItem);
+  });
+
+  renderCheckDraft();
+  savePendingOrderDraft();
+  refreshCustomerPanels();
+  notify(`تم تحميل آخر طلب لـ ${customer.name}`);
+}
+
+function ensureCustomerExists(name) {
+  const trimmed = String(name || "").trim();
+  if (!trimmed || trimmed === "بدون اسم") return null;
+  const existing = findCustomerByName(trimmed);
+  if (existing) return existing;
+  const newCustomer = {
+    id: `customer-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    name: trimmed,
+    country: "",
+    recipes: [],
+    notes: "",
+    createdAt: new Date().toISOString(),
+  };
+  data.customers.unshift(newCustomer);
+  return newCustomer;
+}
+
+// Setup: check-customer فقط (شيكات)
+(function setupCheckCustomerAutocomplete() {
+  const input = document.getElementById("check-customer");
+  const list = document.getElementById("customer-autocomplete-list");
+  if (!input || !list) return;
+
+  input.addEventListener("input", () => {
+    renderCustomerSuggestions(input.value);
+  });
+
+  input.addEventListener("focus", () => {
+    if (input.value.trim()) {
+      renderCustomerSuggestions(input.value);
+    }
+  });
+
+  input.addEventListener("blur", () => {
+    setTimeout(() => {
+      if (!list.hidden) list.hidden = true;
+    }, 180);
+  });
+
+  // لما المستخدم يمسح الاسم، اخفي البانر
+  input.addEventListener("input", () => {
+    if (!input.value.trim()) hideCustomerInfoBanner();
+  });
+})();

@@ -2,7 +2,7 @@
 
 ## تنظيم الملفات والصوت
 
-الواجهة مقسمة إلى `assets/public/index.html` (هيكل الصفحة)، و`assets/public/css/app.css` (التصميم)، و`assets/public/js/app.js` (المنطق). يوجد مقطع الصوت الأساسي فقط تحت `assets/audio/`، ويتولى `android-src/MainActivity.java` تشغيله مرة واحدة بعد سداد كل الحسابات. تفاصيل البنية وخطوات التحقق موجودة في [`docs/PROJECT_STRUCTURE.md`](docs/PROJECT_STRUCTURE.md).
+الواجهة مقسمة إلى `assets/public/index.html` (هيكل الصفحة)، وملفات CSS داخل `assets/public/css/`، و`assets/public/js/app.js` (المنطق). هذه الملفات والأصول مستعادة من الحزمة المرجعية `MANDOURCOFFEE_1.0.82.apk` حتى يطابق مصدر GitHub الواجهة الفعلية للحزمة. يوجد مقطع الصوت الأساسي تحت `assets/audio/`، ويتولى `android-src/MainActivity.java` تشغيله مرة واحدة بعد سداد كل الحسابات. تفاصيل البنية وخطوات التحقق موجودة في [`docs/PROJECT_STRUCTURE.md`](docs/PROJECT_STRUCTURE.md).
 
 ## ترتيب الشاشات والتنقل
 

@@ -1,0 +1,879 @@
+/* Espresso dark interface: selected concept 2. */
+body.dark-theme {
+  --bg: #171310;
+  --card: #241d19;
+  --ink: #f5eadb;
+  --mut: #b8a28c;
+  --acc: #c28b4b;
+  --acc2: #e3b66e;
+  --ok: #57bd91;
+  --line: #49382d;
+  --shadow: 0 10px 26px #0008;
+  --accent-soft: #392a20;
+  --surface-elevated: #2b221d;
+  --focus-ring: #d6a66088;
+  color-scheme: dark;
+  background:
+    radial-gradient(ellipse at 95% 3%, #704b2a22, transparent 34%),
+    radial-gradient(ellipse at 5% 48%, #144c3822, transparent 32%),
+    var(--bg);
+  color: var(--ink);
+}
+body.dark-theme .appbar {
+  background: linear-gradient(110deg, #14110f, #2b2019 72%, #38271b);
+  border-bottom: 1px solid #57402e;
+  box-shadow: 0 8px 24px #0008;
+}
+body.dark-theme .brand-symbol {
+  background: #39291f;
+  border-color: #a8753d88;
+  box-shadow: inset 0 1px #ffffff20;
+}
+body.dark-theme .appbar-sub,
+body.dark-theme .appbar-net-weight span {
+  color: #c7b49f;
+}
+body.dark-theme .dashboard-hero {
+  border: 1px solid #67492f;
+  background-image:
+    linear-gradient(90deg, #17110dcc 0%, #211914b8 36%, #241a14f0 70%, #241a14fa 100%),
+    url("../../../assets/mandour-home-banner.jpg");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  box-shadow: 0 14px 30px #0006;
+}
+body.dark-theme .dashboard-kicker { color: #e7bd7c; }
+body.dark-theme .action-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+body.dark-theme .action-button {
+  min-height: 106px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+  padding: 12px 8px;
+  border-color: #49382d;
+  border-radius: 17px;
+  background: linear-gradient(155deg, #2b221d, #211a16);
+  color: var(--ink);
+  box-shadow: 0 8px 20px #0004;
+  text-align: center;
+}
+body.dark-theme .action-button .action-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  background: #493522;
+  color: #f0c477;
+}
+body.dark-theme .action-button .action-text { text-align: center; }
+body.dark-theme .action-button .action-text strong { font-size: 12px; }
+body.dark-theme .action-button .action-text small,
+body.dark-theme .action-button .arrow { display: none; }
+body.dark-theme .action-button:hover { border-color: #bd8745; }
+body.dark-theme .summary-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+body.dark-theme .summary-chip {
+  min-height: 66px;
+  border-color: var(--line);
+  background: #241d19;
+  color: var(--ink);
+}
+body.dark-theme .summary-chip strong { color: #f4d59b; }
+body.dark-theme :is(.panel, .backup-panel, .auto-backup-settings, .activity-panel,
+  .summary-chip, .home-recent-item, .home-table-card, .notification-item,
+  .customer-card, .history-item, .custom-bean-row, .check-menu-card,
+  .inventory-item, .loyalty-item, .sales-kpi-grid > div, .sales-methods span,
+  .backup-history-item, .business-contact, .global-search-results > *,
+  [class$="-card"], [class$="-item"], [class$="-row"]) {
+  border-color: var(--line);
+  background-color: var(--card);
+  color: var(--ink);
+}
+body.dark-theme .home-table-card.open,
+body.dark-theme .home-table-card.deferred { background: #3a2b1d; border-color: #8c6338; }
+body.dark-theme .home-table-card.partial { background: #382321; border-color: #805046; }
+body.dark-theme .home-table-card span,
+body.dark-theme .home-table-card small,
+body.dark-theme .home-recent-item small,
+body.dark-theme .home-recent-item time,
+body.dark-theme .backup-note,
+body.dark-theme .view-intro { color: var(--mut); }
+body.dark-theme .action-icon,
+body.dark-theme .home-recent-icon,
+body.dark-theme .notification-bell,
+body.dark-theme .notification-icon {
+  background: #493522;
+  color: #f0c477;
+}
+body.dark-theme button.primary,
+body.dark-theme .primary {
+  border-color: #d29a55;
+  background: linear-gradient(135deg, #a86b2c, #c28b4b);
+  color: #fff8ea;
+  box-shadow: 0 5px 14px #0005;
+}
+body.dark-theme button.secondary,
+body.dark-theme .secondary {
+  border-color: #5a4635;
+  background: #2c231d;
+  color: #ead7bd;
+}
+body.dark-theme .cashier-shortcuts button[data-check-panel="orders"],
+body.dark-theme .home-quick-actions button[data-check-panel="orders"] {
+  background: linear-gradient(135deg, #176344, #21815a);
+  border-color: #38a878;
+  color: #f0fff7;
+}
+body.dark-theme input,
+body.dark-theme select,
+body.dark-theme textarea,
+body.dark-theme .field input,
+body.dark-theme .field select,
+body.dark-theme .global-search-box input,
+body.dark-theme .inventory-form input {
+  border-color: var(--line);
+  background: #1c1714;
+  color: var(--ink);
+}
+body.dark-theme input::placeholder,
+body.dark-theme textarea::placeholder { color: #927e6b; }
+body.dark-theme .bottom-nav {
+  border-color: #46372d;
+  background: #171310ed;
+  box-shadow: 0 -10px 28px #0008;
+}
+body.dark-theme .bottom-nav button { color: #b9a590; }
+body.dark-theme .bottom-nav button[aria-current="page"] {
+  background: #20392e;
+  color: #e8c17f;
+}
+body.dark-theme .bottom-nav button.nav-primary[aria-current="page"] {
+  background: #173e2e;
+  color: #79d0a5;
+}
+body.dark-theme .check-order-dock,
+body.dark-theme .invoice-dock {
+  border-color: #554132;
+  background: #211a16ed;
+  color: var(--ink);
+  box-shadow: 0 -8px 28px #0008;
+}
+body.dark-theme .modal-card,
+body.dark-theme .modal-header,
+body.dark-theme .modal-content,
+body.dark-theme .dialog-card {
+  border-color: var(--line);
+  background: #241d19;
+  color: var(--ink);
+}
+body.dark-theme table th,
+body.dark-theme table td,
+body.dark-theme .table-row { border-color: var(--line); color: var(--ink); }
+body.dark-theme .empty { color: var(--mut); }
+body.dark-theme .tool-badge,
+body.dark-theme .inventory-actions button { background: #493522; color: #f0c477; }
+body.dark-theme .inventory-item.low-stock { background: #3a2b1d; }
+body.dark-theme .sales-kpi-grid > div,
+body.dark-theme .sales-methods span { background: #2a211b; }
+@media (max-width: 360px) {
+  body.dark-theme .action-grid { gap: 7px; }
+  body.dark-theme .action-button { min-height: 94px; }
+}
+body.dark-theme .appbar-logo {
+  display: block;
+  padding: 0;
+  object-fit: cover;
+  border: 1px solid #a8753d88;
+  background: #171310;
+}
+body.dark-theme .dashboard-art { display: none !important; }
+html.dark-theme {
+  background-color: #171310;
+  color-scheme: dark;
+}
+body.dark-theme .check-panel-switch button,
+body.dark-theme .check-filter-bar button {
+  border-color: var(--line);
+  background: #2b221d;
+  color: var(--ink);
+}
+body.dark-theme .check-panel-switch button:is([aria-pressed="true"], .active, .selected),
+body.dark-theme .check-filter-bar button:is([aria-pressed="true"], .active, .selected) {
+  border-color: #d19a54;
+  background: #a96c2d;
+  color: #fff8ea;
+}
+body.dark-theme .check-filter-bar {
+  border-color: var(--line);
+  background: #211a16;
+  color: var(--ink);
+}
+body.dark-theme .empty,
+body.dark-theme .draft-empty-state {
+  border-color: var(--line);
+  background: #241d19;
+  color: var(--mut);
+}
+
+body.dark-theme .checks-summary-card.open { border-color: #8c6338; background: #3a2b1d; color: #f1d39a; }
+body.dark-theme .checks-summary-card.due { border-color: #805046; background: #382321; color: #f0b5a8; }
+body.dark-theme .checks-summary-card.paid { border-color: #386b50; background: #20372a; color: #a6e0bb; }
+body.dark-theme .bean-inventory-strip {
+  border-color: var(--line);
+  background: #211a16;
+  color: var(--ink);
+}
+body.dark-theme .bean-inventory-strip > div { border-color: var(--line); background: #2b221d; color: var(--ink); }
+body.dark-theme .doc-type-options button,
+body.dark-theme .roast-option {
+  border-color: var(--line);
+  background: #2b221d;
+  color: var(--ink);
+}
+body.dark-theme .doc-type-options button[aria-pressed="true"],
+body.dark-theme .roast-option[aria-pressed="true"] {
+  border-color: #d19a54;
+  background: #493522;
+  color: #f5d394;
+}
+body.dark-theme .payment-method {
+  border-color: var(--line);
+  background: #2b221d;
+  color: var(--ink);
+}
+body.dark-theme .payment-method[aria-pressed="true"] {
+  border-color: #c28b4b;
+  background: #392a20;
+  color: #f5d394;
+}
+body.dark-theme .branch-location,
+body.dark-theme .payment-destination,
+body.dark-theme .roast-panel,
+body.dark-theme .invoice-breakdown,
+body.dark-theme .history-disclosure {
+  border-color: var(--line);
+  background: #241d19;
+  color: var(--ink);
+}
+body.dark-theme .branch-pin,
+body.dark-theme .roast-heading-icon { background: #493522; color: #f0c477; }
+body.dark-theme .branch-location a,
+body.dark-theme .payment-destination b { color: #e3b66e; }
+body.dark-theme .payment-mark { border-color: #4a3a2f; background: #fff; }
+body.dark-theme .invoice-breakdown > div { border-color: var(--line); color: var(--ink); }
+body.dark-theme .invoice-breakdown .final-row { color: #f4d59b; }
+body.dark-theme .history-disclosure summary,
+body.dark-theme .history-disclosure summary small { color: var(--ink); }
+body.dark-theme .bean-photo { border-color: var(--line); background-color: #33271f; }
+
+body.dark-theme .table-number-button,
+body.dark-theme .table-number-stepper button {
+  border-color: var(--line);
+  background: #2b221d;
+  color: var(--ink);
+}
+body.dark-theme .table-number-button small,
+body.dark-theme .table-number-stepper output { color: var(--mut); }
+body.dark-theme .table-number-button.is-occupied { border-color: #986c3e; }
+body.dark-theme .table-number-button[aria-pressed="true"] {
+  border-color: #d19a54;
+  background: #493522;
+  color: #f5d394;
+  box-shadow: inset 0 0 0 1px #d19a54;
+}
+body.dark-theme .table-number-button[aria-pressed="true"] small { color: #f0c477; }
+body.dark-theme .table-selection-status {
+  border-color: var(--line);
+  background: #211a16;
+  color: var(--mut);
+}
+body.dark-theme .table-use-open-check {
+  border-color: #a9783e;
+  background: #493522;
+  color: #f5d394;
+}
+
+
+/* Cashier order form: keep every field and choice aligned with the espresso theme. */
+body.dark-theme #check-order-form {
+  border-color: var(--line);
+  background: #241d19;
+  color: var(--ink);
+  box-shadow: 0 10px 28px #0006;
+}
+body.dark-theme #check-order-form .account-fields-grid {
+  border-color: var(--line);
+  background: #1f1915;
+  color: var(--ink);
+  box-shadow: none;
+}
+body.dark-theme #check-order-form .account-fields-grid .field label {
+  color: #d5b995;
+}
+body.dark-theme #check-order-form .account-fields-grid .field label small,
+body.dark-theme #check-order-form .account-fields-grid .field .field-help {
+  color: var(--mut);
+}
+body.dark-theme #check-order-form .account-fields-grid .field input,
+body.dark-theme #check-order-form .account-fields-grid .field select {
+  border-color: var(--line);
+  background: #171310;
+  color: var(--ink);
+}
+body.dark-theme #check-order-form .account-fields-grid .field input::placeholder {
+  color: #927e6b;
+}
+body.dark-theme .account-section-head strong,
+body.dark-theme .order-menu-section-head h3,
+body.dark-theme .check-context-head strong,
+body.dark-theme .check-context-cell strong {
+  color: var(--ink);
+}
+body.dark-theme .account-step-mark,
+body.dark-theme .order-menu-step-mark {
+  border-color: #6f5335;
+  background: #493522;
+  color: #f0c477;
+}
+body.dark-theme .check-user-preview {
+  border-color: var(--line);
+  background: #2a211b;
+  color: var(--ink);
+}
+body.dark-theme .check-context-head small,
+body.dark-theme .check-context-cell {
+  border-color: var(--line);
+  background: #211a16;
+  color: var(--ink);
+}
+body.dark-theme .check-context-cell small,
+body.dark-theme .order-menu-section-head small {
+  color: var(--mut);
+}
+body.dark-theme .check-menu-price {
+  border-color: #5a4635;
+  background: #392a20;
+  color: #f0c477;
+}
+body.dark-theme .check-menu-card > img {
+  border-color: var(--line);
+  background: #33271f;
+}
+body.dark-theme .check-menu-info .option-buttons .option-btn {
+  border-color: var(--line);
+  background: #2b221d;
+  color: var(--ink);
+}
+body.dark-theme .check-menu-info .option-buttons .option-btn.is-default {
+  border-color: #8c6338;
+  background: #493522;
+  color: #f5d394;
+}
+/* ============================================
+   Dark theme fixes — تغطية كل العناصر الفاتحة
+   ============================================ */
+
+/* بطاقات الشيكات */
+body.dark-theme .check-card {
+  background: #241d19;
+  border-color: var(--line);
+}
+body.dark-theme .check-card-priority {
+  background: linear-gradient(155deg, #2a211b, #241d19);
+}
+body.dark-theme .check-card-info-cell {
+  background: #2a211b;
+  border-color: var(--line);
+}
+body.dark-theme .check-card-info-cell > small {
+  color: var(--mut);
+}
+body.dark-theme .check-card-info-cell > strong {
+  color: var(--ink);
+}
+body.dark-theme .check-card-label-row .check-kind {
+  background: #493522;
+  border-color: #6f5335;
+  color: #f0c477;
+}
+body.dark-theme .check-card-metrics > span {
+  background: #2a211b;
+  border-color: var(--line);
+}
+body.dark-theme .check-card-metrics small {
+  color: var(--mut);
+}
+body.dark-theme .check-card-metrics strong {
+  color: var(--ink);
+}
+body.dark-theme .check-card-metrics .remaining {
+  background: #382321;
+  border-color: #805046;
+}
+body.dark-theme .check-card-metrics .remaining strong {
+  color: #f0b5a8;
+}
+body.dark-theme .check-details-toggle {
+  background: #2a211b;
+  color: var(--ink);
+  border-color: var(--line);
+}
+body.dark-theme .check-details-toggle .accordion-chevron {
+  background: #493522;
+  border-color: #6f5335;
+  color: #f0c477;
+}
+body.dark-theme .check-accordion[open] > summary {
+  border-color: var(--line);
+}
+body.dark-theme .check-accordion-body {
+  background: #241d19;
+}
+body.dark-theme .paid-stamp {
+  background: #20372a;
+  border-color: #386b50;
+  color: #a6e0bb;
+}
+body.dark-theme .check-card-quick-actions .quick-add-order,
+body.dark-theme .check-card-quick-actions .quick-copy,
+body.dark-theme .per-guest-add-order {
+  background: #2c231d;
+  border-color: #5a4635;
+  color: #ead7bd;
+}
+
+/* العملاء والأصناف */
+body.dark-theme .compact-guest {
+  border-color: var(--line);
+}
+body.dark-theme .compact-guest-head strong {
+  color: var(--ink) !important;
+}
+body.dark-theme .compact-item {
+  background: #2a211b;
+  border-color: var(--line);
+}
+body.dark-theme .compact-item .check-line-name {
+  color: var(--ink);
+}
+body.dark-theme .compact-item .check-line-name small {
+  color: var(--mut);
+}
+body.dark-theme .item-line-meta > strong {
+  color: #f0c477;
+}
+body.dark-theme .item-line-meta .discount-field span {
+  color: var(--mut);
+}
+body.dark-theme .pay-item {
+  background: #493522 !important;
+  border-color: #6f5335 !important;
+  color: #f0c477;
+}
+body.dark-theme .pay-item.is-paid {
+  background: #20372a !important;
+  border-color: #386b50 !important;
+  color: #a6e0bb;
+}
+body.dark-theme .paid-line {
+  background: #1d1714 !important;
+}
+body.dark-theme .paid-line .check-line-name {
+  color: var(--mut);
+}
+
+/* أزرار الكمية والتحكم */
+body.dark-theme .qty-controls button,
+body.dark-theme .compact-qty button {
+  background: #2a211b;
+  border-color: var(--line);
+  color: var(--ink);
+}
+body.dark-theme .qty-controls button:active,
+body.dark-theme .compact-qty button:active {
+  background: #493522;
+}
+
+/* المسودة */
+body.dark-theme .check-draft-box {
+  background: linear-gradient(160deg, #2a211b, #241d19);
+  border-color: var(--line);
+}
+body.dark-theme .draft-review-head {
+  border-color: var(--line);
+}
+body.dark-theme .draft-review-head h3 {
+  color: var(--ink);
+}
+body.dark-theme .draft-review-head small {
+  color: var(--mut);
+}
+body.dark-theme .draft-review-step {
+  background: #493522;
+  border-color: #6f5335;
+  color: #f0c477;
+}
+body.dark-theme .check-draft-line {
+  background: #2a211b;
+  border-color: var(--line);
+}
+body.dark-theme .draft-item-header > .draft-item-copy > strong {
+  color: var(--ink);
+}
+body.dark-theme .draft-item-index {
+  background: #493522;
+  color: #f0c477;
+}
+body.dark-theme .draft-line-total {
+  color: #f0c477;
+}
+body.dark-theme .draft-customer-field {
+  color: var(--mut);
+}
+body.dark-theme .draft-customer-input {
+  background: #1d1714;
+  border-color: var(--line);
+  color: var(--ink);
+}
+body.dark-theme .draft-item-controls {
+  border-color: var(--line);
+}
+body.dark-theme .draft-line-discount > span {
+  color: var(--mut);
+}
+body.dark-theme .draft-line-discount input {
+  background: #1d1714;
+  border-color: var(--line);
+  color: var(--ink);
+}
+body.dark-theme .draft-quantity-field > small {
+  color: var(--mut);
+}
+body.dark-theme .draft-quantity-field .qty-controls button {
+  background: #493522;
+  border-color: #6f5335;
+  color: #f0c477;
+}
+body.dark-theme .draft-quantity-field .qty-controls .draft-remove-btn {
+  background: #382321;
+  border-color: #805046;
+  color: #f0b5a8;
+}
+body.dark-theme .draft-empty-state {
+  background: #2a211b;
+  border-color: var(--line);
+}
+body.dark-theme .draft-empty-state strong {
+  color: var(--ink);
+}
+body.dark-theme .draft-empty-state small {
+  color: var(--mut);
+}
+
+/* العملاء الحاليين */
+body.dark-theme .current-customer-item {
+  background: #2a211b;
+  border-color: var(--line);
+}
+body.dark-theme .current-customer-item .item-info strong {
+  color: var(--ink);
+}
+body.dark-theme .current-customer-item .item-info small {
+  color: var(--mut);
+}
+body.dark-theme .current-customer-item .item-controls button {
+  background: #493522;
+  border-color: #6f5335;
+  color: #f0c477;
+}
+body.dark-theme .current-customer-item .item-controls .btn-remove {
+  background: #382321;
+  border-color: #805046;
+  color: #f0b5a8;
+}
+body.dark-theme .customer-chip {
+  background: #2a211b;
+  border-color: var(--line);
+  color: var(--ink);
+}
+body.dark-theme .customer-chip .chip-total {
+  background: #493522;
+  color: #f0c477;
+}
+body.dark-theme .customer-chip.is-active {
+  background: #493522;
+  border-color: #d19a54;
+  color: #f5d394;
+}
+body.dark-theme .customer-chip.is-active .chip-total {
+  background: #d19a54;
+  color: #24150d;
+}
+body.dark-theme .customer-chip .chip-remove {
+  background: #1d1714;
+  border-color: #5a4635;
+  color: #f0b5a8;
+}
+body.dark-theme .chip-add-btn {
+  background: #493522;
+  border-color: #6f5335;
+  color: #f0c477;
+}
+
+/* المنيو */
+body.dark-theme .check-menu-card {
+  background: #241d19;
+  border-color: var(--line);
+}
+body.dark-theme .check-menu-card > img {
+  background: #33271f;
+  border-color: var(--line);
+}
+body.dark-theme .check-menu-info strong {
+  color: var(--ink);
+}
+body.dark-theme .check-menu-info > button:not(.option-btn) {
+  background: linear-gradient(145deg, #a86b2c, #c28b4b);
+  border-color: #d29a55;
+  color: #fff8ea;
+}
+body.dark-theme .check-menu-price {
+  background: #493522;
+  border-color: #6f5335;
+  color: #f0c477;
+}
+body.dark-theme .option-btn {
+  background: #2a211b;
+  border-color: var(--line);
+  color: var(--ink);
+}
+body.dark-theme .option-btn .opt-label {
+  color: var(--ink);
+}
+body.dark-theme .option-btn .opt-price {
+  color: #f0c477;
+}
+body.dark-theme .option-btn.is-default {
+  background: #493522;
+  border-color: #8c6338;
+  color: #f5d394;
+}
+body.dark-theme .quick-add-big {
+  background: #2a211b;
+  border-color: var(--line);
+}
+body.dark-theme .quick-add-big strong {
+  color: var(--ink);
+}
+body.dark-theme .quick-add-big small {
+  color: #f0c477;
+}
+
+/* الملاحظات والـ timeline */
+body.dark-theme .check-note-grid {
+  background: #241d19;
+  border-color: var(--line);
+}
+body.dark-theme .check-note-grid label {
+  color: var(--mut);
+}
+body.dark-theme .check-note-grid input,
+body.dark-theme .check-note-grid textarea {
+  background: #1d1714;
+  border-color: var(--line);
+  color: var(--ink);
+}
+body.dark-theme .check-timeline {
+  background: #241d19;
+  border-color: var(--line);
+}
+body.dark-theme .check-timeline > summary {
+  color: #f0c477;
+}
+body.dark-theme .check-timeline-entry {
+  background: #2a211b;
+  border-right-color: #8a6b3e;
+  color: var(--ink);
+}
+body.dark-theme .check-timeline-entry strong {
+  color: var(--ink);
+}
+body.dark-theme .check-timeline-entry small {
+  color: var(--mut);
+}
+
+/* البقشيش */
+body.dark-theme .tip-field {
+  color: var(--mut);
+}
+body.dark-theme .tip-field input {
+  background: #1d1714;
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+/* شريط الحفظ السفلي */
+body.dark-theme .check-order-dock {
+  background: #211a16ed;
+  border-color: #554132;
+  color: var(--ink);
+}
+body.dark-theme .check-order-dock .check-dock-total {
+  border-color: var(--line);
+}
+body.dark-theme .check-order-dock .check-dock-total small {
+  color: var(--mut);
+}
+body.dark-theme .check-order-dock .check-dock-total strong {
+  color: #f0c477;
+}
+body.dark-theme .check-order-dock .check-dock-context strong {
+  color: var(--ink);
+}
+body.dark-theme .check-order-dock .check-dock-context small {
+  color: var(--mut);
+}
+body.dark-theme .check-order-dock .check-commit:disabled {
+  background: #2a211b;
+  border-color: var(--line);
+  color: #6b5a48;
+}
+
+/* الملخص */
+body.dark-theme .draft-summary-panel {
+  background: #241d19;
+  border-color: var(--line);
+}
+body.dark-theme .draft-summary-head strong {
+  color: var(--ink);
+}
+body.dark-theme .draft-summary-head small {
+  color: #f0c477;
+}
+body.dark-theme .draft-summary-row {
+  background: #2a211b;
+  color: var(--ink);
+}
+body.dark-theme .draft-summary-row strong {
+  color: var(--ink);
+}
+body.dark-theme .draft-summary-row span {
+  color: var(--mut);
+}
+body.dark-theme .draft-summary-row.is-total {
+  background: #3a2b1d;
+  border-color: #6f5335;
+  color: #f0c477;
+}
+body.dark-theme .draft-summary-row.is-total strong,
+body.dark-theme .draft-summary-row.is-total span {
+  color: #f0c477;
+}
+
+/* الحالة الفاضية */
+body.dark-theme .current-customer-empty {
+  background: #2a211b;
+  border-color: var(--line);
+  color: var(--mut);
+}
+
+/* نصوص الشيك */
+body.dark-theme .compact-customer {
+  background: #2a211b;
+  border-color: var(--line);
+  color: var(--ink);
+}
+body.dark-theme .check-user-preview {
+  background: #2a211b;
+  border-color: var(--line);
+  color: var(--ink);
+}
+body.dark-theme .check-context-head strong {
+  color: var(--ink);
+}
+body.dark-theme .check-context-head small {
+  background: #493522;
+  border-color: #6f5335;
+  color: #f0c477;
+}
+body.dark-theme .check-context-cell strong {
+  color: var(--ink);
+}
+body.dark-theme .check-context-cell small {
+  color: var(--mut);
+}
+/* ============================================
+   Dark theme — إصلاح الإضافات السريعة والأزرار المزدوجة
+   (محتاج !important عشان نكسب على cashier.css)
+   ============================================ */
+
+/* ⚡ الإضافات السريعة */
+body.dark-theme .quick-add-row {
+  background: transparent;
+}
+body.dark-theme .quick-add-btn {
+  background: #2a211b !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+}
+body.dark-theme .quick-add-btn:active {
+  background: #493522 !important;
+}
+body.dark-theme .quick-add-btn .qa-name {
+  color: var(--ink) !important;
+}
+body.dark-theme .quick-add-btn .qa-price {
+  color: #f0c477 !important;
+}
+
+/* ☕ الأزرار المزدوجة (تركي سنجل/دبل، إسبريسو، لاتيه، إلخ) */
+body.dark-theme .check-menu-info .option-buttons {
+  background: transparent !important;
+}
+body.dark-theme .check-menu-info .option-buttons .option-btn {
+  background: #2a211b !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+  box-shadow: none !important;
+}
+body.dark-theme .check-menu-info .option-buttons .option-btn .opt-label {
+  color: var(--ink) !important;
+}
+body.dark-theme .check-menu-info .option-buttons .option-btn .opt-price {
+  color: #f0c477 !important;
+}
+body.dark-theme .check-menu-info .option-buttons .option-btn:active {
+  background: #493522 !important;
+}
+
+/* الزر الافتراضي (is-default) */
+body.dark-theme .check-menu-info .option-buttons .option-btn.is-default {
+  background: #493522 !important;
+  border-color: #8c6338 !important;
+  color: #f5d394 !important;
+  box-shadow: inset 0 0 0 1px #8c6338 !important;
+}
+body.dark-theme .check-menu-info .option-buttons .option-btn.is-default .opt-label {
+  color: #f5d394 !important;
+}
+body.dark-theme .check-menu-info .option-buttons .option-btn.is-default .opt-price {
+  color: #f0c477 !important;
+}
+
+/* اسم المشروب جوه الكارت */
+body.dark-theme .check-menu-info strong {
+  color: var(--ink) !important;
+}
+
+/* سعر المشروب (للمشروبات اللي ليها زرار واحد) */
+body.dark-theme .check-menu-info .check-menu-price {
+  background: #493522 !important;
+  border-color: #6f5335 !important;
+  color: #f0c477 !important;
+}
