@@ -24,7 +24,7 @@ jobs:
           cp -R assets/. www/assets/
           npm init -y
           npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor/local-notifications@6
-          npx cap init "Mandour Coffee" com.mandour.coffee.v5 --web-dir www
+          npx cap init "MANDOURCOFFEE" com.mandour.coffee.v5 --web-dir www
           node -e "const fs=require('fs');const p='capacitor.config.json';const c=JSON.parse(fs.readFileSync(p));c.plugins={...(c.plugins||{}),LocalNotifications:{smallIcon:'ic_stat_mandour',iconColor:'#503827'}};fs.writeFileSync(p,JSON.stringify(c,null,2))"
           npx cap add android
           npx cap sync android
@@ -48,5 +48,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
-          name: Mandour Coffee v${{ github.run_number }}
+          name: MANDOURCOFFEE v${{ github.run_number }}
           files: mandour-coffee-v${{ github.run_number }}.apk
