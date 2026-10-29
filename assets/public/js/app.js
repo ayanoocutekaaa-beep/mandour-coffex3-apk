@@ -764,16 +764,19 @@ function refreshHome() {
   }
   updateNotificationBadge();
 }
-const views = ["home", "invoice", "blends", "checks", "notifications", "tools"];
-const titles = {
+const viewTitles = Object.freeze({
   home: "مندور كوفي",
   invoice: "إنشاء فاتورة",
   blends: "العملاء والتوليفات",
-  "add-bean": "إضافة نوع بن",
   checks: "الشيكات",
   notifications: "مركز الإشعارات",
   tools: "المزيد والأدوات",
-};
+});
+const views = Object.freeze(Object.keys(viewTitles));
+function viewFromHash(hash = window.location.hash) {
+  const candidate = decodeURIComponent(String(hash).replace(/^#/, "").split("?")[0]).trim();
+  return views.includes(candidate) ? candidate : "home";
+}
 function openView(name, { push = false, animate = true } = {}) {
   if (!views.includes(name)) name = "home";
   if (push && name !== currentView)
@@ -792,7 +795,7 @@ function openView(name, { push = false, animate = true } = {}) {
   const next = document.getElementById(`${name}-view`);
   if (!next) return;
   document.getElementById("back-button").hidden = name === "home";
-  document.getElementById("bar-title").textContent = titles[name];
+  document.getElementById("bar-title").textContent = viewTitles[name];
   currentView = name;
   syncPaidSound();
   document.body.classList.toggle("invoice-active", name === "invoice");
@@ -830,7 +833,10 @@ document.addEventListener("click", (event) => {
   if (button) openView(button.dataset.view, { push: true, animate: false });
 });
 window.addEventListener("popstate", (event) =>
-  openView(event.state?.mandourView || "home", { push: false, animate: false }),
+  openView(event.state?.mandourView || viewFromHash(), { push: false, animate: false }),
+);
+window.addEventListener("hashchange", () =>
+  openView(viewFromHash(), { push: false, animate: false }),
 );
 window.mandourAndroidBack = function () {
   if (!document.getElementById("receipt-modal").hidden) {
@@ -4638,13 +4644,14 @@ window.setTimeout(() => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) window.setTimeout(finishSplash, 120);
 });
+const initialView = viewFromHash();
 history.replaceState(
-  { mandourView: "home" },
+  { mandourView: initialView },
   "",
-  `${location.pathname}${location.search}#home`,
+  `${location.pathname}${location.search}#${initialView}`,
 );
 refreshHome();
-openView("home", { push: false, animate: false });
+openView(initialView, { push: false, animate: false });
 if (expiredInvoicesRemovedAtStartup)
   setTimeout(
     () =>
